@@ -1,0 +1,28 @@
+#!/bin/sh
+
+###################################################
+# This script should be run before every commit   #
+# to check for failing tests etc.                 #
+# Copy it to .git/hooks/ to have it do just that. #
+###################################################
+
+# exit without success at first sign of error
+set -o errexit
+
+# Redirect output to stderr.
+exec 1>&2
+
+# update this script
+if [ -f .git-hooks-pre-commit ] ; then
+	cp .git-hooks-pre-commit .git/hooks/pre-commit
+fi
+
+echo Lint with flake8
+
+flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --extend-exclude=.ipynb_checkpoints
+
+#flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+echo Test with pytest
+
+pytest

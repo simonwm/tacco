@@ -1,0 +1,12 @@
+.ipynb_checkpoints/
+*.log
+*.png
+*.pdf
+*.csv
+*.h5ad
+*.h5
+__pycache__/
+docs/_autosummary/
+docs/_build/
+tacco.egg-info/
+/dist/

@@ -1,0 +1,125 @@
+import tempfile
+import subprocess
+import os
+import warnings
+import pandas as pd
+import numpy as np
+import scipy.sparse
+
+from .. import utils
+from . import _helper as helper
+from .. import get
+from .. import preprocessing
+
+def annotate_SingleR(
+    adata,
+    reference,
+    annotation_key,
+    counts_location=None,
+    conda_env=None,
+    fine_tune=True,
+    aggr_ref=True,
+    working_directory=None,
+    verbose=True,
+):
+
+    """\
+    Annotates an :class:`~anndata.AnnData` using reference data by SingleR
+    [Aran19]_.
+    
+    Parameters
+    ----------
+    adata
+        An :class:`~anndata.AnnData` including expression data in `.X` and
+        annotation in `.obs`.
+    reference
+        Reference data to get the annotation definition from. See e.g. 
+        :func:`~tc.pp.create_reference` for options to create it.
+    annotation_key
+        The `.obs` key where the annotation and profiles are stored in the
+        `reference`. If `None`, it is inferred from `reference`, if possible.
+    counts_location
+        A string or tuple specifying where the count matrix is stored, e.g.
+        `'X'`, `('raw','X')`, `('raw','obsm','my_counts_key')`,
+        `('layer','my_counts_key')`, ... For details see
+        :func:`~tc.get.counts`.
+    conda_env
+        The path of a conda environment where `SingleR` is installed and
+        importable as 'library(SingleR)'.
+    fine_tune
+        Forwards the 'fine.tune' parameter to SingleR.
+    aggr_ref
+        Forwards the 'aggr.ref' parameter to SingleR.
+    working_directory
+        The directory where to store all the intermediates. If `None`, a
+        temporary directory is used and cleaned in the end. This option is
+        probably only relevant for debugging.
+    verbose
+        Whether to print stderr and stdout of the SingleR run.
+        
+    Returns
+    -------
+    Returns the annotation in a :class:`~pandas.DataFrame`.
+    
+    """
+    
+    if conda_env is None or not os.path.exists(conda_env):
+        raise Exception(f'The conda environment {conda_env!r} does not exist! A conda environment with a working `SingleR` setup is needed and can be supplied by the `conda_env` argument.')
+        
+    adata, reference, annotation_key = helper.validate_annotation_args(adata, reference, annotation_key, counts_location, full_reference=True)
+    
+    tempdir = None
+    if working_directory is None:
+        tempdir = tempfile.TemporaryDirectory(prefix='temp_SingleR_',dir='.')
+        working_directory = tempdir.name
+    working_directory = working_directory + '/'
+    
+    data_file_name = 'data.h5ad'
+    ref_file_name = 'reference.h5ad'
+    result_file_namebase = 'result'
+    result_file_name = result_file_namebase + '.tsv'
+
+    R_script = os.path.dirname(os.path.abspath(__file__)) + '/SingleR.R'
+    
+    # SingleR expects log-normalized data
+    adata = utils.preprocess_single_cell_data(adata, hvg=False, scale=False, pca=False, inplace=False, min_cells=0, min_genes=0)
+    reference = utils.preprocess_single_cell_data(reference, hvg=False, scale=False, pca=False, inplace=False, min_cells=0, min_genes=0)
+
+    #print('writing data')
+    utils.write_adata_x_var_obs(adata, filename=working_directory + data_file_name, compression='gzip')
+
+    #print('writing reference')
+    utils.write_adata_x_var_obs(reference, filename=working_directory + ref_file_name, compression='gzip')
+    #print('running SingleR')
+    process = subprocess.Popen('bash', shell=False, universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+    command = f'\
+cd {working_directory}\n\
+source $(dirname $(dirname $(which conda)))/bin/activate\n\
+conda activate {conda_env}\n\
+Rscript "{R_script}" "{ref_file_name}" "{data_file_name}" "{result_file_namebase}" "{annotation_key}" "{fine_tune}" "{aggr_ref}"\n\
+'
+    #print(command)
+    out, err = process.communicate(command)
+    #print('done')
+    
+    successful = os.path.isfile(working_directory + result_file_name)
+    if verbose or not successful:
+        print(out)
+        print(err)
+    try:
+        if successful:
+            type_annotations = pd.read_csv(working_directory + result_file_name, sep='\t')
+        else:
+            raise Exception('SingleR did not work properly!')
+    finally:
+        if tempdir is not None:
+            tempdir.cleanup()
+    
+    type_annotations = type_annotations.set_index(type_annotations.columns[0])
+    type_fractions = pd.get_dummies(type_annotations[type_annotations.columns[0]])
+    type_fractions.columns = type_fractions.columns.astype(str)
+    type_fractions.columns.name = None
+    type_fractions.index.name = None
+    type_fractions = helper.normalize_result_format(type_fractions, types=reference.obs[annotation_key].unique())
+    
+    return type_fractions
