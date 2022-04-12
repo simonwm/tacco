@@ -6,7 +6,7 @@
 *.h5ad
 *.h5
 __pycache__/
-docs/_autosummary/
-docs/_build/
+docsource/_autosummary/
+docsource/_build/
 tacco.egg-info/
 /dist/

@@ -300,7 +300,7 @@ def _draw_weights(canvas_size, weights, data, offset_x, offset_y, stencil):
         canvas[(xo-extra_size):(xo+extra_size+1),(yo-extra_size):(yo+extra_size+1)] += w * stencil
     return canvas
                     
-def _render_frame(df, colors, ax_, id_=None, cmap=None, cmap_vmin_vmax=None, out_min_max=None, joint=True, point_size=3, grid=False, margin=0.25, scale=None, title=''):
+def _render_frame(df, colors, ax_, id_=None, cmap=None, cmap_vmin_vmax=None, out_min_max=None, joint=True, point_size=3, grid=False, margin=0.25, scale=None, title='', color_mix_mode='xyv'):
     
     typing = df[df.columns.intersection(colors.index)]
     coords = df[['x','y']].to_numpy()
@@ -390,7 +390,7 @@ def _render_frame(df, colors, ax_, id_=None, cmap=None, cmap_vmin_vmax=None, out
         #finite_norm = norm_canvas!=0
         
         if joint is None or joint:
-            canvas = mix_base_colors(np.stack([canvases[t] for t in canvases],axis=-1), np.array([colors[t] for t in canvases]))
+            canvas = mix_base_colors(np.stack([canvases[t] for t in canvases],axis=-1), np.array([colors[t] for t in canvases]), mode=color_mix_mode)
             for i in range(3): # remove zero weight colors
                 canvas[...,i][~finite_sum] = 1
             canvas[canvas>1] = 1 # numerical accuracy issues
@@ -505,12 +505,16 @@ def spatial_distribution_plot(typing_data, coords, colors, n_cols=1, axs=None, j
         df = df.loc[:,~df.isna().all(axis=0)] # remove all-nan columns
         df = df.loc[~df.isna().any(axis=1)] # remove any-nan rows
         
-        if render:
-            if not rasterized:
-                raise ValueError(f'`render==True` only works when `rasterized==True`')
-            _render_frame (df, colors, ax_, id_=id_, cmap=cmap, cmap_vmin_vmax=cmap_vmin_vmax, out_min_max=out_min_max, joint=joint, point_size=point_size, grid=grid, margin=margin, scale=scale, title=title)
-        else:
+        if isinstance(render, bool) and not render:
             _scatter_frame(df, colors, ax_, id_=id_, cmap=cmap, cmap_vmin_vmax=cmap_vmin_vmax, out_min_max=out_min_max, joint=joint, point_size=point_size, grid=grid, margin=margin, scale=scale, title=title, rasterized=rasterized)
+        else:
+            if not rasterized:
+                raise ValueError(f'`render!=False` only works when `rasterized==True`')
+            if isinstance(render, bool):
+                color_mix_mode = 'xyv'
+            else:
+                color_mix_mode = render
+            _render_frame (df, colors, ax_, id_=id_, cmap=cmap, cmap_vmin_vmax=cmap_vmin_vmax, out_min_max=out_min_max, joint=joint, point_size=point_size, grid=grid, margin=margin, scale=scale, title=title, color_mix_mode=color_mix_mode)
         
         for ax in ax_:
             
@@ -584,11 +588,11 @@ def get_default_colors(n, offset=0):
         default_colors *= ((n+offset) // len(default_colors) + 1)
         return default_colors[offset:(n+offset)]
 
-def mix_base_colors(weights, base_colors_rgb):
+def mix_base_colors(weights, base_colors_rgb, mode='xyv'):
     """\
-    Mix colors "additively". In contrast to weighted averages over rgb values
-    (which results in quite dark colors), the average is done in "xyv" space,
-    which is "hsv" with th "hs" part converted from polar to cartesian
+    Mix colors "additively". In contrast to weighted averages over "rgb" values
+    (which results in quite dark colors), the average can be done in "xyv"
+    space, which is "hsv" with the "hs" part converted from polar to cartesian
     coordinates.
     
     Parameters
@@ -600,7 +604,12 @@ def mix_base_colors(weights, base_colors_rgb):
     base_colors_rgb
         An `n_base X 3` matrix defining the base colors in rgb space; this must
         be a :class:`~numpy.ndarray`.
-    
+    mode
+        The mixing mode; available are:
+        
+        - 'rgb': average the rgb values in the rgb cube
+        - 'xyv': average the xyz values in the hsv cylider
+        
     Returns
     -------
     Returns the color mixtures depending on the type of `weights` either as\
@@ -613,24 +622,28 @@ def mix_base_colors(weights, base_colors_rgb):
         weights_index = weights.index
         weights = weights.to_numpy()
     weights = weights / weights.sum(axis=-1)[...,None]
-    base_colors_hsv = np.array([matplotlib.colors.rgb_to_hsv(base_color_rgb[:3]) for base_color_rgb in base_colors_rgb])
-    base_colors_xyv = np.array([
-        np.cos(base_colors_hsv[:,0] * 2 * np.pi) * base_colors_hsv[:,1],
-        np.sin(base_colors_hsv[:,0] * 2 * np.pi) * base_colors_hsv[:,1],
-        base_colors_hsv[:,2]
-    ]).T
-    mixed_colors_xyv = weights @ base_colors_xyv
-    mixed_colors_hsv = np.stack([
-        np.arctan2(mixed_colors_xyv[...,1], mixed_colors_xyv[...,0])/(2 * np.pi),
-        np.sqrt(mixed_colors_xyv[...,0]**2 + mixed_colors_xyv[...,1]**2),
-        mixed_colors_xyv[...,2]
-    ],axis=-1)
-    mixed_colors_hsv[mixed_colors_hsv[...,0]<0,0] += 1
-    mixed_colors_rgb = matplotlib.colors.hsv_to_rgb(mixed_colors_hsv)
-    if weights_index is not None:
-        mixed_colors_rgb = pd.DataFrame(mixed_colors_rgb, index=weights_index)
+    if mode == 'xyv':
+        base_colors_hsv = np.array([matplotlib.colors.rgb_to_hsv(base_color_rgb[:3]) for base_color_rgb in base_colors_rgb])
+        base_colors_xyv = np.array([
+            np.cos(base_colors_hsv[:,0] * 2 * np.pi) * base_colors_hsv[:,1],
+            np.sin(base_colors_hsv[:,0] * 2 * np.pi) * base_colors_hsv[:,1],
+            base_colors_hsv[:,2]
+        ]).T
+        mixed_colors_xyv = weights @ base_colors_xyv
+        mixed_colors_hsv = np.stack([
+            np.arctan2(mixed_colors_xyv[...,1], mixed_colors_xyv[...,0])/(2 * np.pi),
+            np.sqrt(mixed_colors_xyv[...,0]**2 + mixed_colors_xyv[...,1]**2),
+            mixed_colors_xyv[...,2]
+        ],axis=-1)
+        mixed_colors_hsv[mixed_colors_hsv[...,0]<0,0] += 1
+        mixed_colors_rgb = matplotlib.colors.hsv_to_rgb(mixed_colors_hsv)
+        if weights_index is not None:
+            mixed_colors_rgb = pd.DataFrame(mixed_colors_rgb, index=weights_index)
+    elif mode == 'rgb':
+        mixed_colors_rgb = weights @ base_colors_rgb
+    else:
+        raise ValueError(f'The mode "{mode}" is not implemented!')
     return mixed_colors_rgb
-
 
 def _filter_types(typing_data, types, colors, show_only):
     if show_only is not None:
@@ -930,7 +943,7 @@ def scatter(
     sharey=False,
     share_scaling=True,
     n_cols=1,
-    joint=None,
+    joint=True,
     method_labels=None,
     counts_location=None,
     compositional=False,
@@ -1045,10 +1058,15 @@ def scatter(
         has the advantage that only the scatter part of the figure will be
         exported as pixelated version if the plot is exported as vectorgraphic,
         with the rest like labels and axes being exported as a vectorgraphic.
+        This parameter provides control over the type of color averaging in the
+        process of the rendering by specifying one of the modes available in
+        :func:`~tacco.plots.mix_base_colors`, e.g. "xyv" or "rgb", with "xyv"
+        being equivalent to setting `True`.
     rasterized
         Whether to rasterize the interior of the plot, even when exported later
         as vectorgraphic. This leads to much smaller plots for many (data)
-        points. `rasterized==False` is incompatible with `render=True`.
+        points. `rasterized==False` is incompatible with `render==True` or
+        string.
         This parameter provides experimental support for plotting pie charts
         per dot via ´rasterized=="pie"´ and ´render==False´. This is much
         slower, so only usable for very few points.

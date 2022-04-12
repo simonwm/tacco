@@ -1,0 +1,80 @@
+name: build-sphinx-to-gh-pages
+
+on: 
+  push:
+    branches: [ master ]
+
+jobs:
+
+  build_sphinx_job:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: clone repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies with micromamba
+        uses: mamba-org/provision-with-micromamba@main
+        with:
+          cache-downloads: true
+          extra-specs: |
+            sphinx
+            sphinx_rtd_theme
+            pydata-sphinx-theme
+            sphinx-autodoc-typehints
+            nbsphinx
+            ipython
+            jupytext
+            jupyter 
+
+      - name: Build Sphinx html doc
+        shell: bash -l {0} # necessary to access the (cached) mamba environment
+        run: |
+          set -x
+
+          pushd docsource
+
+          make clean
+          make html
+
+          popd
+
+      - name: Push Sphinx doc into the gh-pages branch
+        run: |
+          set -x
+
+          # move the generated docs out of the way
+          docroot=`mktemp -d`
+          mv "docbuild/html/" "${docroot}/"
+ 
+          # change to gh-pages branch
+          git checkout gh-pages
+
+          # move .git directory out of the way
+          mv ".git/" "${docroot}/"
+
+          # clean out everything
+          rm -rf *
+
+          # transplant the docs and the .git back in the target directory structure
+          mv ${docroot}/html/* .
+          mv ${docroot}/.git .
+
+          touch .nojekyll
+ 
+          git add .
+
+          # set metadata for the commit
+          git config --global user.name github-actions
+          git config --global user.email github-actions@github.com
+ 
+          msg="Updating Docs for commit ${GITHUB_SHA}"
+          git commit -m "${msg}" --amend
+ 
+          # only keep a single commit in the gh-pages branch (to keep the repo small)
+          git push origin gh-pages --force
+ 
+

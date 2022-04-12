@@ -5,7 +5,7 @@
 SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
-BUILDDIR      = _build
+BUILDDIR      = ../docbuild
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -13,10 +13,14 @@ help:
 
 .PHONY: help Makefile
 
+github:
+	@make html
+	@cp -a ../docbuild/html/. ../docs
+
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 
 %: Makefile
-	rm -rf _build
+	rm -rf ../docbuild
 	rm -rf _autosummary
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)

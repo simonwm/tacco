@@ -8,9 +8,9 @@ sys.path.insert(0, os.path.abspath('..'))  # Source code dir relative to this fi
 
 import tacco
 
-project = 'Tacco'
-copyright = '2021, Broad Institute'
-author = tacco.__author__
+project = 'TACCO'
+copyright = '2022, Broad Institute'
+#author = tacco.__author__
 
 # The full version, including alpha/beta/rc tags
 #release = '1.0'
@@ -26,6 +26,7 @@ extensions = [
     'nbsphinx',  # Integrate Jupyter Notebooks and Sphinx
     'IPython.sphinxext.ipython_console_highlighting',
     'sphinx.ext.napoleon',
+    'sphinx.ext.githubpages',
 ]
 
 # Mappings for sphinx.ext.intersphinx. Projects have to have Sphinx-generated doc! (.inv file)

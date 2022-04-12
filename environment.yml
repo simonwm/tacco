@@ -1,0 +1,29 @@
+name: TACCO_env
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python>3.7.0,!=3.8.0
+  - requests
+  - joblib
+  - numba>=0.51.2
+  - numpy
+  - matplotlib
+  - pyqt!=5.9.2
+  - seaborn
+  - sparse_dot_mkl>=0.7.3
+  - scanpy>=1.7.0
+  - statsmodels
+  - anndata
+  - pandas>=1.1.0
+  - scipy>=1.6.0
+  - mkl
+  - mkl-service
+  - scikit-learn
+  - threadpoolctl
+  - pyamg
+  - pip # for pip installing tacco
+  - git # for pip installing tacco from github
+  - pip:
+     - git+https://github.com/simonwm/tacco.git
+
