@@ -1,0 +1,6 @@
+tacco.eval.score\_error.proj\_err
+=================================
+
+.. currentmodule:: tacco.eval.score_error
+
+.. autofunction:: proj_err

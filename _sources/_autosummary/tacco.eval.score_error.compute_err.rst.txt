@@ -1,0 +1,6 @@
+tacco.eval.score\_error.compute\_err
+====================================
+
+.. currentmodule:: tacco.eval.score_error
+
+.. autofunction:: compute_err

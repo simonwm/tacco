@@ -1,0 +1,6 @@
+tacco.utils.merge\_annotation
+=============================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: merge_annotation

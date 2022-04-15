@@ -1,0 +1,23 @@
+tacco.benchmarking
+==================
+
+.. automodule:: tacco.benchmarking
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      benchmark_annotate
+      benchmark_script
+      benchmark_shell
+   
+   
+   

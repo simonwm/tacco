@@ -1,0 +1,6 @@
+tacco.plots.dotplot
+===================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: dotplot

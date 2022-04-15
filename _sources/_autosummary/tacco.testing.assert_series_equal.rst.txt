@@ -1,0 +1,6 @@
+tacco.testing.assert\_series\_equal
+===================================
+
+.. currentmodule:: tacco.testing
+
+.. autofunction:: assert_series_equal

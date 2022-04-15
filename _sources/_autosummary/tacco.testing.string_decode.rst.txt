@@ -1,0 +1,6 @@
+tacco.testing.string\_decode
+============================
+
+.. currentmodule:: tacco.testing
+
+.. autofunction:: string_decode

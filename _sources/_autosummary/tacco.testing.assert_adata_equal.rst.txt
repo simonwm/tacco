@@ -1,0 +1,6 @@
+tacco.testing.assert\_adata\_equal
+==================================
+
+.. currentmodule:: tacco.testing
+
+.. autofunction:: assert_adata_equal

@@ -1,0 +1,6 @@
+tacco.tools.annotate\_tangram
+=============================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: annotate_tangram

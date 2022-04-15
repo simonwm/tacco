@@ -1,0 +1,6 @@
+tacco.preprocessing.filter\_reference
+=====================================
+
+.. currentmodule:: tacco.preprocessing
+
+.. autofunction:: filter_reference

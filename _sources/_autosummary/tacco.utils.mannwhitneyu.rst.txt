@@ -1,0 +1,6 @@
+tacco.utils.mannwhitneyu
+========================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: mannwhitneyu

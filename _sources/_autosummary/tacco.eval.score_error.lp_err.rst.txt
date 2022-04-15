@@ -1,0 +1,6 @@
+tacco.eval.score\_error.lp\_err
+===============================
+
+.. currentmodule:: tacco.eval.score_error
+
+.. autofunction:: lp_err

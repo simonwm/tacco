@@ -1,0 +1,6 @@
+tacco.utils.get\_balanced\_separated\_intervals
+===============================================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: get_balanced_separated_intervals

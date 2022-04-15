@@ -1,0 +1,37 @@
+﻿tacco
+=====
+
+.. automodule:: tacco
+
+   
+   
+   .. rubric:: Modules
+
+   .. autosummary::
+      :toctree:
+      :template: custom-module-template.rst
+      :recursive:
+   
+      benchmarking
+      eval
+      get
+      plots
+      preprocessing
+      testing
+      tools
+      utils
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      sum
+   
+   
+   

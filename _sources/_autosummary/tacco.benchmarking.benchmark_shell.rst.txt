@@ -1,0 +1,6 @@
+tacco.benchmarking.benchmark\_shell
+===================================
+
+.. currentmodule:: tacco.benchmarking
+
+.. autofunction:: benchmark_shell

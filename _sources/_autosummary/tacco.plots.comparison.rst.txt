@@ -1,0 +1,6 @@
+tacco.plots.comparison
+======================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: comparison

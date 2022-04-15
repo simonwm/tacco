@@ -1,0 +1,6 @@
+tacco.tools.setup\_orthology\_converter
+=======================================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: setup_orthology_converter

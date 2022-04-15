@@ -1,0 +1,23 @@
+tacco.get
+=========
+
+.. automodule:: tacco.get
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      counts
+      data_from_key
+      positions
+   
+   
+   

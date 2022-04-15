@@ -1,0 +1,6 @@
+tacco.utils.scale\_counts
+=========================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: scale_counts

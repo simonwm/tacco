@@ -1,0 +1,6 @@
+tacco.testing.assert\_tuple\_equal
+==================================
+
+.. currentmodule:: tacco.testing
+
+.. autofunction:: assert_tuple_equal

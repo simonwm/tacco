@@ -1,0 +1,6 @@
+tacco.tools.annotate\_nnls
+==========================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: annotate_nnls

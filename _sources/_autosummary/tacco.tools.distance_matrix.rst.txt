@@ -1,0 +1,6 @@
+tacco.tools.distance\_matrix
+============================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: distance_matrix

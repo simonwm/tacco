@@ -1,0 +1,6 @@
+tacco.plots.mix\_base\_colors
+=============================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: mix_base_colors

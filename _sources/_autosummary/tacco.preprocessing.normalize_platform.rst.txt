@@ -1,0 +1,6 @@
+tacco.preprocessing.normalize\_platform
+=======================================
+
+.. currentmodule:: tacco.preprocessing
+
+.. autofunction:: normalize_platform

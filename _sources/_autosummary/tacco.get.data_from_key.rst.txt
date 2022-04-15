@@ -1,0 +1,6 @@
+tacco.get.data\_from\_key
+=========================
+
+.. currentmodule:: tacco.get
+
+.. autofunction:: data_from_key

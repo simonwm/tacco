@@ -1,0 +1,6 @@
+tacco.plots.scatter
+===================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: scatter

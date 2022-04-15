@@ -1,0 +1,6 @@
+tacco.get.counts
+================
+
+.. currentmodule:: tacco.get
+
+.. autofunction:: counts

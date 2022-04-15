@@ -1,0 +1,6 @@
+tacco.utils.welchttest
+======================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: welchttest

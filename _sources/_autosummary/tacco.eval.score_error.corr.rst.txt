@@ -1,0 +1,6 @@
+tacco.eval.score\_error.corr
+============================
+
+.. currentmodule:: tacco.eval.score_error
+
+.. autofunction:: corr

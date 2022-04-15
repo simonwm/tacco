@@ -1,0 +1,6 @@
+tacco.utils.get\_conda\_envs
+============================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: get_conda_envs

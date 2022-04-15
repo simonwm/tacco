@@ -1,0 +1,6 @@
+tacco.tools.get\_contributions
+==============================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: get_contributions

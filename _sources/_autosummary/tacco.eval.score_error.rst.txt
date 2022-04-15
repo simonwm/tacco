@@ -1,0 +1,25 @@
+tacco.eval.score\_error
+=======================
+
+.. automodule:: tacco.eval.score_error
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      compute_err
+      corr
+      lp_err
+      max_correct
+      proj_err
+   
+   
+   

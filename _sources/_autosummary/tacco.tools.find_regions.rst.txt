@@ -1,0 +1,6 @@
+tacco.tools.find\_regions
+=========================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: find_regions

@@ -1,0 +1,6 @@
+tacco.testing.assert\_index\_equal
+==================================
+
+.. currentmodule:: tacco.testing
+
+.. autofunction:: assert_index_equal

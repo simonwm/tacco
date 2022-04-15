@@ -1,0 +1,6 @@
+tacco.utils.cpu\_count
+======================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: cpu_count

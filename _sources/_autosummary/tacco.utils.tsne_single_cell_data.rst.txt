@@ -1,0 +1,6 @@
+tacco.utils.tsne\_single\_cell\_data
+====================================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: tsne_single_cell_data

@@ -1,0 +1,6 @@
+tacco.tools.annotate\_wot
+=========================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: annotate_wot

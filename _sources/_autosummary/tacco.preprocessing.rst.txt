@@ -1,0 +1,31 @@
+tacco.preprocessing
+===================
+
+.. automodule:: tacco.preprocessing
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      apply_random_platform_effect
+      check_counts_validity
+      construct_reference_profiles
+      filter
+      filter_annotation
+      filter_profiles
+      filter_reference
+      filter_reference_genes
+      normalize_platform
+      refine_reference
+      subsample_annotation
+   
+   
+   

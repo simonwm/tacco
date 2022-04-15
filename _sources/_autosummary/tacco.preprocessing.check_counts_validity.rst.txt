@@ -1,0 +1,6 @@
+tacco.preprocessing.check\_counts\_validity
+===========================================
+
+.. currentmodule:: tacco.preprocessing
+
+.. autofunction:: check_counts_validity

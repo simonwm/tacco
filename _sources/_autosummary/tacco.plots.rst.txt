@@ -1,0 +1,38 @@
+tacco.plots
+===========
+
+.. automodule:: tacco.plots
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      annotated_heatmap
+      annotation_coordinate
+      cellsize
+      co_occurrence
+      co_occurrence_matrix
+      comparison
+      compositions
+      contribution
+      dotplot
+      frequency
+      frequency_bar
+      get_default_colors
+      heatmap
+      mix_base_colors
+      scatter
+      sigmap
+      significances
+      subplots
+   
+   
+   
