@@ -1,0 +1,21 @@
+Examples
+--------
+
+The notebooks for the examples and the workflow to prepare the necessary datasets are available in the `example repository <https://github.com/simonwm/tacco_examples>`_.
+
+.. nbgallery::
+   notebooks/benchmarking
+   notebooks/cooccurrence
+   notebooks/insilico_mouse_colon
+   notebooks/mapping_single_cells_into_space
+   notebooks/object_splitting
+   notebooks/osmFISH_single_molecule_annotation
+   notebooks/overview
+   notebooks/parameter_variations
+   notebooks/simulated_ambient
+   notebooks/simulated_dropout
+   notebooks/single_cell_differentiation
+   notebooks/slideseq_mouse_colon
+   notebooks/slideseq_mouse_olfactory_bulb
+   notebooks/slideseq_mouse_olfactory_bulb_single
+   notebooks/visium_mouse_kidney

@@ -1,0 +1,6 @@
+tacco.sum
+=========
+
+.. currentmodule:: tacco
+
+.. autofunction:: sum

@@ -1,0 +1,6 @@
+tacco.tools.affinity
+====================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: affinity

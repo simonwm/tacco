@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TACCO overview &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Parameter Variations for annotation using Optimal Transport" href="parameter_variations.html" />
+    <link rel="prev" title="Single molecule data: osmFISH mouse somato-sensory cortex" href="osmFISH_single_molecule_annotation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../examples.html">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="benchmarking.html">Benchmarking runtime and memory of annotation methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cooccurrence.html">Co-occurrence computations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="insilico_mouse_colon.html">In-silico mixed Mouse Colon scRNA-seq data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mapping_single_cells_into_space.html">Mapping single cells into space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_splitting.html">Object splitting for in-silico mixed scRNA-seq data and Slide-Seq data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="osmFISH_single_molecule_annotation.html">Single molecule data: osmFISH mouse somato-sensory cortex</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">TACCO overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Load-data">Load data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#TACCO:-a-flexible-framework-for-the-annotation-and-analysis-of-cells-and-cell-like-objects">TACCO: a flexible framework for the annotation and analysis of cells and cell-like objects</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Compositional-Annotations">Compositional Annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Annotation-process:">Annotation process:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Analysis-tools-for-compositional-annotations,-especially-for-spatial-data">Analysis tools for compositional annotations, especially for spatial data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Object-splitting">Object splitting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Enrichment-of-compositional-annotations">Enrichment of compositional annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Inferring-Regions">Inferring Regions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="parameter_variations.html">Parameter Variations for annotation using Optimal Transport</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulated_ambient.html">Simulated single cell expression data with ambient contamination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulated_dropout.html">Simulated single cell expression data with dropout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="single_cell_differentiation.html">Single-cell differentiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slideseq_mouse_colon.html">Slide-Seq Mouse Colon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slideseq_mouse_olfactory_bulb.html">Slide-Seq Mouse Olfactory Bulb - multiple pucks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slideseq_mouse_olfactory_bulb_single.html">Slide-Seq Mouse Olfactory Bulb - single puck</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visium_mouse_kidney.html">Visium Mouse Kidney</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../_autosummary/tacco.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../examples.html">Examples</a></li>
+      <li class="breadcrumb-item active">TACCO overview</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="TACCO-overview">
+<h1>TACCO overview<a class="headerlink" href="#TACCO-overview" title="Link to this heading">¶</a></h1>
+<p>This example uses synthetic data to illustrate the TACCO annotate workflow and some downstream analysis and visualization tools following Figure 1 from:</p>
+<p>(Mages et. al.): Mages, S., Moriel, N., Avraham-Davidi, I. et al. TACCO unifies annotation transfer and decomposition of cell identities for single-cell and spatial omics. Nat Biotechnol (2023). <a class="reference external" href="https://doi.org/10.1038/s41587-023-01657-3">https://doi.org/10.1038/s41587-023-01657-3</a></p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tacco</span> <span class="k">as</span> <span class="nn">tc</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="c1"># The notebook expects to be executed either in the workflow directory or in the repository root folder...</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s1">&#39;workflow/overview&#39;</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s1">&#39;workflow/overview/visualization_helper.py&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;.&#39;</span><span class="p">))</span>
+<span class="kn">import</span> <span class="nn">visualization_helper</span>
+</pre></div>
+</div>
+</div>
+<section id="Load-data">
+<h2>Load data<a class="headerlink" href="#Load-data" title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">visualization_helper</span><span class="o">.</span><span class="n">generate_data</span><span class="p">()</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">initialize_plotting_params</span><span class="p">()</span>
+<span class="n">adata</span> <span class="o">=</span> <span class="n">visualization_helper</span><span class="o">.</span><span class="n">generate_adata</span><span class="p">()</span>
+<span class="n">colors_celltype</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;#0f0&#39;</span><span class="p">,</span><span class="s1">&#39;#f00&#39;</span><span class="p">,</span><span class="s1">&#39;#00f&#39;</span><span class="p">,]</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="TACCO:-a-flexible-framework-for-the-annotation-and-analysis-of-cells-and-cell-like-objects">
+<h2>TACCO: a flexible framework for the annotation and analysis of cells and cell-like objects<a class="headerlink" href="#TACCO:-a-flexible-framework-for-the-annotation-and-analysis-of-cells-and-cell-like-objects" title="Link to this heading">¶</a></h2>
+<p>TACCO aims to annotate single cells and cell-like objects like Slide-seq beads (objects <em>b</em>) or Visium spots, with compositional annotations. In cases with discrete ground truth (e.g. a B cell vs a fibroblast) we interpret the compositional annotation as probabilities of belonging to a category <em>t</em>. Both objects <em>b</em> and categories <em>t</em> are in a common high dimensional data space, e.g., expression space. Generally, objects that are close to a category in that space, should have a high contribution
+of that category in the compositional annotation.</p>
+<p>TACCO generates annotations for new datasets of mixtures using an annotated single-cell reference. The result is a compositional annotation for the new datapoints. The framework is completed by a set of downstream analysis tools, some of which are especially optimized for analysis involving compositional annotations. TACCO relies on Anndata and seamlessly integrates with the Scanpy ecosystem.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">axsize</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">plot_unannotated_data</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">adata</span><span class="p">)</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">plot_scRef</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">plot_annotated_data</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span> <span class="n">adata</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_overview_5_0.png" src="../_images/notebooks_overview_5_0.png" />
+</div>
+</div>
+</section>
+<section id="Compositional-Annotations">
+<h2>Compositional Annotations<a class="headerlink" href="#Compositional-Annotations" title="Link to this heading">¶</a></h2>
+<p>Illustrative embeddings of cells and cell-like objects annotated (left) for mixtures (pie charts) of idealized pure contributions (large triangles); (middle) as ambiguous annotations (triangles with colored borders) for technical artifacts like high ambient contributions or dropout levels; and (right) continuous annotations (circles) along biological continua.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">axsize</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">plot_compositional_annotation</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">plot_ambiguous_categories</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">plot_continuous_spectrum</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_overview_7_0.png" src="../_images/notebooks_overview_7_0.png" />
+</div>
+</div>
+</section>
+<section id="Annotation-process:">
+<h2>Annotation process:<a class="headerlink" href="#Annotation-process:" title="Link to this heading">¶</a></h2>
+<p>Far left: A labeled reference dataset (e.g., scRNA-seq data, colored triangles) and a new dataset (e.g. Slide-seq beads, circles) is first presented in a common high-dimensional space (e.g., expression space) optionally using platform normalization to make the datasets comparable. Near left: TACCO represents the reference categories by one or multiple representative profiles (large colored triangles). Near right: TACCO uses semi-unbalanced entropic optimal transport to transfer annotations from
+the reference categories to the new dataset (arrows), generating compositional annotations for the new datapoints (colored piecharts). To improve the capture of the subdominant contributions, this process is iterated. Far right: TACCO provides as output compositional annotations for the new dataset.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">axsize</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">plot_common_space</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">plot_reference_profiles</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">plot_optimal_transport</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">plot_full_annotated</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_overview_9_0.png" src="../_images/notebooks_overview_9_0.png" />
+</div>
+</div>
+</section>
+<section id="Analysis-tools-for-compositional-annotations,-especially-for-spatial-data">
+<h2>Analysis tools for compositional annotations, especially for spatial data<a class="headerlink" href="#Analysis-tools-for-compositional-annotations,-especially-for-spatial-data" title="Link to this heading">¶</a></h2>
+<p>TACCO comes with a set of tools to quantify spatial relationships on long (tissue) and short (cellular neighbourships) length scales and can infer spatial regions.</p>
+<p>To score co-localization or co-occurrence of annotations, TACCO calculates the probability to find an <em>annotation</em> at a distance <em>x</em> from a center annotation <em>center</em> normalized by the probability to find <em>annotation</em> regardless of a <em>center</em>:</p>
+<div class="math notranslate nohighlight">
+\[\frac{p(annotation|center,x)}{p(annotation)}\]</div>
+<p>This is well-defined also for non-categorical annotations, which are commonplace for the compositional annotations created with TACCO and for pairs of unrelated annotations.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">co_occurrence</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="s1">&#39;fractions&#39;</span><span class="p">,</span> <span class="n">result_key</span><span class="o">=</span><span class="s1">&#39;fractions&#39;</span><span class="p">,</span> <span class="n">delta_distance</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_permutation</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">axsize</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">),</span>  <span class="n">wspace</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">co_occurrence</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="s1">&#39;fractions&#39;</span><span class="p">,</span> <span class="n">score_key</span><span class="o">=</span><span class="s1">&#39;composition&#39;</span><span class="p">,</span> <span class="n">show_only_center</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;f0&#39;</span><span class="p">],</span> <span class="n">colors</span><span class="o">=</span><span class="p">{</span><span class="sa">f</span><span class="s1">&#39;f</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">:</span> <span class="n">colors_celltype</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">colors_celltype</span><span class="p">))},</span> <span class="n">legend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">axsize</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">),</span> <span class="n">ax</span><span class="o">=</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]);</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">set_pl_co_occ_params</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">adata</span><span class="p">)</span>
+<span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">co_occurrence_matrix</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="s1">&#39;fractions&#39;</span><span class="p">,</span> <span class="n">score_key</span><span class="o">=</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="n">axsize</span><span class="o">=</span><span class="p">(</span><span class="mf">1.2</span><span class="p">,</span><span class="mf">1.2</span><span class="p">),</span> <span class="n">restrict_intervals</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cmap_vmin_vmax</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">],</span> <span class="n">ax</span><span class="o">=</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">scale_legend</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">set_pl_co_occ_matrix</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+co_occurrence: The argument `distance_key` is `None`, meaning that the distance which is now calculated on the fly will not be saved. Providing a precalculated distance saves time in multiple calls to this function.
+calculating distance for sample 1/1
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_overview_12_1.png" src="../_images/notebooks_overview_12_1.png" />
+</div>
+</div>
+</section>
+<section id="Object-splitting">
+<h2>Object splitting<a class="headerlink" href="#Object-splitting" title="Link to this heading">¶</a></h2>
+<p>For each observation in the unannotated dataset the annotation method generates an assignment of a composition of annotation categories. Generally, each observation is associated with more than one category with non-zero contribution. When the categories are cell types, this can be problematic for downstream applications that require the expression profiles of single cells as input, i.e. pure profiles that can be attributed to a single cell. For example, as cell-type-related expression
+constitutes a strong signal, analysis of expression programs is easier across cells of a shared type. Thus, it is desirable to derive several “virtual” observations for every real observation, which correspond to the pure contribution of each annotation category.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">find_regions</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">annotation_key</span><span class="o">=</span><span class="s1">&#39;fractions&#39;</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">position_weight</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">axsize</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">plot_unannotated_data</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">adata</span><span class="p">)</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">plot_annotated_data</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">adata</span><span class="p">)</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">plot_object_split_green</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span> <span class="n">adata</span><span class="p">)</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">plot_object_split_red</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">],</span> <span class="n">adata</span><span class="p">)</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">plot_object_split_blue</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">4</span><span class="p">],</span> <span class="n">adata</span><span class="p">)</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">plot_object_splitting</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">5</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_overview_14_0.png" src="../_images/notebooks_overview_14_0.png" />
+</div>
+</div>
+</section>
+<section id="Enrichment-of-compositional-annotations">
+<h2>Enrichment of compositional annotations<a class="headerlink" href="#Enrichment-of-compositional-annotations" title="Link to this heading">¶</a></h2>
+<p>TACCO supports various approaches to visualize compositional differences in the spatial structure of a sample and estimate the statistical significance of these differences / enrichments. In particular, TACCO uses sample information to calculate enrichments not across observations (single cells / spatial beads, which are no independent observations and can lead to p-value inflation), but across multiple samples, which gives meaningful and reasonable p-values.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">n_x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">axsize</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">))</span>
+<span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">significances</span><span class="p">(</span><span class="n">tc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">enrichments</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="s1">&#39;fractions&#39;</span><span class="p">,</span> <span class="s1">&#39;region&#39;</span><span class="p">,</span> <span class="p">),</span> <span class="s1">&#39;p_mwu_fdr_bh&#39;</span><span class="p">,</span> <span class="s1">&#39;fractions&#39;</span><span class="p">,</span> <span class="s1">&#39;region&#39;</span><span class="p">,</span> <span class="n">annotate_pvalues</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">scale_legend</span><span class="o">=</span><span class="mf">0.75</span><span class="p">);</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">set_pl_significances_params</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_overview_16_0.png" src="../_images/notebooks_overview_16_0.png" />
+</div>
+</div>
+</section>
+<section id="Inferring-Regions">
+<h2>Inferring Regions<a class="headerlink" href="#Inferring-Regions" title="Link to this heading">¶</a></h2>
+<p>For spatially-convoluted expression data, such as in spatial transcriptomics methods including Slide-seq and Visium, clustering (of beads or spots) in expression space is less meaningful as individual cells are mixed. “Regions” which are defined both in position and expression or annotation space can be a meaningful alternative. TACCO implements a method to define such regions consisting of two steps: 1. Construction of one k-nearest neighbors graph based on expression (or annotation) distances
+and another k-nearest neighbors graph based on physical distances 2. Combination of the two graphs as a weighted sum of the graphs’ adjacencies</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">axsize</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">visualization_helper</span><span class="o">.</span><span class="n">plot_region_voronoi</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">adata</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_overview_18_0.png" src="../_images/notebooks_overview_18_0.png" />
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="osmFISH_single_molecule_annotation.html" class="btn btn-neutral float-left" title="Single molecule data: osmFISH mouse somato-sensory cortex" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="parameter_variations.html" class="btn btn-neutral float-right" title="Parameter Variations for annotation using Optimal Transport" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

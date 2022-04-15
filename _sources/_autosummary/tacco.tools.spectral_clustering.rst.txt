@@ -1,0 +1,6 @@
+tacco.tools.spectral\_clustering
+================================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: spectral_clustering

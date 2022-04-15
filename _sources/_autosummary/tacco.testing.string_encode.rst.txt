@@ -1,0 +1,6 @@
+tacco.testing.string\_encode
+============================
+
+.. currentmodule:: tacco.testing
+
+.. autofunction:: string_encode

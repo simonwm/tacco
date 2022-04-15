@@ -1,0 +1,6 @@
+tacco.tools.setup\_goa\_analysis
+================================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: setup_goa_analysis

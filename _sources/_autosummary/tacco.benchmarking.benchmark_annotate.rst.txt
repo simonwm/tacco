@@ -1,0 +1,6 @@
+tacco.benchmarking.benchmark\_annotate
+======================================
+
+.. currentmodule:: tacco.benchmarking
+
+.. autofunction:: benchmark_annotate

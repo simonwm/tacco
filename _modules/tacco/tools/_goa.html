@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.tools._goa &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/tacco.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tacco.tools._goa</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tacco.tools._goa</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">gzip</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+
+<span class="k">try</span><span class="p">:</span> <span class="c1"># dont fail importing the whole module, just because go term enrichment analysis is not available</span>
+    <span class="kn">from</span> <span class="nn">goatools.obo_parser</span> <span class="kn">import</span> <span class="n">GODag</span>
+    <span class="kn">from</span> <span class="nn">goatools.anno.genetogo_reader</span> <span class="kn">import</span> <span class="n">Gene2GoReader</span>
+    <span class="kn">from</span> <span class="nn">goatools.goea.go_enrichment_ns</span> <span class="kn">import</span> <span class="n">GOEnrichmentStudyNS</span>
+    <span class="n">HAVE_GOA</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">HAVE_GOA</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="n">_symbol2geneID</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">_goeaobj</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">def</span> <span class="nf">_get_downloaded_file</span><span class="p">(</span><span class="n">URL</span><span class="p">,</span> <span class="n">working_directory</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">URL</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">URL</span>
+    <span class="n">fname</span> <span class="o">=</span> <span class="n">working_directory</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">URL</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;using buffered </span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fname</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;downloading </span><span class="si">{</span><span class="n">URL</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="n">URL</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fname</span>
+
+<div class="viewcode-block" id="setup_goa_analysis">
+<a class="viewcode-back" href="../../../_autosummary/tacco.tools.setup_goa_analysis.html#tacco.tools.setup_goa_analysis">[docs]</a>
+<span class="k">def</span> <span class="nf">setup_goa_analysis</span><span class="p">(</span>
+    <span class="n">gene_index</span><span class="p">,</span>
+    <span class="n">gene_info_file</span><span class="o">=</span><span class="s1">&#39;https://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Mammalia/Mus_musculus.gene_info.gz&#39;</span><span class="p">,</span>
+    <span class="n">tax_id</span><span class="o">=</span><span class="mi">10090</span><span class="p">,</span>
+    <span class="n">GO_obo_file</span><span class="o">=</span><span class="s1">&#39;http://purl.obolibrary.org/obo/go/go-basic.obo&#39;</span><span class="p">,</span>
+    <span class="n">gene2GO_file</span><span class="o">=</span><span class="s1">&#39;https://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz&#39;</span><span class="p">,</span>
+    <span class="n">working_directory</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Setup a GO analysis. This is a convenience wrapper around the goatools</span>
+<span class="sd">    package [Klopfenstein18]_ and like goatools performs the enrichment</span>
+<span class="sd">    analysis independent of the availability of webservices using a databases</span>
+<span class="sd">    downloaded once for reproducibility.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    gene_index</span>
+<span class="sd">        The list of all possible genes.</span>
+<span class="sd">    gene_info_file</span>
+<span class="sd">        File containing a mapping from NCBI GeneIDs to gene symbols, e.g.</span>
+<span class="sd">        downloaded from `https://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Mammalia/Mus_musculus.gene_info.gz`.</span>
+<span class="sd">        If this is not available as a local file, it is treated as an URL and</span>
+<span class="sd">        downloaded to the `working_directory` if necessary, see below.</span>
+<span class="sd">    tax_id</span>
+<span class="sd">        The NCBI taxonomy ID to filter the `gene_info_file` for.</span>
+<span class="sd">    GO_obo_file</span>
+<span class="sd">        File containing the Gene Ontology data, e.g. downloaded from</span>
+<span class="sd">        `http://purl.obolibrary.org/obo/go/go-basic.obo analysis/go-basic.obo`.</span>
+<span class="sd">        If this is not available as a local file, it is treated as an URL and</span>
+<span class="sd">        downloaded to the `working_directory` if necessary, see below.</span>
+<span class="sd">    gene2GO_file</span>
+<span class="sd">        File containing a mapping from NCBI GeneIDs to Gene Ontology data, e.g.</span>
+<span class="sd">        downloaded from `https://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz`.</span>
+<span class="sd">        If this is not available as a local file, it is treated as an URL and</span>
+<span class="sd">        downloaded to the `working_directory` if necessary, see below.</span>
+<span class="sd">    working_directory</span>
+<span class="sd">        Directory where to buffer downloaded files. If a file of the same name</span>
+<span class="sd">        already exists in this directory, it is not downloaded again.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Returns a :class:`~goatools.goea.go_enrichment_ns:GOEnrichmentStudyNS` and\</span>
+<span class="sd">    a :class:`~pandas.Series` mapping gene symbols to gene ids. Both are needed\</span>
+<span class="sd">    to run the enrichment analyses. For convenience, they are also buffered as\</span>
+<span class="sd">    global objects and used automatically.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">HAVE_GOA</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">&#39;To use the goatools wrapper, the goatools package must be installed!&#39;</span><span class="p">)</span>
+    
+    <span class="n">gene_index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">gene_index</span><span class="p">)</span>
+    
+    <span class="c1"># download files if necessary</span>
+    <span class="n">gene_info_file</span> <span class="o">=</span> <span class="n">_get_downloaded_file</span><span class="p">(</span><span class="n">gene_info_file</span><span class="p">,</span> <span class="n">working_directory</span><span class="p">)</span>
+    <span class="n">GO_obo_file</span> <span class="o">=</span> <span class="n">_get_downloaded_file</span><span class="p">(</span><span class="n">GO_obo_file</span><span class="p">,</span> <span class="n">working_directory</span><span class="p">)</span>
+    <span class="n">gene2GO_file</span> <span class="o">=</span> <span class="n">_get_downloaded_file</span><span class="p">(</span><span class="n">gene2GO_file</span><span class="p">,</span> <span class="n">working_directory</span><span class="p">)</span>
+
+    <span class="c1"># setup the symbol2geneID mapping</span>
+    <span class="n">symbol2geneID</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="n">gene_info_file</span><span class="p">)</span>
+    <span class="n">symbol2geneID</span> <span class="o">=</span> <span class="n">symbol2geneID</span><span class="p">[</span><span class="n">symbol2geneID</span><span class="p">[</span><span class="s1">&#39;#tax_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">tax_id</span><span class="p">]</span>
+    <span class="n">first</span> <span class="o">=</span> <span class="n">symbol2geneID</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s1">&#39;Symbol&#39;</span><span class="p">,</span><span class="n">keep</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;Symbol&#39;</span><span class="p">)[</span><span class="s2">&quot;GeneID&quot;</span><span class="p">]</span>
+    <span class="n">last</span> <span class="o">=</span> <span class="n">symbol2geneID</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s1">&#39;Symbol&#39;</span><span class="p">,</span><span class="n">keep</span><span class="o">=</span><span class="s1">&#39;last&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;Symbol&#39;</span><span class="p">)[</span><span class="s2">&quot;GeneID&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">first</span><span class="p">[</span><span class="n">gene_index</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">first</span><span class="o">.</span><span class="n">index</span><span class="p">)]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span> <span class="o">!=</span> <span class="n">last</span><span class="p">[</span><span class="n">gene_index</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">last</span><span class="o">.</span><span class="n">index</span><span class="p">)]</span><span class="o">.</span><span class="n">dropna</span><span class="p">())</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;WARNING: There were non-unique assignments of gene symbols to gene ids. This can potentially influence the result of the GO term enrichment analysis.&#39;</span><span class="p">)</span>
+    <span class="n">symbol2geneID</span> <span class="o">=</span> <span class="n">first</span>
+    <span class="n">symbol2geneID</span> <span class="o">=</span> <span class="n">symbol2geneID</span><span class="p">[</span><span class="n">gene_index</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">symbol2geneID</span><span class="o">.</span><span class="n">index</span><span class="p">)]</span>
+
+    <span class="n">obodag</span> <span class="o">=</span> <span class="n">GODag</span><span class="p">(</span><span class="n">GO_obo_file</span><span class="p">)</span>
+
+    <span class="n">_</span><span class="p">,</span> <span class="n">fin_gene2go</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">()</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fin_gene2go</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp_file</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">gene2GO_file</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">zip_file</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copyfileobj</span><span class="p">(</span><span class="n">zip_file</span><span class="p">,</span> <span class="n">tmp_file</span><span class="p">)</span>
+    <span class="n">objanno</span> <span class="o">=</span> <span class="n">Gene2GoReader</span><span class="p">(</span><span class="n">fin_gene2go</span><span class="p">,</span> <span class="n">taxids</span><span class="o">=</span><span class="p">[</span><span class="n">tax_id</span><span class="p">])</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fin_gene2go</span><span class="p">)</span>
+    <span class="n">ns2assoc</span> <span class="o">=</span> <span class="n">objanno</span><span class="o">.</span><span class="n">get_ns2assc</span><span class="p">()</span>
+
+    <span class="k">global</span> <span class="n">_symbol2geneID</span><span class="p">,</span> <span class="n">_goeaobj</span>
+    
+    <span class="n">_symbol2geneID</span> <span class="o">=</span> <span class="n">symbol2geneID</span>
+    <span class="n">_goeaobj</span> <span class="o">=</span> <span class="n">GOEnrichmentStudyNS</span><span class="p">(</span><span class="n">_symbol2geneID</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">ns2assoc</span><span class="p">,</span> <span class="n">obodag</span><span class="p">,</span> <span class="n">propagate_counts</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span> <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;fdr_bh&#39;</span><span class="p">])</span>
+    
+    <span class="k">return</span> <span class="n">_goeaobj</span><span class="p">,</span> <span class="n">_symbol2geneID</span></div>
+
+
+<div class="viewcode-block" id="run_goa_analysis">
+<a class="viewcode-back" href="../../../_autosummary/tacco.tools.run_goa_analysis.html#tacco.tools.run_goa_analysis">[docs]</a>
+<span class="k">def</span> <span class="nf">run_goa_analysis</span><span class="p">(</span>
+    <span class="n">genes</span><span class="p">,</span>
+    <span class="n">goeaobj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">symbol2geneID</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Run a GO analysis. This is a convenience wrapper around the goatools</span>
+<span class="sd">    package [Klopfenstein18]_ and like goatools performs the enrichment</span>
+<span class="sd">    analysis independent of the availability of webservices using a databases</span>
+<span class="sd">    downloaded once for reproducibility.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    genes</span>
+<span class="sd">        A single list of gene symbols or a dict-like of gene lists.</span>
+<span class="sd">    goeaobj</span>
+<span class="sd">        A :class:`~goatools.goea.go_enrichment_ns:GOEnrichmentStudyNS` like the</span>
+<span class="sd">        one returned by :func:`~tacco.tools.setup_goa_analysis`. If `None`, uses the</span>
+<span class="sd">        instance buffered by the last call to :func:`~tacco.tools.setup_goa_analysis`.</span>
+<span class="sd">    symbol2geneID</span>
+<span class="sd">        a :class:`~pandas.Series` mapping gene symbols to gene ids. If `None`,</span>
+<span class="sd">        uses the instance buffered by the last call to</span>
+<span class="sd">        :func:`~tacco.tools.setup_goa_analysis`.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Returns a :class:`~pandas.DataFrame` containing the result of the\</span>
+<span class="sd">    enrichment analysis.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_symbol2geneID</span><span class="p">,</span> <span class="n">_goeaobj</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">HAVE_GOA</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">&#39;To use the goatools wrapper, the goatools package must be installed!&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">symbol2geneID</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_symbol2geneID</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;&quot;goa.perform_goa_analysis&quot; was run before &quot;goa.setup_goa_analysis&quot;!&#39;</span><span class="p">)</span>
+        <span class="n">symbol2geneID</span> <span class="o">=</span> <span class="n">_symbol2geneID</span>
+    
+    <span class="k">if</span> <span class="n">goeaobj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_goeaobj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;&quot;goa.perform_goa_analysis&quot; was run before &quot;goa.setup_goa_analysis&quot;!&#39;</span><span class="p">)</span>
+        <span class="n">goeaobj</span> <span class="o">=</span> <span class="n">_goeaobj</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">genes</span><span class="p">,</span><span class="s1">&#39;items&#39;</span><span class="p">):</span>
+        <span class="n">genes</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;&#39;</span><span class="p">:</span><span class="n">genes</span><span class="p">}</span>
+
+    <span class="n">group_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">p_value_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">go_term_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">go_name_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">go_enrichment_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">go_ns_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">genes_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">ranked_genes</span> <span class="ow">in</span> <span class="n">genes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">ranked_genes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">ranked_genes</span><span class="p">)</span>
+        <span class="n">ranked_genes</span> <span class="o">=</span> <span class="n">ranked_genes</span><span class="p">[</span><span class="n">ranked_genes</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">symbol2geneID</span><span class="o">.</span><span class="n">index</span><span class="p">)]</span>
+        <span class="n">geneids_study</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ranked_genes</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">symbol2geneID</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span>
+        <span class="n">goea_results</span> <span class="o">=</span> <span class="n">goeaobj</span><span class="o">.</span><span class="n">run_study</span><span class="p">(</span><span class="n">geneids_study</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">goea_results</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">p_fdr_bh</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">:</span>
+                <span class="n">group_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+                <span class="n">p_value_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">p_fdr_bh</span><span class="p">)</span>
+                <span class="n">go_term_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">GO</span><span class="p">)</span>
+                <span class="n">go_name_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">go_enrichment_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;enriched&#39;</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">enrichment</span> <span class="o">==</span> <span class="s1">&#39;e&#39;</span> <span class="k">else</span> <span class="s1">&#39;purified&#39;</span><span class="p">)</span>
+                <span class="n">go_ns_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">goterm</span><span class="o">.</span><span class="n">namespace</span><span class="p">)</span>
+                <span class="n">genes_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">symbol2geneID</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">symbol2geneID</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">study_items</span><span class="p">)]))</span>
+    
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;group&#39;</span><span class="p">:</span><span class="n">group_list</span><span class="p">,</span><span class="s1">&#39;GO_namespace&#39;</span><span class="p">:</span><span class="n">go_ns_list</span><span class="p">,</span><span class="s1">&#39;p_value&#39;</span><span class="p">:</span><span class="n">p_value_list</span><span class="p">,</span><span class="s1">&#39;finding&#39;</span><span class="p">:</span><span class="n">go_enrichment_list</span><span class="p">,</span><span class="s1">&#39;GO_term&#39;</span><span class="p">:</span><span class="n">go_term_list</span><span class="p">,</span><span class="s1">&#39;GO_name&#39;</span><span class="p">:</span><span class="n">go_name_list</span><span class="p">,</span><span class="s1">&#39;genes&#39;</span><span class="p">:</span><span class="n">genes_list</span><span class="p">})</span></div>
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

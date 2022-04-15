@@ -1,0 +1,67 @@
+tacco.utils
+===========
+
+.. automodule:: tacco.utils
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      AnnData_query
+      anndata2dataframe
+      bin
+      cdist
+      col_scale
+      complete_choice
+      coo_tocsr_buffered
+      coo_tocsr_inplace
+      cpu_count
+      dataframe2anndata
+      dense_distance_matrix
+      divide
+      find_unused_key
+      fishers_exact
+      flat_inverse_mapping
+      gemmT
+      generate_mixture_profiles
+      get_average_profiles
+      get_balanced_separated_intervals
+      get_first_principal_axis
+      get_maximum_annotation
+      get_sum
+      hash
+      heapsort3
+      log
+      log1p
+      mannwhitneyu
+      merge_annotation
+      merge_colors
+      min_dtype
+      mode
+      parallel_nnls
+      preprocess_single_cell_data
+      projection
+      row_scale
+      scale_counts
+      solve_OT
+      sparse_distance_matrix
+      sparse_result_gemmT
+      spatial_split
+      split_spatial_samples
+      sqrt
+      studentttest
+      tsne_single_cell_data
+      umap_single_cell_data
+      welchttest
+      write_adata_x_var_obs
+   
+   
+   

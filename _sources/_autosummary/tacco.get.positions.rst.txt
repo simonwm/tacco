@@ -1,0 +1,6 @@
+tacco.get.positions
+===================
+
+.. currentmodule:: tacco.get
+
+.. autofunction:: positions

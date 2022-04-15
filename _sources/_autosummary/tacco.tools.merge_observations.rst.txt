@@ -1,0 +1,6 @@
+tacco.tools.merge\_observations
+===============================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: merge_observations

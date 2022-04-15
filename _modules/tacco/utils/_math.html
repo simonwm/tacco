@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.utils._math &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/tacco.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tacco.utils._math</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tacco.utils._math</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">issparse</span><span class="p">,</span> <span class="n">csr_matrix</span><span class="p">,</span> <span class="n">csc_matrix</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils.sparsefuncs</span> <span class="kn">import</span> <span class="n">inplace_column_scale</span><span class="p">,</span> <span class="n">inplace_row_scale</span>
+<span class="kn">import</span> <span class="nn">numba</span>
+<span class="kn">import</span> <span class="nn">mkl</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">njit</span><span class="p">,</span> <span class="n">prange</span>
+
+<span class="nd">@njit</span><span class="p">(</span><span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_divide_serial</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">out</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)):</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+<span class="nd">@njit</span><span class="p">(</span><span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_divide_parallel</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">out</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)):</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+<div class="viewcode-block" id="divide">
+<a class="viewcode-back" href="../../../_autosummary/tacco.utils.divide.html#tacco.utils.divide">[docs]</a>
+<span class="k">def</span> <span class="nf">divide</span><span class="p">(</span>
+    <span class="n">a</span><span class="p">,</span>
+    <span class="n">b</span><span class="p">,</span>
+    <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Calculates division `out = a / b`.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a</span>
+<span class="sd">        A :class:`~numpy.ndarray` with at least 1 dimension</span>
+<span class="sd">    b</span>
+<span class="sd">        A :class:`~numpy.ndarray` with at least 1 dimension of the same shape</span>
+<span class="sd">        as `a`</span>
+<span class="sd">    out</span>
+<span class="sd">        A :class:`~numpy.ndarray` with at least 1 dimension of the same shape</span>
+<span class="sd">        as `a`. If `None`, the result is returned.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    A :class:`~numpy.ndarray` containing the result.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+
+    <span class="k">assert</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="o">==</span><span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="o">==</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">parallel</span><span class="p">:</span>
+        <span class="n">_divide_parallel</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">out</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_divide_serial</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">out</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<span class="nd">@njit</span><span class="p">(</span><span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_sparse_result_gemmT</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">out_row</span><span class="p">,</span> <span class="n">out_col</span><span class="p">,</span> <span class="n">out_data</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">rc</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">out_row</span><span class="p">)):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">out_row</span><span class="p">[</span><span class="n">rc</span><span class="p">]</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">out_col</span><span class="p">[</span><span class="n">rc</span><span class="p">]</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">temp</span> <span class="o">+=</span> <span class="n">A</span><span class="p">[</span><span class="n">r</span><span class="p">,</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="n">B</span><span class="p">[</span><span class="n">c</span><span class="p">,</span><span class="n">k</span><span class="p">]</span>
+        <span class="n">out_data</span><span class="p">[</span><span class="n">rc</span><span class="p">]</span> <span class="o">+=</span> <span class="n">temp</span>
+<span class="nd">@njit</span><span class="p">(</span><span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_sparse_result_gemmT_serial</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">out_row</span><span class="p">,</span> <span class="n">out_col</span><span class="p">,</span> <span class="n">out_data</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">rc</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">out_row</span><span class="p">)):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">out_row</span><span class="p">[</span><span class="n">rc</span><span class="p">]</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">out_col</span><span class="p">[</span><span class="n">rc</span><span class="p">]</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">temp</span> <span class="o">+=</span> <span class="n">A</span><span class="p">[</span><span class="n">r</span><span class="p">,</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="n">B</span><span class="p">[</span><span class="n">c</span><span class="p">,</span><span class="n">k</span><span class="p">]</span>
+        <span class="n">out_data</span><span class="p">[</span><span class="n">rc</span><span class="p">]</span> <span class="o">+=</span> <span class="n">temp</span>
+
+<div class="viewcode-block" id="sparse_result_gemmT">
+<a class="viewcode-back" href="../../../_autosummary/tacco.utils.sparse_result_gemmT.html#tacco.utils.sparse_result_gemmT">[docs]</a>
+<span class="k">def</span> <span class="nf">sparse_result_gemmT</span><span class="p">(</span>
+    <span class="n">A</span><span class="p">,</span> 
+    <span class="n">B</span><span class="p">,</span>
+    <span class="n">sparse_out</span><span class="p">,</span>
+    <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">update_out</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Perform a dense matrix-matrix multiplication A @ B.T for the case when only</span>
+<span class="sd">    a sparse subset of the result is needed. Note that the second matrix is</span>
+<span class="sd">    transposed.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    A</span>
+<span class="sd">        A 2d numpy array..</span>
+<span class="sd">    B</span>
+<span class="sd">        A 2d numpy array with the same second dimension as `A`.</span>
+<span class="sd">    sparse_out</span>
+<span class="sd">        A `scipy.sparse` matrix to contain the result and to provide the</span>
+<span class="sd">        sparsity structure of the result.</span>
+<span class="sd">    parallel</span>
+<span class="sd">        Whether to work on multiple cores.</span>
+<span class="sd">    inplace</span>
+<span class="sd">        Whether to write the result directly into `sparse_out` or return a</span>
+<span class="sd">        copy. `inplace` is only possible if `sparse_out` is a</span>
+<span class="sd">        :class:`~scipy.sparse.coo_matrix`.</span>
+<span class="sd">    update_out</span>
+<span class="sd">        Whether to add the result to the existing values of `sparse_out` or to</span>
+<span class="sd">        overwrite them.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Returns the :class:`~scipy.sparse.coo_matrix` containing the result.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">result_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">inner_size</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`A` and `B` dont have the same second dimension! The shapes are </span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2">!&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">result_shape</span> <span class="o">!=</span> <span class="n">sparse_out</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The result shape implied by `A` and `B` </span><span class="si">%s</span><span class="s2"> dont fit to the one supplied in `sparse_out`! The corresponding shapes are </span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2">!&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">result_shape</span><span class="p">,</span> <span class="n">sparse_out</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    
+    <span class="n">_sparse_out</span> <span class="o">=</span> <span class="n">sparse_out</span><span class="o">.</span><span class="n">tocoo</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">inplace</span> <span class="ow">and</span> <span class="n">_sparse_out</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">sparse_out</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`inplace` is `True` but the supplied sparse result matrix is not a coo matrix!&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">inplace</span> <span class="ow">and</span> <span class="n">_sparse_out</span> <span class="ow">is</span> <span class="n">sparse_out</span><span class="p">:</span>
+        <span class="n">_sparse_out</span> <span class="o">=</span> <span class="n">_sparse_out</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">update_out</span><span class="p">:</span>
+        <span class="n">_sparse_out</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="k">if</span> <span class="n">parallel</span><span class="p">:</span>
+        <span class="n">_sparse_result_gemmT</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">_sparse_out</span><span class="o">.</span><span class="n">row</span><span class="p">,</span> <span class="n">_sparse_out</span><span class="o">.</span><span class="n">col</span><span class="p">,</span> <span class="n">_sparse_out</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_sparse_result_gemmT_serial</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">_sparse_out</span><span class="o">.</span><span class="n">row</span><span class="p">,</span> <span class="n">_sparse_out</span><span class="o">.</span><span class="n">col</span><span class="p">,</span> <span class="n">_sparse_out</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">_sparse_out</span></div>
+
+    
+<span class="nd">@njit</span><span class="p">(</span><span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_csrcsr_gemm_dense</span><span class="p">(</span><span class="n">n_row</span><span class="p">,</span> <span class="n">n_col</span><span class="p">,</span> <span class="n">Ap</span><span class="p">,</span> <span class="n">Aj</span><span class="p">,</span> <span class="n">Ax</span><span class="p">,</span> <span class="n">Bp</span><span class="p">,</span> <span class="n">Bj</span><span class="p">,</span> <span class="n">Bx</span><span class="p">):</span>
+    
+    <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_row</span><span class="p">,</span><span class="n">n_col</span><span class="p">))</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="n">n_row</span><span class="p">):</span>
+        <span class="n">jj_start</span> <span class="o">=</span> <span class="n">Ap</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+        <span class="n">jj_end</span>   <span class="o">=</span> <span class="n">Ap</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>
+        <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">jj_start</span><span class="p">,</span> <span class="n">jj_end</span><span class="p">):</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">Aj</span><span class="p">[</span><span class="n">jj</span><span class="p">];</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">Ax</span><span class="p">[</span><span class="n">jj</span><span class="p">];</span>
+
+            <span class="n">kk_start</span> <span class="o">=</span> <span class="n">Bp</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+            <span class="n">kk_end</span>   <span class="o">=</span> <span class="n">Bp</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>
+            <span class="k">for</span> <span class="n">kk</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">kk_start</span><span class="p">,</span> <span class="n">kk_end</span><span class="p">):</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="n">Bj</span><span class="p">[</span><span class="n">kk</span><span class="p">];</span>
+
+                <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">v</span><span class="o">*</span><span class="n">Bx</span><span class="p">[</span><span class="n">kk</span><span class="p">];</span>
+                
+    <span class="k">return</span> <span class="n">C</span>
+
+<span class="nd">@njit</span><span class="p">(</span><span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_densecsr_gemm_dense</span><span class="p">(</span><span class="n">n_row</span><span class="p">,</span> <span class="n">n_col</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">Bp</span><span class="p">,</span> <span class="n">Bj</span><span class="p">,</span> <span class="n">Bx</span><span class="p">):</span>
+    
+    <span class="n">nk</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_row</span><span class="p">,</span><span class="n">n_col</span><span class="p">))</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="n">n_row</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nk</span><span class="p">):</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">];</span>
+
+            <span class="n">kk_start</span> <span class="o">=</span> <span class="n">Bp</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+            <span class="n">kk_end</span>   <span class="o">=</span> <span class="n">Bp</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>
+            <span class="k">for</span> <span class="n">kk</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">kk_start</span><span class="p">,</span> <span class="n">kk_end</span><span class="p">):</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="n">Bj</span><span class="p">[</span><span class="n">kk</span><span class="p">];</span>
+
+                <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">v</span><span class="o">*</span><span class="n">Bx</span><span class="p">[</span><span class="n">kk</span><span class="p">];</span>
+                
+    <span class="k">return</span> <span class="n">C</span>
+
+<span class="nd">@njit</span><span class="p">(</span><span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_cscdense_gemm_dense</span><span class="p">(</span><span class="n">n_row</span><span class="p">,</span> <span class="n">n_col</span><span class="p">,</span> <span class="n">Ap</span><span class="p">,</span> <span class="n">Ai</span><span class="p">,</span> <span class="n">Ax</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+    
+    <span class="n">nk</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_col</span><span class="p">,</span><span class="n">n_row</span><span class="p">))</span>
+    
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="n">n_col</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nk</span><span class="p">):</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">B</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
+            
+            <span class="n">ii_start</span> <span class="o">=</span> <span class="n">Ap</span><span class="p">[</span><span class="n">k</span><span class="p">];</span>
+            <span class="n">ii_end</span>   <span class="o">=</span> <span class="n">Ap</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>
+            <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ii_start</span><span class="p">,</span> <span class="n">ii_end</span><span class="p">):</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">Ai</span><span class="p">[</span><span class="n">ii</span><span class="p">];</span>
+
+                <span class="n">C</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">v</span><span class="o">*</span><span class="n">Ax</span><span class="p">[</span><span class="n">ii</span><span class="p">];</span>
+                
+    <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">T</span>
+
+<span class="k">def</span> <span class="nf">cast_down_common</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_float_dtype</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_float_dtype</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">B</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">A</span><span class="p">,</span><span class="n">B</span>
+    <span class="k">elif</span> <span class="n">A</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span> <span class="ow">and</span> <span class="n">B</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">A</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">B</span>
+    <span class="k">elif</span> <span class="n">A</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span> <span class="ow">and</span> <span class="n">B</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">A</span><span class="p">,</span><span class="n">B</span>
+        
+<div class="viewcode-block" id="gemmT">
+<a class="viewcode-back" href="../../../_autosummary/tacco.utils.gemmT.html#tacco.utils.gemmT">[docs]</a>
+<span class="k">def</span> <span class="nf">gemmT</span><span class="p">(</span>
+    <span class="n">A</span><span class="p">,</span>
+    <span class="n">B</span><span class="p">,</span>
+    <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">sparse_result</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Perform a matrix-matrix multiplication A @ B.T for arbitrary sparseness of</span>
+<span class="sd">    A and B in parallel. Uses `sparse_dot_mkl` if available.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    A</span>
+<span class="sd">        A 2d :class:`~numpy.ndarray` or a `scipy` sparse matrix.</span>
+<span class="sd">    B</span>
+<span class="sd">        A 2d :class:`~numpy.ndarray` or a `scipy` sparse matrix with the same</span>
+<span class="sd">        second dimension as `A`.</span>
+<span class="sd">    parallel</span>
+<span class="sd">        Whether to run the multiplication in parallel.</span>
+<span class="sd">    sparse_result</span>
+<span class="sd">        Whether to return a sparse result when both inputs are sparse</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Depending on `sparse_result` returns either a :class:`~numpy.ndarray` or a\</span>
+<span class="sd">    scipy sparse matrix containing the result.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">issparse</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`A` can only be a scipy sparse matrix or a numpy array!&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">issparse</span><span class="p">(</span><span class="n">B</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`B` can only be a scipy sparse matrix or a numpy array!&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="p">(</span><span class="n">csr_matrix</span><span class="p">,</span> <span class="n">csc_matrix</span><span class="p">)):</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">B</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="p">(</span><span class="n">csr_matrix</span><span class="p">,</span> <span class="n">csc_matrix</span><span class="p">)):</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+    
+    <span class="n">A</span><span class="p">,</span><span class="n">B</span> <span class="o">=</span> <span class="n">cast_down_common</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">)</span>
+    
+    <span class="n">numba_threads</span> <span class="o">=</span> <span class="n">numba</span><span class="o">.</span><span class="n">get_num_threads</span><span class="p">()</span>
+    <span class="n">mkl_threads</span> <span class="o">=</span> <span class="n">mkl</span><span class="o">.</span><span class="n">get_max_threads</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">parallel</span><span class="p">:</span>
+        <span class="n">numba</span><span class="o">.</span><span class="n">set_num_threads</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">mkl</span><span class="o">.</span><span class="n">set_num_threads</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="n">result_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">inner_size</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`A` and `B` dont have the same second dimension! The shapes are </span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2">!&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    
+    <span class="k">try</span><span class="p">:</span> <span class="c1"># if mkl is available, use it.</span>
+        <span class="kn">import</span> <span class="nn">sparse_dot_mkl</span>
+        <span class="k">return</span> <span class="n">sparse_dot_mkl</span><span class="o">.</span><span class="n">dot_product_mkl</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">dense</span><span class="o">=</span><span class="p">(</span><span class="ow">not</span> <span class="n">sparse_result</span><span class="p">));</span>
+    
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span> <span class="c1"># use custom numba implementation</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;sparse_dot_mkl is not found, so a (slower) fallback is used.&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="ow">and</span> <span class="n">issparse</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">sparse_result</span><span class="p">:</span>
+                <span class="n">A</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+                <span class="n">BT</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">tocsc</span><span class="p">()</span> <span class="c1"># avoids intermediate during transposition: .tocsc() == .T.tocsr()</span>
+                <span class="k">return</span> <span class="n">_csrcsr_gemm_dense</span><span class="p">(</span><span class="n">result_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">result_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">A</span><span class="o">.</span><span class="n">indptr</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">BT</span><span class="o">.</span><span class="n">indptr</span><span class="p">,</span> <span class="n">BT</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">BT</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">A</span><span class="o">@</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">issparse</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">issparse</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+            <span class="n">A</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">tocsc</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">_cscdense_gemm_dense</span><span class="p">(</span><span class="n">result_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">result_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">A</span><span class="o">.</span><span class="n">indptr</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">issparse</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="ow">and</span> <span class="n">issparse</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+            <span class="n">BT</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">tocsc</span><span class="p">()</span> <span class="c1"># avoids intermediate during transposition: .tocsc() == .T.tocsr()</span>
+            <span class="k">return</span> <span class="n">_densecsr_gemm_dense</span><span class="p">(</span><span class="n">result_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">result_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">A</span><span class="p">,</span> <span class="n">BT</span><span class="o">.</span><span class="n">indptr</span><span class="p">,</span> <span class="n">BT</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">BT</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">A</span><span class="o">@</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">parallel</span><span class="p">:</span>
+        <span class="n">numba</span><span class="o">.</span><span class="n">set_num_threads</span><span class="p">(</span><span class="n">numba_threads</span><span class="p">)</span>
+        <span class="n">mkl</span><span class="o">.</span><span class="n">set_num_threads</span><span class="p">(</span><span class="n">mkl_threads</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="row_scale">
+<a class="viewcode-back" href="../../../_autosummary/tacco.utils.row_scale.html#tacco.utils.row_scale">[docs]</a>
+<span class="k">def</span> <span class="nf">row_scale</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">,</span>
+    <span class="n">rescaling_factors</span><span class="p">,</span>
+    <span class="nb">round</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Rescales rows of dense or sparse matrix inplace.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X</span>
+<span class="sd">        A 2d :class:`~numpy.ndarray` array or a `scipy` sparse matrix.</span>
+<span class="sd">    rescaling_factors</span>
+<span class="sd">        A 1d :class:`~numpy.ndarray` containing the row-wise rescaling factors.</span>
+<span class="sd">    round</span>
+<span class="sd">        Whether to round the result to integer values</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    `None`. This is an inplace operation.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">rescaling_factors</span><span class="p">,</span> <span class="s1">&#39;to_numpy&#39;</span><span class="p">):</span>
+        <span class="n">rescaling_factors</span> <span class="o">=</span> <span class="n">rescaling_factors</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="n">rescaling_factors</span> <span class="o">=</span> <span class="n">rescaling_factors</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+        <span class="n">inplace_row_scale</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">rescaling_factors</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">round</span><span class="p">:</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">X</span> <span class="o">*=</span> <span class="n">rescaling_factors</span><span class="p">[:,</span><span class="kc">None</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">round</span><span class="p">:</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">X</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="col_scale">
+<a class="viewcode-back" href="../../../_autosummary/tacco.utils.col_scale.html#tacco.utils.col_scale">[docs]</a>
+<span class="k">def</span> <span class="nf">col_scale</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">,</span>
+    <span class="n">rescaling_factors</span><span class="p">,</span>
+    <span class="nb">round</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Rescales columns of dense or sparse matrix inplace.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X</span>
+<span class="sd">        A 2d :class:`~numpy.ndarray` array or a `scipy` sparse matrix.</span>
+<span class="sd">    rescaling_factors</span>
+<span class="sd">        A 1d :class:`~numpy.ndarray` containing the column-wise rescaling</span>
+<span class="sd">        factors.</span>
+<span class="sd">    round</span>
+<span class="sd">        Whether to round the result to integer values</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    `None`. This is an inplace operation.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">issparse</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;`X` must be a numpy array or a scipy sparse matrix!&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">rescaling_factors</span><span class="p">,</span> <span class="s1">&#39;to_numpy&#39;</span><span class="p">):</span>
+        <span class="n">rescaling_factors</span> <span class="o">=</span> <span class="n">rescaling_factors</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="n">rescaling_factors</span> <span class="o">=</span> <span class="n">rescaling_factors</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+        <span class="n">inplace_column_scale</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">rescaling_factors</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">round</span><span class="p">:</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">X</span> <span class="o">*=</span> <span class="n">rescaling_factors</span>
+        <span class="k">if</span> <span class="nb">round</span><span class="p">:</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">X</span><span class="p">)</span></div>
+
+
+<span class="nd">@njit</span><span class="p">(</span><span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_log1p</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)):</span>
+        <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+<div class="viewcode-block" id="log1p">
+<a class="viewcode-back" href="../../../_autosummary/tacco.utils.log1p.html#tacco.utils.log1p">[docs]</a>
+<span class="k">def</span> <span class="nf">log1p</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">,</span>
+<span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Calculates log1p inplace and in parallel.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X</span>
+<span class="sd">        A :class:`~numpy.ndarray` with more than 1 dimension, a `scipy` sparse</span>
+<span class="sd">        matrix, or something which has an attribute `.X` which fits this</span>
+<span class="sd">        description, e.g. an :class:`~anndata.AnnData`</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    `None`. This is an inplace operation.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">):</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">X</span>
+
+    <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+        <span class="n">_log1p</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_log1p</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></div>
+
+
+<span class="nd">@njit</span><span class="p">(</span><span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_log</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)):</span>
+        <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+<div class="viewcode-block" id="log">
+<a class="viewcode-back" href="../../../_autosummary/tacco.utils.log.html#tacco.utils.log">[docs]</a>
+<span class="k">def</span> <span class="nf">log</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">,</span>
+<span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Calculates log inplace and in parallel.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X</span>
+<span class="sd">        A :class:`~numpy.ndarray` with more than 1 dimension, a `scipy` sparse</span>
+<span class="sd">        matrix, or something which has an attribute `.X` which fits this</span>
+<span class="sd">        description, e.g. an :class:`~anndata.AnnData`</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    `None`. This is an inplace operation.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">):</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">X</span>
+
+    <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+        <span class="n">_log</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_log</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></div>
+
+
+<span class="nd">@njit</span><span class="p">(</span><span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)):</span>
+        <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+<div class="viewcode-block" id="sqrt">
+<a class="viewcode-back" href="../../../_autosummary/tacco.utils.sqrt.html#tacco.utils.sqrt">[docs]</a>
+<span class="k">def</span> <span class="nf">sqrt</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">,</span>
+<span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Calculates sqrt inplace and in parallel.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X</span>
+<span class="sd">        A :class:`~numpy.ndarray` with more than 1 dimension, a `scipy` sparse</span>
+<span class="sd">        matrix, or something which has an attribute `.X` which fits this</span>
+<span class="sd">        description, e.g. an :class:`~anndata.AnnData`</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    `None`. This is an inplace operation.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">):</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">X</span>
+
+    <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+        <span class="n">_sqrt</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_sqrt</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></div>
+
+    
+<span class="k">def</span> <span class="nf">integrate_mean</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+    <span class="c1"># using trapezoidal rule</span>
+    <span class="n">heights</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">y</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">widths</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">ranges</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">means</span> <span class="o">=</span> <span class="p">(</span><span class="n">heights</span> <span class="o">*</span> <span class="n">widths</span><span class="p">)</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span> <span class="o">/</span> <span class="n">ranges</span>
+    <span class="c1"># prepend start value to get same length result</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([[</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span><span class="n">means</span><span class="p">])</span>
+
+<div class="viewcode-block" id="get_sum">
+<a class="viewcode-back" href="../../../_autosummary/tacco.utils.get_sum.html#tacco.utils.get_sum">[docs]</a>
+<span class="k">def</span> <span class="nf">get_sum</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">,</span>
+    <span class="n">axis</span><span class="p">,</span>
+    <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Calculates the sum of a sparse matrix or array-like in a specified axis and</span>
+<span class="sd">    returns a flattened result.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X</span>
+<span class="sd">        A 2d :class:`~numpy.ndarray` or a `scipy` sparse matrix.</span>
+<span class="sd">    axis</span>
+<span class="sd">        The axis along which to calculate the sum</span>
+<span class="sd">    dtype</span>
+<span class="sd">        The dtype used in the accumulators and the result.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    The flattened sums as 1d :class:`~numpy.ndarray`.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">A</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    
+    <span class="kn">import</span> <span class="nn">anndata._core.views</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">anndata</span><span class="o">.</span><span class="n">_core</span><span class="o">.</span><span class="n">views</span><span class="o">.</span><span class="n">ArrayView</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+    
+    <span class="k">return</span> <span class="n">result</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+tacco.preprocessing.apply\_random\_platform\_effect
+===================================================
+
+.. currentmodule:: tacco.preprocessing
+
+.. autofunction:: apply_random_platform_effect

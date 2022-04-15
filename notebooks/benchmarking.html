@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Benchmarking runtime and memory of annotation methods &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Co-occurrence computations" href="cooccurrence.html" />
+    <link rel="prev" title="Examples" href="../examples.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../examples.html">Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Benchmarking runtime and memory of annotation methods</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Plotting-setup">Plotting setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Cross-method-comparison">Cross method comparison</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Load-results">Load results</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Plot-results">Plot results</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Cross-parameter-comparison">Cross parameter comparison</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id1">Load results</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Plot results</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cooccurrence.html">Co-occurrence computations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="insilico_mouse_colon.html">In-silico mixed Mouse Colon scRNA-seq data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mapping_single_cells_into_space.html">Mapping single cells into space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_splitting.html">Object splitting for in-silico mixed scRNA-seq data and Slide-Seq data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="osmFISH_single_molecule_annotation.html">Single molecule data: osmFISH mouse somato-sensory cortex</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview.html">TACCO overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameter_variations.html">Parameter Variations for annotation using Optimal Transport</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulated_ambient.html">Simulated single cell expression data with ambient contamination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulated_dropout.html">Simulated single cell expression data with dropout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="single_cell_differentiation.html">Single-cell differentiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slideseq_mouse_colon.html">Slide-Seq Mouse Colon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slideseq_mouse_olfactory_bulb.html">Slide-Seq Mouse Olfactory Bulb - multiple pucks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slideseq_mouse_olfactory_bulb_single.html">Slide-Seq Mouse Olfactory Bulb - single puck</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visium_mouse_kidney.html">Visium Mouse Kidney</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../_autosummary/tacco.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../examples.html">Examples</a></li>
+      <li class="breadcrumb-item active">Benchmarking runtime and memory of annotation methods</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Benchmarking-runtime-and-memory-of-annotation-methods">
+<h1>Benchmarking runtime and memory of annotation methods<a class="headerlink" href="#Benchmarking-runtime-and-memory-of-annotation-methods" title="Link to this heading">¶</a></h1>
+<p>This example benrchmarks runtime and memory requirements for annotating different datasets with different methods. The datasets are are taken from (Weinreb et al.) and (Avraham-Davidi et al.) or simulated using (Moriel) and (Kotliar).</p>
+<p>(Weinreb et al.): Weinreb C, Rodriguez-Fraticelli A, Camargo FD, Klein AM. Lineage tracing on transcriptional landscapes links state to fate during differentiation. Science. 2020 Feb 14;367(6479):eaaw3381. doi: 10.1126/science.aaw3381. Epub 2020 Jan 23. PMID: 31974159; PMCID: PMC7608074.</p>
+<p>(Avraham-Davidi et al.): Avraham-Davidi I, Mages S, Klughammer J, et al. Integrative single cell and spatial transcriptomics of colorectal cancer reveals multicellular functional units that support tumor progression. doi: <a class="reference external" href="https://doi.org/10.1101/2022.10.02.508492">https://doi.org/10.1101/2022.10.02.508492</a></p>
+<p>(Moriel): Moriel, N. Extension of scsim single-cell RNA-sequencing data simulations. github.com/nitzanlab/scsim-ext (2023)</p>
+<p>(Kotliar): Kotliar, D. scsim: simulate single-cell RNA-SEQ data using the Splatter statistical framework but implemented in python. github.com/dylkot/scsim (2021)</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">tacco</span> <span class="k">as</span> <span class="nn">tc</span>
+
+<span class="c1"># The notebook expects to be executed either in the workflow directory or in the repository root folder...</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s1">&#39;workflow&#39;</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s1">&#39;workflow/common_code.py&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;..&#39;</span><span class="p">))</span>
+<span class="kn">import</span> <span class="nn">common_code</span>
+</pre></div>
+</div>
+</div>
+<section id="Plotting-setup">
+<h2>Plotting setup<a class="headerlink" href="#Plotting-setup" title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">axsize</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span><span class="o">*</span><span class="mf">0.5</span>
+
+<span class="k">def</span> <span class="nf">plot_benchmark_results</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">purpose</span><span class="p">):</span>
+
+    <span class="n">res</span><span class="p">[</span><span class="s1">&#39;dataset&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;dataset&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">CategoricalDtype</span><span class="p">([</span><span class="s1">&#39;Mixture&#39;</span><span class="p">,</span><span class="s1">&#39;Dropout&#39;</span><span class="p">,</span><span class="s1">&#39;Differentiation&#39;</span><span class="p">],</span> <span class="n">ordered</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s1">&#39;dataset&#39;</span><span class="p">,</span><span class="s1">&#39;Ndat&#39;</span><span class="p">])</span>
+
+    <span class="n">res</span><span class="p">[</span><span class="s1">&#39;time (s)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;annotation_time_s&#39;</span><span class="p">]</span>
+    <span class="n">res</span><span class="p">[</span><span class="s1">&#39;memory (GB)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;max_mem_usage_GB&#39;</span><span class="p">]</span>
+    <span class="n">res</span><span class="p">[</span><span class="s1">&#39;L2 error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;L2&#39;</span><span class="p">]</span>
+
+    <span class="n">methods</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+    <span class="n">n_dnames</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;dataset&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+
+    <span class="n">quantities</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;time (s)&#39;</span><span class="p">,</span><span class="s1">&#39;memory (GB)&#39;</span><span class="p">,</span><span class="s1">&#39;L2 error&#39;</span><span class="p">]</span>
+    <span class="n">fig</span><span class="p">,</span><span class="n">axs</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">n_dnames</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">quantities</span><span class="p">),</span> <span class="n">axsize</span><span class="o">=</span><span class="n">axsize</span><span class="p">,</span> <span class="n">x_padding</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">y_padding</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">colors</span> <span class="o">=</span> <span class="p">{</span><span class="n">m</span><span class="p">:</span><span class="n">common_code</span><span class="o">.</span><span class="n">method_color</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">}</span>
+    <span class="n">styles</span> <span class="o">=</span> <span class="p">{</span><span class="n">m</span><span class="p">:</span><span class="n">common_code</span><span class="o">.</span><span class="n">method_style</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">jx_ax</span><span class="p">,</span> <span class="p">(</span><span class="n">dname</span><span class="p">,</span> <span class="n">res1</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;dataset&#39;</span><span class="p">)):</span>
+        <span class="n">res1</span> <span class="o">=</span> <span class="n">res1</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">res1</span><span class="p">[</span><span class="n">quantities</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">iy_ax</span><span class="p">,</span> <span class="n">qty</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">quantities</span><span class="p">):</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">axs</span><span class="p">[</span><span class="n">iy_ax</span><span class="p">,</span><span class="n">jx_ax</span><span class="p">]</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="n">res1</span><span class="p">[</span><span class="s1">&#39;Ndat&#39;</span><span class="p">]</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">res1</span><span class="p">[</span><span class="n">qty</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">qty</span> <span class="o">==</span> <span class="s1">&#39;time (s)&#39;</span><span class="p">:</span> <span class="c1"># part 1 of adding second, minute and hour marker: plot the lines under the data</span>
+
+                <span class="n">ynew</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">60</span><span class="p">,</span><span class="mi">600</span><span class="p">,</span><span class="mi">3600</span><span class="p">,</span><span class="mi">36000</span><span class="p">])</span>
+                <span class="n">ynew_minor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">0.1</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">60</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span><span class="mi">600</span><span class="p">,</span><span class="mi">60</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span><span class="mi">3600</span><span class="p">,</span><span class="mi">600</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">3600</span><span class="p">,</span><span class="mi">36000</span><span class="p">,</span><span class="mi">3600</span><span class="p">)])</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+                <span class="n">ynewlabels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;0.1s&#39;</span><span class="p">,</span><span class="s1">&#39;1s&#39;</span><span class="p">,</span><span class="s1">&#39;10s&#39;</span><span class="p">,</span><span class="s1">&#39;1min&#39;</span><span class="p">,</span><span class="s1">&#39;10min&#39;</span><span class="p">,</span><span class="s1">&#39;1h&#39;</span><span class="p">,</span><span class="s1">&#39;10h&#39;</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">purpose</span> <span class="o">==</span> <span class="s1">&#39;cross_methods&#39;</span><span class="p">:</span>
+                    <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">44000</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3600</span>
+                <span class="n">ynewlabels</span> <span class="o">=</span> <span class="n">ynewlabels</span><span class="p">[(</span><span class="n">ynew</span> <span class="o">&gt;</span> <span class="n">ymin</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">ynew</span> <span class="o">&lt;</span> <span class="n">ymax</span><span class="p">)]</span>
+                <span class="n">ynew</span> <span class="o">=</span> <span class="n">ynew</span><span class="p">[(</span><span class="n">ynew</span> <span class="o">&gt;</span> <span class="n">ymin</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">ynew</span> <span class="o">&lt;</span> <span class="n">ymax</span><span class="p">)]</span>
+                <span class="n">ynew_minor</span> <span class="o">=</span> <span class="n">ynew_minor</span><span class="p">[(</span><span class="n">ynew_minor</span> <span class="o">&gt;</span> <span class="n">ymin</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">ynew_minor</span> <span class="o">&lt;</span> <span class="n">ymax</span><span class="p">)]</span>
+                <span class="k">for</span> <span class="n">yn</span> <span class="ow">in</span> <span class="n">ynew</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">yn</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">qty</span> <span class="o">==</span> <span class="s1">&#39;memory (GB)&#39;</span><span class="p">:</span>
+
+                <span class="n">ynew</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.4</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">40</span><span class="p">,</span><span class="mi">100</span><span class="p">])</span>
+                <span class="n">ynew_minor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">0.1</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="mi">1000</span><span class="p">,</span><span class="mi">100</span><span class="p">)])</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+                <span class="n">ynewlabels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;0.1GB&#39;</span><span class="p">,</span><span class="s1">&#39;0.4GB&#39;</span><span class="p">,</span><span class="s1">&#39;1GB&#39;</span><span class="p">,</span><span class="s1">&#39;4GB&#39;</span><span class="p">,</span><span class="s1">&#39;10GB&#39;</span><span class="p">,</span><span class="s1">&#39;40GB&#39;</span><span class="p">,</span><span class="s1">&#39;100GB&#39;</span><span class="p">])</span>
+                <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mi">101</span>
+                <span class="n">ynewlabels</span> <span class="o">=</span> <span class="n">ynewlabels</span><span class="p">[(</span><span class="n">ynew</span> <span class="o">&gt;</span> <span class="n">ymin</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">ynew</span> <span class="o">&lt;</span> <span class="n">ymax</span><span class="p">)]</span>
+                <span class="n">ynew</span> <span class="o">=</span> <span class="n">ynew</span><span class="p">[(</span><span class="n">ynew</span> <span class="o">&gt;</span> <span class="n">ymin</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">ynew</span> <span class="o">&lt;</span> <span class="n">ymax</span><span class="p">)]</span>
+                <span class="n">ynew_minor</span> <span class="o">=</span> <span class="n">ynew_minor</span><span class="p">[(</span><span class="n">ynew_minor</span> <span class="o">&gt;</span> <span class="n">ymin</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">ynew_minor</span> <span class="o">&lt;</span> <span class="n">ymax</span><span class="p">)]</span>
+                <span class="k">for</span> <span class="n">yn</span> <span class="ow">in</span> <span class="n">ynew</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">yn</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">:</span>
+                <span class="n">selector</span> <span class="o">=</span> <span class="n">res1</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">m</span>
+                <span class="k">if</span> <span class="n">selector</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">zorder_args</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">if</span> <span class="n">purpose</span> <span class="o">!=</span> <span class="s1">&#39;cross_methods&#39;</span> <span class="ow">and</span> <span class="n">m</span> <span class="o">==</span> <span class="s1">&#39;TACCO&#39;</span><span class="p">:</span>
+                    <span class="n">zorder_args</span><span class="p">[</span><span class="s1">&#39;zorder&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.5</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">selector</span><span class="p">],</span><span class="n">y</span><span class="p">[</span><span class="n">selector</span><span class="p">],</span><span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">m</span><span class="p">],</span><span class="n">ls</span><span class="o">=</span><span class="n">styles</span><span class="p">[</span><span class="n">m</span><span class="p">],</span><span class="n">label</span><span class="o">=</span><span class="n">m</span><span class="p">,</span> <span class="o">**</span><span class="n">zorder_args</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">iy_ax</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">dname</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">iy_ax</span> <span class="o">==</span> <span class="n">axs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;number of observations&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">jx_ax</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">qty</span> <span class="o">==</span> <span class="s1">&#39;time (s)&#39;</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;runtime&#39;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">qty</span> <span class="o">==</span> <span class="s1">&#39;memory (GB)&#39;</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;memory&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">qty</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">qty</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;time (s)&#39;</span><span class="p">,</span><span class="s1">&#39;memory (GB)&#39;</span><span class="p">]:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">qty</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;time (s)&#39;</span><span class="p">,</span><span class="s1">&#39;memory (GB)&#39;</span><span class="p">]:</span> <span class="c1"># part 2 off adding second, minute and hour marker: add the second y axis after rescaling the first y axis to log scale</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">ynew_minor</span><span class="p">,</span><span class="n">minor</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">ynew</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="n">ynewlabels</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">([],</span><span class="n">minor</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">((</span><span class="n">ymin</span><span class="p">,</span><span class="n">ymax</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">iy_ax</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">jx_ax</span> <span class="o">==</span> <span class="n">axs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">ncol</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Cross-method-comparison">
+<h2>Cross method comparison<a class="headerlink" href="#Cross-method-comparison" title="Link to this heading">¶</a></h2>
+<section id="Load-results">
+<h3>Load results<a class="headerlink" href="#Load-results" title="Link to this heading">¶</a></h3>
+<p>Running all the methods on all datasets across all problem sizes takes quit a while and is therefore outsourced to the Snakemake workflow.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">results_path</span> <span class="o">=</span> <span class="n">common_code</span><span class="o">.</span><span class="n">find_path</span><span class="p">(</span><span class="s1">&#39;results/benchmarking&#39;</span><span class="p">)</span>
+<span class="n">cross_method_results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">results_path</span><span class="si">}</span><span class="s1">/cross_methods.csv&#39;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Plot-results">
+<h3>Plot results<a class="headerlink" href="#Plot-results" title="Link to this heading">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_benchmark_results</span><span class="p">(</span><span class="n">cross_method_results</span><span class="p">,</span> <span class="n">purpose</span><span class="o">=</span><span class="s1">&#39;cross_methods&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_benchmarking_10_0.png" src="../_images/notebooks_benchmarking_10_0.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="Cross-parameter-comparison">
+<h2>Cross parameter comparison<a class="headerlink" href="#Cross-parameter-comparison" title="Link to this heading">¶</a></h2>
+<section id="id1">
+<h3>Load results<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<p>Running all parameter variations on all datasets across all problem sizes takes quit a while and is therefore outsourced to the Snakemake workflow.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">results_path</span> <span class="o">=</span> <span class="n">common_code</span><span class="o">.</span><span class="n">find_path</span><span class="p">(</span><span class="s1">&#39;results/benchmarking&#39;</span><span class="p">)</span>
+<span class="n">cross_params_results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">results_path</span><span class="si">}</span><span class="s1">/cross_params.csv&#39;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="id2">
+<h3>Plot results<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_benchmark_results</span><span class="p">(</span><span class="n">cross_params_results</span><span class="p">,</span> <span class="n">purpose</span><span class="o">=</span><span class="s1">&#39;cross_params&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_benchmarking_16_0.png" src="../_images/notebooks_benchmarking_16_0.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../examples.html" class="btn btn-neutral float-left" title="Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cooccurrence.html" class="btn btn-neutral float-right" title="Co-occurrence computations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

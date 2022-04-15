@@ -1,0 +1,6 @@
+tacco.tools.annotate\_novosparc
+===============================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: annotate_novosparc

@@ -1,0 +1,6 @@
+tacco.utils.studentttest
+========================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: studentttest

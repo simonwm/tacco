@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.tools._find_regions &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/tacco.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tacco.tools._find_regions</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tacco.tools._find_regions</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">njit</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">get</span>
+
+<span class="k">def</span> <span class="nf">_find_neighbours</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">key_added</span><span class="p">,</span> <span class="n">amplitudes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Runs sc.pp.neighbours and handles pd.DataFrames correctly... TODO: Should probably fix that in scanpy. &quot;&quot;&quot;</span>
+    <span class="n">_annotation_key</span> <span class="o">=</span> <span class="n">annotation_key</span>
+    <span class="k">if</span> <span class="n">annotation_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+        <span class="n">_annotation_key</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">find_unused_key</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">)</span>
+        <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">_annotation_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">amplitudes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">annotation_key</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">_annotation_key</span> <span class="o">==</span> <span class="n">annotation_key</span><span class="p">:</span>
+            <span class="n">_annotation_key</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">find_unused_key</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">annotation_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">_annotation_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">X</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">_annotation_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span>
+        <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">_annotation_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">_annotation_key</span><span class="p">]</span> <span class="o">/</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_sum</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">_annotation_key</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span><span class="kc">None</span><span class="p">])</span>
+    <span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">use_rep</span><span class="o">=</span><span class="n">_annotation_key</span><span class="p">,</span> <span class="n">key_added</span><span class="o">=</span><span class="n">key_added</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">_annotation_key</span> <span class="o">!=</span> <span class="n">annotation_key</span><span class="p">:</span>
+        <span class="k">del</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">_annotation_key</span><span class="p">]</span>
+
+<div class="viewcode-block" id="find_regions">
+<a class="viewcode-back" href="../../../_autosummary/tacco.tools.find_regions.html#tacco.tools.find_regions">[docs]</a>
+<span class="k">def</span> <span class="nf">find_regions</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">,</span>
+    <span class="n">key_added</span><span class="o">=</span><span class="s1">&#39;region&#39;</span><span class="p">,</span>
+    <span class="n">batch_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">position_weight</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span>
+    <span class="n">resolution</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">annotation_connectivity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">annotation_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">position_connectivity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">position_key</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">),</span>
+    <span class="n">batch_position_distance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">amplitudes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">cross_batch_overweight_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kw_args</span><span class="p">,</span>
+    <span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Find regions in position space defined by proximity in position space and</span>
+<span class="sd">    in expression (or annotation) space.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adata</span>
+<span class="sd">        An :class:`~anndata.AnnData` including expression data in `.X` and</span>
+<span class="sd">        profiles in `.varm` and/or annotation in `.obs` or `.obsm`.</span>
+<span class="sd">    key_added</span>
+<span class="sd">        The `.obs` key where the resulting regions are written to. It is also</span>
+<span class="sd">        used to determine where new neighbour and connectivity results should</span>
+<span class="sd">        be written to, see parameters `connectivity` and</span>
+<span class="sd">        `position_connectivity`.</span>
+<span class="sd">    batch_key</span>
+<span class="sd">        The `.obs` key with categorical batch information. The expression</span>
+<span class="sd">        connectivity is then balanced within and between batches. If `None`, a</span>
+<span class="sd">        single batch is assumed.</span>
+<span class="sd">    position_weight</span>
+<span class="sd">        The weight of the position connectivity compared to the expression</span>
+<span class="sd">        connectivity.</span>
+<span class="sd">    resolution</span>
+<span class="sd">        The clustering resolution.</span>
+<span class="sd">    annotation_connectivity</span>
+<span class="sd">        The `.obsp` key where the precomputed expression connectivity can be</span>
+<span class="sd">        found. If `None`, a new connectivity is computed with</span>
+<span class="sd">        :func:`~scanpy.pp.neighbors` and default parameters and then saved</span>
+<span class="sd">        under &quot;nn_&lt;key_added&gt;_annotation&quot;.</span>
+<span class="sd">    annotation_key</span>
+<span class="sd">        The `.obsm` key containing data to use instead of expression. If</span>
+<span class="sd">        `None`, use expression data.</span>
+<span class="sd">    position_connectivity</span>
+<span class="sd">        The `.obsp` key where the precomputed position connectivity can be</span>
+<span class="sd">        found. If `None`, a new connectivity is computed with</span>
+<span class="sd">        :func:`scanpy.pp.neighbors` and default parameters and then saved</span>
+<span class="sd">        under &quot;nn_&lt;key_added&gt;_position&quot;.</span>
+<span class="sd">    position_key</span>
+<span class="sd">        The `.obsm` key or array-like of `.obs` keys with the position space</span>
+<span class="sd">        coordinates</span>
+<span class="sd">    batch_position_distance</span>
+<span class="sd">        The additional position distance to apply to observations between</span>
+<span class="sd">        batches. If `None`, it is taken much larger than any distance within a</span>
+<span class="sd">        batch. </span>
+<span class="sd">    amplitudes</span>
+<span class="sd">        Whether to treat the annotation as probabilities and calculate</span>
+<span class="sd">        amplitudes from them</span>
+<span class="sd">    cross_batch_overweight_factor</span>
+<span class="sd">        The factor to increase cross batch connection weight over within batch</span>
+<span class="sd">        connections.</span>
+<span class="sd">    **kw_args</span>
+<span class="sd">        Additional key word arguments are forwarded to</span>
+<span class="sd">        :func:`~scanpy.pp.neighbors`. Particularly interesting is probably</span>
+<span class="sd">        `n_neighbors`.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    The updated input `adata` containing e.g. the `obs[key_added]` containing\</span>
+<span class="sd">    the region information.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">key_added_annotation</span> <span class="o">=</span> <span class="s1">&#39;nn_&#39;</span> <span class="o">+</span> <span class="n">key_added</span> <span class="o">+</span> <span class="s1">&#39;_annotation&#39;</span>
+    <span class="k">if</span> <span class="n">annotation_connectivity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">annotation_connectivity</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsp</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;The key &quot;</span><span class="si">%s</span><span class="s1">&quot; for annotation_connectivity is not available in .obsp!&#39;</span> <span class="o">%</span> <span class="n">annotation_connectivity</span><span class="p">)</span>
+        <span class="n">annotation_connectivity</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsp</span><span class="p">[</span><span class="n">annotation_connectivity</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">annotation_connectivity</span> <span class="o">=</span> <span class="n">key_added_annotation</span> <span class="o">+</span> <span class="s1">&#39;_connectivities&#39;</span>
+        <span class="k">if</span> <span class="n">annotation_connectivity</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsp</span><span class="p">:</span>
+            <span class="n">annotation_connectivity</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsp</span><span class="p">[</span><span class="n">annotation_connectivity</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_find_neighbours</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">key_added_annotation</span><span class="p">,</span> <span class="n">amplitudes</span><span class="o">=</span><span class="n">amplitudes</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">)</span>
+            <span class="n">annotation_connectivity</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsp</span><span class="p">[</span><span class="n">annotation_connectivity</span><span class="p">]</span>
+
+    <span class="n">key_added_position</span> <span class="o">=</span> <span class="s1">&#39;nn_&#39;</span> <span class="o">+</span> <span class="n">key_added</span> <span class="o">+</span> <span class="s1">&#39;_position&#39;</span>
+    <span class="k">if</span> <span class="n">position_connectivity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">position_connectivity</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsp</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;The key &quot;</span><span class="si">%s</span><span class="s1">&quot; for position_connectivity is not available in .obsp!&#39;</span> <span class="o">%</span> <span class="n">position_connectivity</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">batch_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Care must be taken to compute connectivities with a batch key included! Make sure this was properly done for the connectivities under .obsp[&quot;</span><span class="si">%s</span><span class="s1">&quot;]!&#39;</span> <span class="o">%</span> <span class="n">position_connectivity</span><span class="p">)</span>
+        <span class="n">position_connectivity</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsp</span><span class="p">[</span><span class="n">position_connectivity</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">position_connectivity</span> <span class="o">=</span> <span class="n">key_added_position</span> <span class="o">+</span> <span class="s1">&#39;_connectivities&#39;</span>
+        <span class="k">if</span> <span class="n">position_connectivity</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsp</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">batch_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Care must be taken to compute connectivities with a batch key included! Make sure this was properly done for the connectivities under .obsp[&quot;</span><span class="si">%s</span><span class="s1">&quot;]!&#39;</span> <span class="o">%</span> <span class="n">position_connectivity</span><span class="p">)</span>
+            <span class="n">position_connectivity</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsp</span><span class="p">[</span><span class="n">position_connectivity</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">positions</span> <span class="o">=</span> <span class="n">get</span><span class="o">.</span><span class="n">positions</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">position_key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">position_key</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">position_key</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">position_key</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">batch_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># let data from different batches have some fixed (large) spatial distance offset</span>
+                <span class="k">if</span> <span class="n">batch_position_distance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">positions_range</span> <span class="o">=</span> <span class="n">positions</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">positions</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                    <span class="n">batch_position_distance</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">positions_range</span>
+                <span class="k">if</span> <span class="n">batch_position_distance</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">positions</span><span class="p">,</span> <span class="n">batch_position_distance</span> <span class="o">*</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">batch_key</span><span class="p">])])</span>
+
+            <span class="n">new_position_key</span> <span class="o">=</span> <span class="s1">&#39;X_&#39;</span> <span class="o">+</span> <span class="n">position_key</span>
+            <span class="k">while</span> <span class="n">new_position_key</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">:</span>
+                <span class="n">new_position_key</span> <span class="o">+=</span> <span class="s1">&#39;1&#39;</span>
+            <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">new_position_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">positions</span>
+
+            <span class="n">_find_neighbours</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">new_position_key</span><span class="p">,</span> <span class="n">key_added_position</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">)</span>
+            <span class="n">position_connectivity</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsp</span><span class="p">[</span><span class="n">position_connectivity</span><span class="p">]</span>
+
+            <span class="k">del</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">new_position_key</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">batch_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># batch balance the connectivities across batches</span>
+        <span class="n">batch_dummy</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">batch_key</span><span class="p">])</span>
+        <span class="n">batch_dummy</span> <span class="o">/=</span> <span class="n">batch_dummy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        <span class="n">batch_connectivity</span> <span class="o">=</span> <span class="n">batch_dummy</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="p">(</span><span class="n">annotation_connectivity</span> <span class="o">@</span> <span class="n">batch_dummy</span><span class="p">)</span>
+        <span class="n">cross_batch_rescaling_factor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">batch_connectivity</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">batch_connectivity</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()[</span><span class="n">np</span><span class="o">.</span><span class="n">triu_indices</span><span class="p">(</span><span class="n">batch_connectivity</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">cross_batch_rescaling_factor</span> <span class="o">*=</span> <span class="n">cross_batch_overweight_factor</span>
+        <span class="nd">@njit</span>
+        <span class="k">def</span> <span class="nf">upscale_cross_batch</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">row</span><span class="p">,</span><span class="n">col</span><span class="p">,</span><span class="n">batch</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">batch</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">!=</span> <span class="n">batch</span><span class="p">[</span><span class="n">col</span><span class="p">[</span><span class="n">i</span><span class="p">]]:</span>
+                    <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">cross_batch_rescaling_factor</span>
+        <span class="n">_connectivity</span> <span class="o">=</span> <span class="n">annotation_connectivity</span><span class="o">.</span><span class="n">tocoo</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">_connectivity</span> <span class="ow">is</span> <span class="n">annotation_connectivity</span><span class="p">:</span>
+            <span class="n">_connectivity</span> <span class="o">=</span> <span class="n">annotation_connectivity</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">annotation_connectivity</span> <span class="o">=</span> <span class="n">_connectivity</span>
+        <span class="n">upscale_cross_batch</span><span class="p">(</span><span class="n">annotation_connectivity</span><span class="o">.</span><span class="n">data</span><span class="p">,</span><span class="n">annotation_connectivity</span><span class="o">.</span><span class="n">row</span><span class="p">,</span><span class="n">annotation_connectivity</span><span class="o">.</span><span class="n">col</span><span class="p">,</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">batch_key</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span>
+        <span class="n">annotation_connectivity</span> <span class="o">=</span> <span class="n">annotation_connectivity</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+
+    <span class="n">sum_weights</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">position_weight</span>
+    <span class="n">position_weight</span> <span class="o">/=</span> <span class="n">sum_weights</span>
+    <span class="n">annotation_weight</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">position_weight</span>
+
+    <span class="n">adjacency</span> <span class="o">=</span> <span class="n">annotation_weight</span> <span class="o">*</span> <span class="n">annotation_connectivity</span> <span class="o">+</span> <span class="n">position_weight</span> <span class="o">*</span> <span class="n">position_connectivity</span>
+
+    <span class="n">adata</span><span class="o">.</span><span class="n">obsp</span><span class="p">[</span><span class="n">key_added</span> <span class="o">+</span> <span class="s1">&#39;_connectivities&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">adjacency</span>
+    
+    <span class="n">sc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">leiden</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">key_added</span><span class="o">=</span><span class="n">key_added</span><span class="p">,</span> <span class="n">adjacency</span><span class="o">=</span><span class="n">adjacency</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">adata</span></div>
+
+
+<div class="viewcode-block" id="fill_regions">
+<a class="viewcode-back" href="../../../_autosummary/tacco.tools.fill_regions.html#tacco.tools.fill_regions">[docs]</a>
+<span class="k">def</span> <span class="nf">fill_regions</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">,</span>
+    <span class="n">region_key</span><span class="o">=</span><span class="s1">&#39;region&#39;</span><span class="p">,</span>
+    <span class="n">batch_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">position_key</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">),</span>
+    <span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Fills the region annotation of not annotated observation (i.e. na values)</span>
+<span class="sd">    with the annotation of the spatially closest annotated observation.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adata</span>
+<span class="sd">        An :class:`~anndata.AnnData` including region and position annotation.</span>
+<span class="sd">    region_key</span>
+<span class="sd">        The `.obs` key where the region annotation is stored.</span>
+<span class="sd">    batch_key</span>
+<span class="sd">        The `.obs` key with categorical batch information. If not `None`, the</span>
+<span class="sd">        filling is performed per batch.</span>
+<span class="sd">    position_key</span>
+<span class="sd">        The `.obsm` key or array-like of `.obs` keys with the position space</span>
+<span class="sd">        coordinates.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    The updated input `adata` containing the filled `obs[region_key]`.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">region_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The `region_key` &quot;</span><span class="si">{</span><span class="n">region_key</span><span class="si">}</span><span class="s1">&quot; is not a column name in `adata.obs`&#39;</span><span class="p">)</span>
+
+    <span class="n">positions</span> <span class="o">=</span> <span class="n">get</span><span class="o">.</span><span class="n">positions</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">position_key</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">batch_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">batches</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">batch_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The `batch_key` &quot;</span><span class="si">{</span><span class="n">batch_key</span><span class="si">}</span><span class="s1">&quot; is not a column name in `adata.obs`&#39;</span><span class="p">)</span>
+        <span class="n">batches</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">batch_key</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">get_closest_annotation</span><span class="p">(</span><span class="n">batch</span><span class="p">):</span>
+        <span class="n">all_pos</span> <span class="o">=</span> <span class="n">positions</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">batch</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">all_anno</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">batch</span><span class="o">.</span><span class="n">index</span><span class="p">,</span><span class="n">region_key</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">anno</span> <span class="o">=</span> <span class="n">all_anno</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">all_pos</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">anno</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">new_pos</span> <span class="o">=</span> <span class="n">all_pos</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">all_anno</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">anno</span><span class="o">.</span><span class="n">index</span><span class="p">)]</span>
+        <span class="n">dists</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">new_pos</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;euclidean&#39;</span><span class="p">)</span>
+        <span class="n">new_anno</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">anno</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">dists</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">index</span><span class="o">=</span><span class="n">new_pos</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">anno</span><span class="p">,</span> <span class="n">new_anno</span><span class="p">])</span><span class="o">.</span><span class="n">reindex_like</span><span class="p">(</span><span class="n">all_anno</span><span class="p">)</span>
+    
+    <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">region_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">batches</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">batches</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">get_closest_annotation</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">adata</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

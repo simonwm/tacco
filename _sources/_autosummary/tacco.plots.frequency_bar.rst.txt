@@ -1,0 +1,6 @@
+tacco.plots.frequency\_bar
+==========================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: frequency_bar

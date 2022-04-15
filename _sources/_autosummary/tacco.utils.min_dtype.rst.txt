@@ -1,0 +1,6 @@
+tacco.utils.min\_dtype
+======================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: min_dtype

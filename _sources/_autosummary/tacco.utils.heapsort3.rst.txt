@@ -1,0 +1,6 @@
+tacco.utils.heapsort3
+=====================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: heapsort3

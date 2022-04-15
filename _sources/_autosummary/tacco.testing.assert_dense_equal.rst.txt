@@ -1,0 +1,6 @@
+tacco.testing.assert\_dense\_equal
+==================================
+
+.. currentmodule:: tacco.testing
+
+.. autofunction:: assert_dense_equal

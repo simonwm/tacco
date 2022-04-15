@@ -1,0 +1,6 @@
+tacco.utils.split\_spatial\_samples
+===================================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: split_spatial_samples

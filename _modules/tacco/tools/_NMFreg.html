@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.tools._NMFreg &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/tacco.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tacco.tools._NMFreg</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tacco.tools._NMFreg</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">StandardScaler</span>
+<span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">NMF</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">parallel_nnls</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_helper</span> <span class="k">as</span> <span class="n">helper</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">get</span>
+
+<div class="viewcode-block" id="annotate_NMFreg">
+<a class="viewcode-back" href="../../../_autosummary/tacco.tools.annotate_NMFreg.html#tacco.tools.annotate_NMFreg">[docs]</a>
+<span class="k">def</span> <span class="nf">annotate_NMFreg</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">,</span>
+    <span class="n">reference</span><span class="p">,</span>
+    <span class="n">annotation_key</span><span class="p">,</span>
+    <span class="n">K</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+    <span class="n">counts_location</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">min_counts_per_cell</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">min_counts_per_gene</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Annotates an :class:`~anndata.AnnData` using reference data by NMFreg</span>
+<span class="sd">    [Rodriques19]_.</span>
+
+<span class="sd">    This is the direct interface to this annotation method. In practice using</span>
+<span class="sd">    the general wrapper :func:`~tacco.tools.annotate` is recommended due to its</span>
+<span class="sd">    higher flexibility.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adata</span>
+<span class="sd">        An :class:`~anndata.AnnData` including expression data in `.X`.</span>
+<span class="sd">    reference</span>
+<span class="sd">        Reference data to get the annotation definition from.</span>
+<span class="sd">    annotation_key</span>
+<span class="sd">        The `.obs` key where the annotation is stored in the `reference`. If</span>
+<span class="sd">        `None`, it is inferred from `reference`, if possible.</span>
+<span class="sd">    K</span>
+<span class="sd">        Number of NMF factors</span>
+<span class="sd">    random_state</span>
+<span class="sd">        Random seed</span>
+<span class="sd">    counts_location</span>
+<span class="sd">        A string or tuple specifying where the count matrix is stored, e.g.</span>
+<span class="sd">        `&#39;X&#39;`, `(&#39;raw&#39;,&#39;X&#39;)`, `(&#39;raw&#39;,&#39;obsm&#39;,&#39;my_counts_key&#39;)`,</span>
+<span class="sd">        `(&#39;layer&#39;,&#39;my_counts_key&#39;)`, ... For details see</span>
+<span class="sd">        :func:`~tacco.get.counts`.</span>
+<span class="sd">    min_counts_per_cell</span>
+<span class="sd">        Minimum number of counts per cell</span>
+<span class="sd">    min_counts_per_gene</span>
+<span class="sd">        Minimum number of counts per gene</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Returns the annotation in a :class:`~pandas.DataFrame`.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">tdata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">validate_annotation_args</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">counts_location</span><span class="p">,</span> <span class="n">full_reference</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="n">atlas_dge</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    
+    <span class="n">celltype_dict_rev</span> <span class="o">=</span> <span class="p">{</span><span class="n">cluster</span><span class="p">:</span> <span class="n">ic</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">ic</span><span class="p">,</span><span class="n">cluster</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">atlas_dge</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())}</span>
+
+    <span class="n">idx_name</span> <span class="o">=</span> <span class="s1">&#39;barcode&#39;</span>
+    <span class="n">atlas_dge</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">idx_name</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="n">cell_clusters</span> <span class="o">=</span> <span class="n">atlas_dge</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()[[</span><span class="n">idx_name</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">]]</span>
+    <span class="n">cell_clusters</span><span class="p">[</span><span class="s1">&#39;cluster&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell_clusters</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">celltype_dict_rev</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="c1">#subset to only use really good cells</span>
+    <span class="n">atlas_dge</span> <span class="o">=</span> <span class="n">atlas_dge</span><span class="p">[(</span><span class="n">atlas_dge</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">&gt;</span><span class="n">min_counts_per_cell</span><span class="p">),:]</span>
+    <span class="n">atlas_dge</span> <span class="o">=</span> <span class="n">atlas_dge</span><span class="p">[:,(</span><span class="n">atlas_dge</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">&gt;</span><span class="n">min_counts_per_gene</span><span class="p">)]</span>
+    <span class="n">cell_clusters</span> <span class="o">=</span> <span class="n">cell_clusters</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">cell_clusters</span><span class="o">.</span><span class="n">barcode</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">atlas_dge</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)),]</span>
+    <span class="n">cell_clusters</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">metacell_dict</span> <span class="o">=</span> <span class="p">{</span> <span class="nb">str</span><span class="p">(</span><span class="n">celltype_dict_rev</span><span class="p">[</span><span class="n">key</span><span class="p">]):</span> <span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">celltype_dict_rev</span> <span class="p">}</span>
+    <span class="n">celltype_dict</span> <span class="o">=</span> <span class="p">{</span> <span class="n">celltype_dict_rev</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span> <span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">celltype_dict_rev</span> <span class="p">}</span>
+    <span class="n">plot_size_dict</span> <span class="o">=</span> <span class="p">{</span><span class="mi">10</span><span class="p">:</span><span class="mi">4</span><span class="p">}</span>
+    <span class="n">ct_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">metacell_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="c1"># need to have both the sample and the reference over a shared set of features</span>
+    <span class="n">gene_intersection</span> <span class="o">=</span> <span class="n">atlas_dge</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">tdata</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">atlas_dge</span> <span class="o">=</span> <span class="n">atlas_dge</span><span class="p">[:,</span> <span class="n">gene_intersection</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="c1"># preprocess the reference for NMF</span>
+    <span class="n">cell_totalUMIa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">atlas_dge</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">normalize_total</span><span class="p">(</span><span class="n">atlas_dge</span><span class="p">,</span> <span class="n">target_sum</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">atlas_dge</span><span class="p">,</span> <span class="n">zero_center</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="n">NMF</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">K</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span><span class="p">)</span>
+    <span class="n">Ha</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">atlas_dge</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">Wa</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">components_</span>
+
+    <span class="n">Ha_norm</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">(</span><span class="n">with_mean</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">Ha</span><span class="p">)</span>
+    <span class="n">Ha_norm</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">Ha_norm</span><span class="p">)</span>
+    <span class="n">Ha_norm</span><span class="p">[</span><span class="s1">&#39;barcode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">atlas_dge</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+    <span class="n">Ha</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">Ha</span><span class="p">)</span>
+    <span class="n">Ha</span><span class="p">[</span><span class="s1">&#39;cellname&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">atlas_dge</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+    <span class="n">WaT</span> <span class="o">=</span> <span class="n">Wa</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">maxloc</span> <span class="o">=</span> <span class="n">Ha_norm</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;barcode&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">cell_clusters</span><span class="p">[</span><span class="s1">&#39;maxloc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">maxloc</span>
+
+    <span class="n">num_atlas_clusters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">cell_clusters</span><span class="p">[</span><span class="s1">&#39;cluster&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="n">factor_to_celltype_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_atlas_clusters</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> 
+                                         <span class="n">columns</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="n">K</span><span class="p">))</span>
+    <span class="n">fig</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">K</span><span class="p">):</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">bins</span><span class="p">,</span> <span class="n">patches</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">cell_clusters</span><span class="p">[</span><span class="s1">&#39;cluster&#39;</span><span class="p">][</span><span class="n">cell_clusters</span><span class="p">[</span><span class="s1">&#39;maxloc&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">k</span><span class="p">],</span>
+                <span class="nb">range</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">num_atlas_clusters</span><span class="o">+</span><span class="mf">0.5</span><span class="p">),</span> 
+                                    <span class="n">bins</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_atlas_clusters</span><span class="p">),</span> 
+                                    <span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xticks</span><span class="p">())</span> <span class="c1"># seems necessary to avoid a warning message in the line below</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">(),</span> <span class="n">rotation</span><span class="o">=</span><span class="s1">&#39;vertical&#39;</span><span class="p">)</span>
+        <span class="n">factor_to_celltype_df</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="n">factor_to_celltype_df</span> <span class="o">=</span> <span class="n">factor_to_celltype_df</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">factor_total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">factor_to_celltype_df</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">factor_to_celltype_df_norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">factor_to_celltype_df</span><span class="p">,</span> 
+                                           <span class="n">factor_total</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()[:,</span><span class="kc">None</span><span class="p">])</span>
+
+    <span class="n">cx</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">clustermap</span><span class="p">(</span><span class="n">factor_to_celltype_df_norm</span><span class="p">,</span> <span class="n">fmt</span> <span class="o">=</span> <span class="s1">&#39;d&#39;</span><span class="p">,</span>
+                    <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;magma_r&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">col_cluster</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                       <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span><span class="n">cbar_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="c1">#ax = sns.clustermap(factor_to_celltype_df_norm, fmt = &#39;d&#39;,</span>
+    <span class="c1">#        cmap=&quot;magma_r&quot;, linewidth=0.5, col_cluster = False,</span>
+    <span class="c1">#        annot = factor_to_celltype_df.loc[cx.dendrogram_row.reordered_ind],</span>
+    <span class="c1">#        figsize=(7, 9))</span>
+
+    <span class="n">maxloc_fc</span> <span class="o">=</span> <span class="n">factor_to_celltype_df</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">factor_to_celltype_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">factor</span> <span class="p">:</span> <span class="n">ctype</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">factor</span><span class="p">,</span> <span class="n">ctype</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">maxloc_fc</span><span class="p">)}</span>
+
+    <span class="n">celltype_to_factor_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_atlas_clusters</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">celltype_to_factor_dict</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">factor_to_celltype_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="n">c</span><span class="p">]</span>
+
+    <span class="n">nonzero_beads</span> <span class="o">=</span> <span class="n">tdata</span><span class="p">[:,</span> <span class="n">gene_intersection</span><span class="p">]</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">!=</span><span class="mi">0</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">tdata</span><span class="p">[</span><span class="n">nonzero_beads</span><span class="p">,</span><span class="n">gene_intersection</span><span class="p">]</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">toarray</span><span class="p">(),</span> <span class="n">columns</span><span class="o">=</span><span class="n">gene_intersection</span><span class="p">)</span>
+    <span class="n">counts</span><span class="p">[</span><span class="s1">&#39;barcode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tdata</span><span class="p">[</span><span class="n">nonzero_beads</span><span class="p">]</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span>
+
+    <span class="n">co</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">Counter</span><span class="p">(</span><span class="n">factor_to_celltype_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">deconv_factor_to_celltype</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">adict</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">num_atlas_clusters</span><span class="p">):</span>
+        <span class="n">nc</span> <span class="o">=</span> <span class="n">num_atlas_clusters</span>
+        <span class="n">tmp_list</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">nc</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">K</span><span class="p">):</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">adict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">tmp_list</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">+=</span> <span class="n">row</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tmp_list</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">NMFreg</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">metacell_dict</span><span class="p">,</span> <span class="n">gene_intersection</span><span class="p">,</span> 
+               <span class="n">num_atlas_clusters</span><span class="p">,</span> <span class="n">celltype_to_factor_dict</span><span class="p">,</span> 
+               <span class="n">celltype_dict</span><span class="p">,</span> <span class="n">plot_size_dict</span><span class="p">):</span>
+
+        <span class="n">puckcounts</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[[</span><span class="s1">&#39;barcode&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">gene_intersection</span><span class="p">]</span>
+        <span class="n">puckcounts</span> <span class="o">=</span> <span class="n">puckcounts</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">counts</span><span class="p">[</span><span class="s1">&#39;barcode&#39;</span><span class="p">])</span>
+        <span class="n">puckcounts</span> <span class="o">=</span> <span class="n">puckcounts</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;barcode&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">cell_totalUMI</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">puckcounts</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">puckcounts_cellnorm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">puckcounts</span><span class="p">,</span> <span class="n">cell_totalUMI</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()[:,</span><span class="kc">None</span><span class="p">])</span>
+        <span class="n">puckcounts_scaled</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">(</span><span class="n">with_mean</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">puckcounts_cellnorm</span><span class="p">)</span>
+
+        <span class="n">XsT</span> <span class="o">=</span> <span class="n">puckcounts_scaled</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="n">Hs_hat</span> <span class="o">=</span> <span class="n">parallel_nnls</span><span class="p">(</span><span class="n">WaT</span><span class="p">,</span> <span class="n">XsT</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+        <span class="n">Hs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">Hs_hat</span><span class="p">)</span>
+        <span class="n">Hs</span><span class="p">[</span><span class="s1">&#39;barcode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">puckcounts</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="n">Hs_norm</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">(</span><span class="n">with_mean</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">Hs</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;barcode&#39;</span><span class="p">,</span> 
+                                                                        <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="n">Hs_norm</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">Hs_norm</span><span class="p">)</span>
+        <span class="n">Hs_norm</span><span class="p">[</span><span class="s1">&#39;barcode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">puckcounts</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+
+        <span class="n">maxloc_s</span> <span class="o">=</span> <span class="n">Hs_norm</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;barcode&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">barcode_clusters</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="n">barcode_clusters</span><span class="p">[</span><span class="s1">&#39;barcode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Hs_norm</span><span class="p">[</span><span class="s1">&#39;barcode&#39;</span><span class="p">]</span>
+        <span class="n">barcode_clusters</span><span class="p">[</span><span class="s1">&#39;max_factor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">maxloc_s</span>
+
+        <span class="n">barcode_clusters</span><span class="p">[</span><span class="s1">&#39;atlas_cluster&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">barcode_clusters</span><span class="p">[</span><span class="s1">&#39;barcode&#39;</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_atlas_clusters</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">condition</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">barcode_clusters</span><span class="p">[</span><span class="s1">&#39;max_factor&#39;</span><span class="p">],</span> 
+                                <span class="n">celltype_to_factor_dict</span><span class="p">[</span><span class="n">c</span><span class="p">])</span>
+            <span class="n">barcode_clusters</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">condition</span><span class="p">,</span><span class="s1">&#39;atlas_cluster&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span>       
+
+        <span class="n">bead_deconv_df</span> <span class="o">=</span> <span class="n">Hs_norm</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">deconv_factor_to_celltype</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> 
+                                                <span class="n">adict</span><span class="o">=</span><span class="n">factor_to_celltype_dict</span><span class="p">,</span>
+                                                <span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span>
+                                                <span class="n">num_atlas_clusters</span><span class="o">=</span><span class="n">num_atlas_clusters</span><span class="p">),</span> 
+                                       <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">bead_deconv_df</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;barcode&#39;</span><span class="p">,</span> <span class="n">Hs_norm</span><span class="p">[</span><span class="s1">&#39;barcode&#39;</span><span class="p">])</span>
+        <span class="n">bead_deconv_df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;barcode&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">bead_deconv_df</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">bead_deconv_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">bead_deconv_df</span><span class="p">)</span>
+        <span class="n">bead_deconv_df</span> <span class="o">=</span> <span class="n">bead_deconv_df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="n">celltype_dict</span><span class="p">)</span>
+
+        <span class="n">maxloc_ct</span> <span class="o">=</span> <span class="n">bead_deconv_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;barcode&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span>
+        <span class="n">bead_maxct_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="n">bead_maxct_df</span><span class="p">[</span><span class="s1">&#39;barcode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bead_deconv_df</span><span class="p">[</span><span class="s1">&#39;barcode&#39;</span><span class="p">]</span>
+        <span class="n">bead_maxct_df</span><span class="p">[</span><span class="s1">&#39;max_cell_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">maxloc_ct</span>
+
+        <span class="k">return</span> <span class="n">Hs</span><span class="p">,</span> <span class="n">Hs_norm</span><span class="p">,</span> <span class="n">puckcounts</span><span class="p">,</span> <span class="n">bead_deconv_df</span><span class="p">,</span> <span class="n">barcode_clusters</span><span class="p">,</span> <span class="n">bead_maxct_df</span>
+
+    <span class="n">Hs</span><span class="p">,</span> <span class="n">Hs_norm</span><span class="p">,</span> <span class="n">puckcounts</span><span class="p">,</span> <span class="n">bead_deconv_df</span><span class="p">,</span> <span class="n">barcode_clusters</span><span class="p">,</span> <span class="n">bead_maxct_df</span> <span class="o">=</span> <span class="n">NMFreg</span><span class="p">(</span><span class="n">counts</span><span class="o">=</span><span class="n">counts</span><span class="p">,</span> 
+                                            <span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
+                                            <span class="n">metacell_dict</span><span class="o">=</span><span class="n">metacell_dict</span><span class="p">,</span> 
+                                            <span class="n">gene_intersection</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">gene_intersection</span><span class="p">),</span> 
+                                            <span class="n">num_atlas_clusters</span><span class="o">=</span><span class="n">num_atlas_clusters</span><span class="p">,</span> 
+                                            <span class="n">celltype_to_factor_dict</span><span class="o">=</span><span class="n">celltype_to_factor_dict</span><span class="p">,</span> 
+                                            <span class="n">celltype_dict</span><span class="o">=</span><span class="n">celltype_dict</span><span class="p">,</span> 
+                                            <span class="n">plot_size_dict</span><span class="o">=</span><span class="n">plot_size_dict</span><span class="p">)</span>
+
+    <span class="n">barcode_totalloading</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">bead_deconv_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;barcode&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">bead_deconv_df_norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">true_divide</span><span class="p">(</span><span class="n">bead_deconv_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;barcode&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">barcode_totalloading</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()[:,</span><span class="kc">None</span><span class="p">])</span>
+    <span class="n">bead_deconv_df_norm</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">puckcounts</span><span class="o">.</span><span class="n">index</span>
+    <span class="n">bead_deconv_df_norm</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">tdata</span><span class="p">[</span><span class="n">nonzero_beads</span><span class="p">]</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="n">bead_deconv_df_norm</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">normalize_result_format</span><span class="p">(</span><span class="n">bead_deconv_df_norm</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">bead_deconv_df_norm</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

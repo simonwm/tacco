@@ -1,0 +1,6 @@
+tacco.tools.segment
+===================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: segment

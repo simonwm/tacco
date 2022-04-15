@@ -1,0 +1,6 @@
+tacco.utils.write\_adata\_x\_var\_obs
+=====================================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: write_adata_x_var_obs

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.utils.split_spatial_samples &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tacco.utils.sqrt" href="tacco.utils.sqrt.html" />
+    <link rel="prev" title="tacco.utils.spatial_split" href="tacco.utils.spatial_split.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tacco.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tacco.benchmarking.html">tacco.benchmarking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.get.html">tacco.get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.plots.html">tacco.plots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.preprocessing.html">tacco.preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.testing.html">tacco.testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.tools.html">tacco.tools</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="tacco.utils.html">tacco.utils</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.AnnData_query.html">tacco.utils.AnnData_query</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.anndata2dataframe.html">tacco.utils.anndata2dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.bin.html">tacco.utils.bin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.cdist.html">tacco.utils.cdist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.col_scale.html">tacco.utils.col_scale</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.complete_choice.html">tacco.utils.complete_choice</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.coo_tocsr_buffered.html">tacco.utils.coo_tocsr_buffered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.coo_tocsr_inplace.html">tacco.utils.coo_tocsr_inplace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.cpu_count.html">tacco.utils.cpu_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.dataframe2anndata.html">tacco.utils.dataframe2anndata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.dense_distance_matrix.html">tacco.utils.dense_distance_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.divide.html">tacco.utils.divide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.find_unused_key.html">tacco.utils.find_unused_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.fishers_exact.html">tacco.utils.fishers_exact</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.flat_inverse_mapping.html">tacco.utils.flat_inverse_mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.gemmT.html">tacco.utils.gemmT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.generate_mixture_profiles.html">tacco.utils.generate_mixture_profiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.get_average_profiles.html">tacco.utils.get_average_profiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.get_balanced_separated_intervals.html">tacco.utils.get_balanced_separated_intervals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.get_first_principal_axis.html">tacco.utils.get_first_principal_axis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.get_maximum_annotation.html">tacco.utils.get_maximum_annotation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.get_sum.html">tacco.utils.get_sum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.hash.html">tacco.utils.hash</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.heapsort3.html">tacco.utils.heapsort3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.log.html">tacco.utils.log</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.log1p.html">tacco.utils.log1p</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.mannwhitneyu.html">tacco.utils.mannwhitneyu</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.merge_annotation.html">tacco.utils.merge_annotation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.merge_colors.html">tacco.utils.merge_colors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.min_dtype.html">tacco.utils.min_dtype</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.mode.html">tacco.utils.mode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.parallel_nnls.html">tacco.utils.parallel_nnls</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.preprocess_single_cell_data.html">tacco.utils.preprocess_single_cell_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.projection.html">tacco.utils.projection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.row_scale.html">tacco.utils.row_scale</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.scale_counts.html">tacco.utils.scale_counts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.solve_OT.html">tacco.utils.solve_OT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.sparse_distance_matrix.html">tacco.utils.sparse_distance_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.sparse_result_gemmT.html">tacco.utils.sparse_result_gemmT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.spatial_split.html">tacco.utils.spatial_split</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">tacco.utils.split_spatial_samples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tacco.utils.split_spatial_samples"><code class="docutils literal notranslate"><span class="pre">split_spatial_samples()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.sqrt.html">tacco.utils.sqrt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.studentttest.html">tacco.utils.studentttest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.tsne_single_cell_data.html">tacco.utils.tsne_single_cell_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.umap_single_cell_data.html">tacco.utils.umap_single_cell_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.welchttest.html">tacco.utils.welchttest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.write_adata_x_var_obs.html">tacco.utils.write_adata_x_var_obs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.sum.html">tacco.sum</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="tacco.html">tacco</a></li>
+          <li class="breadcrumb-item"><a href="tacco.utils.html">tacco.utils</a></li>
+      <li class="breadcrumb-item active">tacco.utils.split_spatial_samples</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tacco-utils-split-spatial-samples">
+<h1>tacco.utils.split_spatial_samples<a class="headerlink" href="#tacco-utils-split-spatial-samples" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="tacco.utils.split_spatial_samples">
+<span class="sig-name descname"><span class="pre">split_spatial_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer_thickness</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('x',</span> <span class="pre">'y')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_scheme</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tacco/utils/_utils.html#split_spatial_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tacco.utils.split_spatial_samples" title="Link to this definition">¶</a></dt>
+<dd><p>Splits a dataset into separated spatial patches. The patches are selected
+to have approximately equal amounts of observations per patch. Between the
+patches a buffer layer of specified thickness is discarded to reduce the
+correlations between the patches. Therefore the thickness should be chosen
+to accomodate the largest relevant correlation length.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>adata</strong> – An <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> with annotation in <cite>.obs</cite> (and <cite>.obsm</cite>).
+Can also be a <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> which is then used in place of
+<cite>.obs</cite>.</p></li>
+<li><p><strong>buffer_thickness</strong> – The thickness of the buffer layer to discard between the spatial
+patches. The units are the same as thosed used in the specification of
+the position information. This should be chosen carefully, as the
+remaining correlation between the spatial patches depends on it.</p></li>
+<li><p><strong>position_key</strong> – The <cite>.obsm</cite> key or array-like of <cite>.obs</cite> keys with the position space
+coordinates.</p></li>
+<li><p><strong>split_direction</strong> – The direction(s) to use for the spatial splits. Use e.g. (‘y’,’x’) for
+two splits with the first in ‘y’ and the second in ‘x’ direction, or
+‘z’ to always split along the ‘z’ direction. Use <cite>None</cite> instead of the
+name of a coordinate direction to automatically determine the direction
+as a flavor of direction with largest extent (first principal axis).</p></li>
+<li><p><strong>split_scheme</strong> – The specification of the strategy used for defining spatial splits. In
+the simplest case this is just an integer specifying the number of
+patches per split. It can also be a tuple to specify a different number
+of patches per split.</p></li>
+<li><p><strong>sample_key</strong> – The <cite>.obs</cite> key with categorical sample information: every sample is
+split separately. Can also be a <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a> containing the
+sample information. If <cite>None</cite>, assume a single sample.</p></li>
+<li><p><strong>result_key</strong> – The <cite>.obs</cite> key to write the split sample annotation to. If <cite>None</cite>,
+returns the split sample annotation as <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a>.</p></li>
+<li><p><strong>check_splits</strong> – Whether to warn about unusual split properties</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Depending on <cite>result_key</cite> returns either a <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a>    containing the split sample annotation or the input <cite>adata</cite> with the split    sample annotation written to <cite>adata.obs[result_key]</cite>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tacco.utils.spatial_split.html" class="btn btn-neutral float-left" title="tacco.utils.spatial_split" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tacco.utils.sqrt.html" class="btn btn-neutral float-right" title="tacco.utils.sqrt" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

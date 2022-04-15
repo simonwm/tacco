@@ -1,0 +1,6 @@
+tacco.utils.bin
+===============
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: bin

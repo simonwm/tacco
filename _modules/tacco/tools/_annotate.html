@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.tools._annotate &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/tacco.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tacco.tools._annotate</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tacco.tools._annotate</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">anndata</span> <span class="k">as</span> <span class="nn">ad</span>
+<span class="kn">import</span> <span class="nn">scipy.sparse</span>
+<span class="kn">import</span> <span class="nn">gc</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">PCG64</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="kn">import</span> <span class="n">MiniBatchKMeans</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">get</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">preprocessing</span>
+<span class="kn">from</span> <span class="nn">..utils._utils</span> <span class="kn">import</span> <span class="n">_infer_annotation_key</span><span class="p">,</span> <span class="n">_get_unique_keys</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">._points</span> <span class="kn">import</span> <span class="n">_map_hash_annotation</span><span class="p">,</span> <span class="n">distance_matrix</span><span class="p">,</span> <span class="n">affinity</span><span class="p">,</span> <span class="n">spectral_clustering</span>
+<span class="kn">from</span> <span class="nn">._split</span> <span class="kn">import</span> <span class="n">split_observations</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_helper</span> <span class="k">as</span> <span class="n">helper</span>
+
+<span class="k">def</span> <span class="nf">check_for_argument</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">argument</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">argument</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">function</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span>
+
+<span class="k">def</span> <span class="nf">annotation_method</span><span class="p">(</span>
+    <span class="n">method</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kw_args</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Wrap a specified method and its arguments in a standard signature</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    method</span>
+<span class="sd">        String selecting the method to use for annotation. Can also be a</span>
+<span class="sd">        callable of signature</span>
+<span class="sd">        `method(adata, reference, annotation_key, **kw_args)` returning a</span>
+<span class="sd">        :class:`~pandas.DataFrame`.</span>
+<span class="sd">        Possible methods include:</span>
+<span class="sd">        </span>
+<span class="sd">        - &#39;OT&#39;, implemented by :func:`~tacco.tools.annotate_OT`</span>
+<span class="sd">        - &#39;nnls&#39;, implemented by :func:`~tacco.tools.annotate_nnls`</span>
+<span class="sd">        - &#39;tangram&#39;, implemented by :func:`~tacco.tools.annotate_tangram`</span>
+<span class="sd">        - &#39;novosparc&#39;, implemented by :func:`~tacco.tools.annotate_novosparc`</span>
+<span class="sd">        - &#39;projection&#39;, implemented by :func:`~tacco.tools.annotate_projection`</span>
+<span class="sd">        - &#39;RCTD&#39;, implemented by :func:`~tacco.tools.annotate_RCTD`</span>
+<span class="sd">        - &#39;NMFreg&#39;, implemented by :func:`~tacco.tools.annotate_NMFreg`</span>
+<span class="sd">        - &#39;SingleR&#39;, implemented by :func:`~tacco.tools.annotate_SingleR`</span>
+<span class="sd">        - &#39;WOT&#39;, implemented by :func:`~tacco.tools.annotate_wot`</span>
+<span class="sd">        - &#39;svm&#39;, implemented by :func:`~tacco.tools.annotate_svm`</span>
+<span class="sd">        </span>
+<span class="sd">    **kw_args</span>
+<span class="sd">        Additional keyword arguments are forwarded to the annotation method.</span>
+<span class="sd">        See the functions mentioned in the documentation of the parameter</span>
+<span class="sd">        `method` for details.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Returns a callable of signature\</span>
+<span class="sd">    `method(adata, reference, annotation_key, annotation_prior, verbose)`\</span>
+<span class="sd">    which performs the actual annotation.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">_method</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">annotation_prior</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
+
+        <span class="k">nonlocal</span> <span class="n">method</span><span class="p">,</span> <span class="n">kw_args</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;NMFreg&#39;</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">._NMFreg</span> <span class="kn">import</span> <span class="n">annotate_NMFreg</span>
+                <span class="n">annotate</span> <span class="o">=</span> <span class="n">annotate_NMFreg</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;WOT&#39;</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">._wot</span> <span class="kn">import</span> <span class="n">_annotate_wot</span>
+                <span class="n">annotate</span> <span class="o">=</span> <span class="n">_annotate_wot</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;OT&#39;</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">._OT</span> <span class="kn">import</span> <span class="n">_annotate_OT</span>
+                <span class="n">annotate</span> <span class="o">=</span> <span class="n">_annotate_OT</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;nnls&#39;</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">._nnls</span> <span class="kn">import</span> <span class="n">_annotate_nnls</span>
+                <span class="n">annotate</span> <span class="o">=</span> <span class="n">_annotate_nnls</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;svm&#39;</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">._svm</span> <span class="kn">import</span> <span class="n">_annotate_svm</span>
+                <span class="n">annotate</span> <span class="o">=</span> <span class="n">_annotate_svm</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;RCTD&#39;</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">._RCTD</span> <span class="kn">import</span> <span class="n">annotate_RCTD</span>
+                <span class="n">annotate</span> <span class="o">=</span> <span class="n">annotate_RCTD</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;SingleR&#39;</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">._SingleR</span> <span class="kn">import</span> <span class="n">annotate_SingleR</span>
+                <span class="n">annotate</span> <span class="o">=</span> <span class="n">annotate_SingleR</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;tangram&#39;</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">._tangram</span> <span class="kn">import</span> <span class="n">_annotate_tangram</span>
+                <span class="n">annotate</span> <span class="o">=</span> <span class="n">_annotate_tangram</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;novosparc&#39;</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">._novosparc</span> <span class="kn">import</span> <span class="n">_annotate_novosparc</span>
+                <span class="n">annotate</span> <span class="o">=</span> <span class="n">_annotate_novosparc</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;projection&#39;</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">._projection</span> <span class="kn">import</span> <span class="n">_annotate_projection</span>
+                <span class="n">annotate</span> <span class="o">=</span> <span class="n">_annotate_projection</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`method` &quot;</span><span class="si">%s</span><span class="s1">&quot; is not implemented.&#39;</span> <span class="o">%</span> <span class="n">method</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">check_for_argument</span><span class="p">(</span><span class="n">annotate</span><span class="p">,</span> <span class="s1">&#39;verbose&#39;</span><span class="p">):</span>
+                <span class="n">verbose_arg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;verbose&#39;</span><span class="p">:</span><span class="n">verbose</span><span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">verbose_arg</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="k">if</span> <span class="n">check_for_argument</span><span class="p">(</span><span class="n">annotate</span><span class="p">,</span> <span class="s1">&#39;annotation_prior&#39;</span><span class="p">):</span>
+
+                <span class="k">if</span> <span class="n">annotation_prior</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">_annotation_prior</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">prep_priors_reference</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">reads</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">annotation_prior</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+                    <span class="n">_annotation_prior</span> <span class="o">=</span> <span class="n">annotation_prior</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">_annotation_prior</span> <span class="o">=</span> <span class="n">annotation_prior</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">)</span>
+
+                <span class="n">cell_type</span> <span class="o">=</span> <span class="n">annotate</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">annotation_prior</span><span class="o">=</span><span class="n">_annotation_prior</span><span class="p">,</span> <span class="o">**</span><span class="n">verbose_arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">)</span>
+
+                <span class="c1">#cell_type/cell_type.sum(axis=1)[:,None]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cell_type</span> <span class="o">=</span> <span class="n">annotate</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="o">**</span><span class="n">verbose_arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">check_for_argument</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="s1">&#39;verbose&#39;</span><span class="p">):</span>
+                    <span class="n">verbose_arg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;verbose&#39;</span><span class="p">:</span><span class="n">verbose</span><span class="p">}</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">verbose_arg</span> <span class="o">=</span> <span class="p">{}</span>
+                
+                <span class="n">cell_type</span> <span class="o">=</span> <span class="n">method</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="o">**</span><span class="n">verbose_arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;The supplied `method` is neither string nor a working callable!&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">cell_type</span>
+
+    <span class="k">return</span> <span class="n">_method</span>
+
+<span class="k">def</span> <span class="nf">boost_annotation_method</span><span class="p">(</span>
+    <span class="n">annotation_method</span><span class="p">,</span>
+    <span class="n">bisections</span><span class="p">,</span>
+    <span class="n">bisection_divisor</span><span class="p">,</span>
+    <span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Boosts an annotation method by bisectioning</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    annotation_method</span>
+<span class="sd">        A callable of signature</span>
+<span class="sd">        `method(adata, reference, annotation_key, annotation_prior)`</span>
+<span class="sd">    bisections</span>
+<span class="sd">        If larger than 0, runs a boosted stronger annotator using a basis</span>
+<span class="sd">        annotator by iteratively running the basis annotator and removing a</span>
+<span class="sd">        reconstructed fraction of the counts. The parameter gives the number of</span>
+<span class="sd">        recursive bisections of the annotation.</span>
+<span class="sd">    bisection_divisor</span>
+<span class="sd">        Number of parts for bisection: First, `bisections` times a fraction of</span>
+<span class="sd">        1/`bisection_divisor` of the unassigned counts of every observation is</span>
+<span class="sd">        assigned. The remainder is then split evely in `bisection_divisor`</span>
+<span class="sd">        parts. E.g. if `bisections` is `2` and `bisection_divisor` is `3`, then</span>
+<span class="sd">        the assigned fractions per round of typing are 1/3,2/3*(1/3,1/3,1/3),</span>
+<span class="sd">        if `bisections` is `3` and `bisection_divisor` is `2`, then they are</span>
+<span class="sd">        1/2,(1/2,(1/2,1/2)/2)/2. Generally, the total number of typing rounds</span>
+<span class="sd">        is `bisections + bisection_divisor - 1`.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Returns a callable of signature\</span>
+<span class="sd">    `method(adata, reference, annotation_key, annotation_prior, verbose)` which\</span>
+<span class="sd">    performs the actual boosted annotation.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">_method</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">annotation_prior</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
+        
+        <span class="k">nonlocal</span> <span class="n">annotation_method</span><span class="p">,</span> <span class="n">bisections</span><span class="p">,</span> <span class="n">bisection_divisor</span>
+        
+        <span class="n">adata</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">AnnData</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">obs</span><span class="o">=</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[[]],</span> <span class="n">var</span><span class="o">=</span><span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="p">[[]])</span>
+        <span class="n">average_profiles</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_average_profiles</span><span class="p">(</span><span class="n">annotation_key</span><span class="p">,</span> <span class="n">reference</span><span class="p">)</span>
+        <span class="n">average_profiles</span> <span class="o">/=</span> <span class="n">average_profiles</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="n">bisection_divisor</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`bisection_divisor` is smaller than 2!&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">get_bisections</span><span class="p">(</span><span class="n">bisections</span><span class="p">,</span> <span class="n">bisection_divisor</span><span class="p">):</span>
+            <span class="n">remaining</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">bs</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bisections</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">current</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">remaining</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">bisection_divisor</span><span class="p">)</span>
+                <span class="n">remaining</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">remaining</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">current</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">current</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">remaining</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">bisection_divisor</span><span class="p">]</span> <span class="o">*</span> <span class="n">bisection_divisor</span><span class="p">)</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+            <span class="n">done</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+            <span class="n">remaining</span> <span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="n">done</span>
+            <span class="n">todo</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="nb">list</span><span class="p">(</span><span class="n">remaining</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])]</span>
+
+            <span class="c1">#print(pd.DataFrame({&#39;todo&#39;: todo, &#39;current&#39;:current, &#39;done&#39;:done, &#39;remaining&#39;:remaining}))</span>
+
+            <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="n">todo</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="n">remaining</span><span class="p">)</span>
+
+        <span class="n">cell_prior</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">prep_cell_priors</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reads</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">total_sums</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_sum</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">todo</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="n">remaining</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">get_bisections</span><span class="p">(</span><span class="n">bisections</span><span class="p">,</span> <span class="n">bisection_divisor</span><span class="p">)):</span>
+
+            <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;bisection run on </span><span class="si">{</span><span class="n">todo</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+            <span class="n">cell_type</span> <span class="o">=</span> <span class="n">annotation_method</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">annotation_prior</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+
+            <span class="c1">#print(&#39;update result with weight&#39;, current)</span>
+            <span class="n">cell_type</span> <span class="o">*=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">cell_type</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()[:,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">sum_cell_type</span> <span class="o">=</span> <span class="n">current</span> <span class="o">*</span> <span class="n">cell_type</span>
+                <span class="n">average_profiles</span> <span class="o">=</span> <span class="n">average_profiles</span><span class="p">[</span><span class="n">cell_type</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sum_cell_type</span> <span class="o">+=</span> <span class="n">current</span> <span class="o">*</span> <span class="n">cell_type</span>
+
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">bisections</span> <span class="o">+</span> <span class="n">bisection_divisor</span> <span class="o">-</span> <span class="mi">2</span><span class="p">:</span> <span class="c1"># dont do preparation for the next round in the last round</span>
+                <span class="c1">#print(&#39;subtract reconstruction with weight&#39;, current)</span>
+
+                <span class="n">cell_type</span> <span class="o">=</span> <span class="n">cell_type</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="p">):</span>
+                    <span class="c1"># the part of the result where there are non-zero entries in the data is the only interesting part, as it is non-negative, will be subtracted from the data and negative values will be set to zero.</span>
+                    <span class="n">reconstruction</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">sparse_result_gemmT</span><span class="p">(</span><span class="n">cell_type</span><span class="p">,</span> <span class="n">average_profiles</span><span class="p">,</span> <span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="n">reconstruction</span> <span class="o">=</span> <span class="n">reconstruction</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">reconstruction</span> <span class="o">=</span> <span class="n">cell_type</span> <span class="o">@</span> <span class="n">average_profiles</span><span class="o">.</span><span class="n">T</span>
+                <span class="n">utils</span><span class="o">.</span><span class="n">row_scale</span><span class="p">(</span><span class="n">reconstruction</span><span class="p">,</span> <span class="n">cell_prior</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">reconstruction</span><span class="p">):</span> <span class="c1"># edgecase bug in scanpy</span>
+                    <span class="n">adata</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">A</span>
+                    <span class="n">reconstruction</span> <span class="o">=</span> <span class="n">reconstruction</span><span class="o">.</span><span class="n">A</span>
+                <span class="n">adata</span><span class="o">.</span><span class="n">X</span> <span class="o">-=</span> <span class="n">current</span> <span class="o">*</span> <span class="n">reconstruction</span>
+
+                <span class="k">del</span> <span class="n">reconstruction</span>
+
+                <span class="c1"># eliminate negative counts... they are an artefact of the subtraction and make problems downstream</span>
+                <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="p">):</span>
+                    <span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">data</span> <span class="o">*=</span> <span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">data</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                    <span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">eliminate_zeros</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">adata</span><span class="o">.</span><span class="n">X</span> <span class="o">*=</span> <span class="n">adata</span><span class="o">.</span><span class="n">X</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+                <span class="c1">#print(&#39;rescale data to&#39;, remaining)</span>
+
+                <span class="n">utils</span><span class="o">.</span><span class="n">row_scale</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">remaining</span> <span class="o">*</span> <span class="p">(</span><span class="n">total_sums</span> <span class="o">/</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_sum</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
+
+        <span class="k">del</span> <span class="n">adata</span> <span class="c1"># clean up the copies.</span>
+        <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span> <span class="c1"># anndata copies are not well garbage collected and accumulate in memory    </span>
+
+        <span class="k">return</span> <span class="n">sum_cell_type</span>
+    
+    <span class="k">return</span> <span class="n">_method</span>
+
+<span class="k">def</span> <span class="nf">platform_normalize_annotation_method</span><span class="p">(</span>
+    <span class="n">annotation_method</span><span class="p">,</span>
+    <span class="n">platform_iterations</span><span class="p">,</span>
+    <span class="n">gene_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">normalize_to</span><span class="o">=</span><span class="s1">&#39;adata&#39;</span><span class="p">,</span>
+    <span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Platform normalizes an annotation method. A call to the resulting method</span>
+<span class="sd">    changes `adata` or `reference` inplace!</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    annotation_method</span>
+<span class="sd">        A callable of signature</span>
+<span class="sd">        `method(adata, reference, annotation_key, annotation_prior)`</span>
+<span class="sd">    platform_iterations</span>
+<span class="sd">        Number of platform normalization iterations. If `0`, platform</span>
+<span class="sd">        normalization is done once in the beginning, but no iteration is done.</span>
+<span class="sd">        If smaller than `0`, no platform normalization is performed at all.</span>
+<span class="sd">    gene_keys</span>
+<span class="sd">        String or list of strings specifying additional count-like `.var` and</span>
+<span class="sd">        `.varm` annotations to scale along with the platform normalization. The</span>
+<span class="sd">        `annotation_key` is included automatically. If `True`, take all `.var`</span>
+<span class="sd">        and `.varm` keys.</span>
+<span class="sd">    normalize_to</span>
+<span class="sd">        To what expression the adatas should be normalized. Can be one of:</span>
+<span class="sd">        </span>
+<span class="sd">        - &#39;adata&#39;: normalize `reference` to conform to `adata`; the resulting</span>
+<span class="sd">          annotation fractions give how many of the actual reads in `adata` are</span>
+<span class="sd">          belonging to which annotation.</span>
+<span class="sd">        - &#39;reference&#39;: normalize `adata` to conform to `reference`; the</span>
+<span class="sd">          resulting annotation fractions give how many of the reads in `adata`</span>
+<span class="sd">          would belong to which annotation if they were measured with the same</span>
+<span class="sd">          platform effects as `reference`.</span>
+<span class="sd">          </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Returns a callable of signature\</span>
+<span class="sd">    `method(adata, reference, annotation_key, annotation_prior, verbose)` which\</span>
+<span class="sd">    performs the actual annotation with platform normalization and normalizes\</span>
+<span class="sd">    `adata` or `reference` inplace.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+        
+    <span class="k">def</span> <span class="nf">_method</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">annotation_prior</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
+        
+        <span class="k">nonlocal</span> <span class="n">annotation_method</span><span class="p">,</span> <span class="n">platform_iterations</span><span class="p">,</span> <span class="n">gene_keys</span><span class="p">,</span> <span class="n">normalize_to</span>
+        
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gene_keys</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">gene_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">gene_keys</span><span class="p">]</span>
+        <span class="n">gene_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">annotation_key</span><span class="p">,</span><span class="o">*</span><span class="p">[</span><span class="n">gk</span> <span class="k">for</span> <span class="n">gk</span> <span class="ow">in</span> <span class="n">gene_keys</span><span class="p">]]</span>
+        
+        <span class="k">if</span> <span class="n">platform_iterations</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">normalize_to</span> <span class="o">==</span> <span class="s1">&#39;reference&#39;</span><span class="p">:</span>
+                <span class="n">adata</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">normalize_platform</span><span class="p">(</span><span class="n">adata</span><span class="o">=</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reference_annotation_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gene_keys</span><span class="o">=</span><span class="n">gene_keys</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">reference</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">normalize_platform</span><span class="p">(</span><span class="n">adata</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="n">adata</span><span class="p">,</span> <span class="n">annotation_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reference_annotation_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gene_keys</span><span class="o">=</span><span class="n">gene_keys</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">pi</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">platform_iterations</span><span class="p">):</span>
+            <span class="n">cell_type</span> <span class="o">=</span> <span class="n">annotation_method</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">annotation_prior</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+            <span class="n">ukey</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">find_unused_key</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">)</span>
+            <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">ukey</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell_type</span>
+            <span class="k">if</span> <span class="n">normalize_to</span> <span class="o">==</span> <span class="s1">&#39;reference&#39;</span><span class="p">:</span>
+                <span class="n">adata</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">normalize_platform</span><span class="p">(</span><span class="n">adata</span><span class="o">=</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="o">=</span><span class="n">ukey</span><span class="p">,</span> <span class="n">reference_annotation_key</span><span class="o">=</span><span class="n">annotation_key</span><span class="p">,</span> <span class="n">gene_keys</span><span class="o">=</span><span class="n">gene_keys</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">reference</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">normalize_platform</span><span class="p">(</span><span class="n">adata</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="n">adata</span><span class="p">,</span> <span class="n">annotation_key</span><span class="o">=</span><span class="n">annotation_key</span><span class="p">,</span> <span class="n">reference_annotation_key</span><span class="o">=</span><span class="n">ukey</span><span class="p">,</span> <span class="n">gene_keys</span><span class="o">=</span><span class="n">gene_keys</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+            <span class="k">del</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">ukey</span><span class="p">]</span>
+        
+        <span class="c1"># renormalize profiles as they have been denormalized by platform noramlization</span>
+        <span class="n">reference</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span> <span class="o">/=</span> <span class="n">reference</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        
+        <span class="n">cell_type</span> <span class="o">=</span> <span class="n">annotation_method</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">annotation_prior</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cell_type</span>
+    
+    <span class="k">return</span> <span class="n">_method</span>
+
+<span class="k">def</span> <span class="nf">multi_center_annotation_method</span><span class="p">(</span>
+    <span class="n">annotation_method</span><span class="p">,</span>
+    <span class="n">multi_center</span><span class="p">,</span>
+    <span class="n">multi_center_amplitudes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">prepare_reconstruction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Creates an annotation method which internally works not on the annotation</span>
+<span class="sd">    categories directly, but on multiple automatically generated sub-categories</span>
+<span class="sd">    using k-means subclusters. This is currently only implemented for</span>
+<span class="sd">    categorical annotations.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    annotation_method</span>
+<span class="sd">        A callable of signature</span>
+<span class="sd">        `method(adata, reference, annotation_key, annotation_prior)`</span>
+<span class="sd">    multi_center</span>
+<span class="sd">        The number of sub-categories per annotation category. If a category has</span>
+<span class="sd">        less observations than this number, uses all the available observations</span>
+<span class="sd">        individually. If `None` or smaller than `1`, then the original</span>
+<span class="sd">        categories are used.</span>
+<span class="sd">    multi_center_amplitudes</span>
+<span class="sd">        Whether to run k-means on amplitudes of the observation profiles or on</span>
+<span class="sd">        the profiles directly.</span>
+<span class="sd">    prepare_reconstruction</span>
+<span class="sd">        This is an out-argument providing a dictionary to fill with the data</span>
+<span class="sd">        necessary for the reconstruction of &quot;denoised&quot; profiles. The necessary</span>
+<span class="sd">        data is a :class:`~pandas.DataFrame` containing the annotation on</span>
+<span class="sd">        sub-categories, another :class:`~pandas.DataFrame` containing the</span>
+<span class="sd">        profiles of the sub-categories, and a mapping of sub-categories to</span>
+<span class="sd">        their original categories.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Returns a callable of signature\</span>
+<span class="sd">    `method(adata, reference, annotation_key, annotation_prior, verbose)` which\</span>
+<span class="sd">    performs the actual annotation on the sub-categories and collects the\</span>
+<span class="sd">    results afterwards.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+        
+    <span class="k">def</span> <span class="nf">_method</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">annotation_prior</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
+        
+        <span class="k">nonlocal</span> <span class="n">annotation_method</span><span class="p">,</span> <span class="n">multi_center</span><span class="p">,</span> <span class="n">prepare_reconstruction</span>
+        
+        <span class="k">if</span> <span class="n">multi_center</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">multi_center</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">cell_type</span> <span class="o">=</span> <span class="n">annotation_method</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">annotation_prior</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">prepare_reconstruction</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">prepare_reconstruction</span><span class="p">[</span><span class="s1">&#39;annotation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell_type</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">prepare_reconstruction</span><span class="p">[</span><span class="s1">&#39;profiles&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">prepare_reconstruction</span><span class="p">[</span><span class="s1">&#39;mapping&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">return</span> <span class="n">cell_type</span>
+        
+        <span class="k">if</span> <span class="n">annotation_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">reference</span><span class="o">.</span><span class="n">obs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`multi_center_annotation_method` needs categorical annotation in the reference!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`multi_center_annotation_method` needs per observation data in the reference!&#39;</span><span class="p">)</span>
+        
+        <span class="n">new_key</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">find_unused_key</span><span class="p">([</span><span class="n">reference</span><span class="o">.</span><span class="n">obs</span><span class="p">,</span><span class="n">reference</span><span class="o">.</span><span class="n">varm</span><span class="p">])</span> <span class="c1"># profiles will be generated and stored in varm</span>
+        
+        <span class="n">reference</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">new_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">reference</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+            
+        <span class="n">preped</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
+        <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_integer_dtype</span><span class="p">(</span><span class="n">preped</span><span class="o">.</span><span class="n">X</span><span class="p">):</span>
+            <span class="n">preped</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">preped</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">multi_center_amplitudes</span><span class="p">:</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">row_scale</span><span class="p">(</span><span class="n">preped</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">utils</span><span class="o">.</span><span class="n">get_sum</span><span class="p">(</span><span class="n">preped</span><span class="o">.</span><span class="n">X</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">preped</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">row_scale</span><span class="p">(</span><span class="n">preped</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="mf">1e4</span><span class="o">/</span><span class="n">utils</span><span class="o">.</span><span class="n">get_sum</span><span class="p">(</span><span class="n">preped</span><span class="o">.</span><span class="n">X</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">preped</span><span class="p">)</span>
+            <span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">preped</span><span class="p">)</span>
+        <span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">preped</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">n_comps</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="nb">min</span><span class="p">(</span><span class="n">preped</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">preped</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        
+        <span class="n">new_cats</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">cat</span><span class="p">,</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">reference</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">annotation_key</span><span class="p">):</span>
+            <span class="n">_multi_center</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">multi_center</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            
+            <span class="n">X</span> <span class="o">=</span> <span class="n">preped</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;X_pca&#39;</span><span class="p">]</span>
+            
+            <span class="c1"># MiniBatch for speed</span>
+            <span class="n">kmeans</span> <span class="o">=</span> <span class="n">MiniBatchKMeans</span><span class="p">(</span>
+                <span class="n">n_clusters</span><span class="o">=</span><span class="n">_multi_center</span><span class="p">,</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                <span class="n">n_init</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="c1"># avoid FutureWarning about changing the default n_init to &#39;auto&#39;; possible speedup by using &#39;auto&#39; - needs evaluation</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_multi_center</span><span class="p">):</span>
+                <span class="n">new_cats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">cat</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">c</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">reference</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span><span class="n">new_key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">kmeans</span><span class="o">.</span><span class="n">labels_</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+        <span class="k">del</span> <span class="n">preped</span>
+        
+        <span class="n">map_new2orig</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">new_cats</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">new_cats</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># restore dtype</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="s1">&#39;categories&#39;</span><span class="p">):</span>
+            <span class="n">map_new2orig</span> <span class="o">=</span> <span class="n">map_new2orig</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">map_new2orig</span> <span class="o">=</span> <span class="n">map_new2orig</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">df_new2orig</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">map_new2orig</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">annotation_prior</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+            <span class="n">annotation_prior</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">((</span><span class="n">df_new2orig</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">/</span> <span class="n">df_new2orig</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span> <span class="o">@</span> <span class="n">annotation_prior</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">df_new2orig</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">index</span><span class="o">=</span><span class="n">df_new2orig</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="n">preprocessing</span><span class="o">.</span><span class="n">construct_reference_profiles</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="o">=</span><span class="n">new_key</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+        <span class="n">cell_type</span> <span class="o">=</span> <span class="n">annotation_method</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">new_key</span><span class="p">,</span> <span class="n">annotation_prior</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">prepare_reconstruction</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">prepare_reconstruction</span><span class="p">[</span><span class="s1">&#39;annotation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell_type</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">prepare_reconstruction</span><span class="p">[</span><span class="s1">&#39;profiles&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="n">new_key</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">prepare_reconstruction</span><span class="p">[</span><span class="s1">&#39;mapping&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">map_new2orig</span>
+        
+        <span class="k">del</span> <span class="n">reference</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">new_key</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">reference</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="n">new_key</span><span class="p">]</span>
+        
+        <span class="n">df_new2orig</span> <span class="o">=</span> <span class="n">df_new2orig</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">cell_type</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">df_new2orig</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span> <span class="c1"># annotation_method could reorder the columns - maybe...</span>
+        <span class="n">cell_type</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">cell_type</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">@</span> <span class="n">df_new2orig</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">index</span><span class="o">=</span><span class="n">cell_type</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">df_new2orig</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">cell_type</span>
+    
+    <span class="k">return</span> <span class="n">_method</span>
+
+<span class="k">def</span> <span class="nf">max_annotation_method</span><span class="p">(</span>
+    <span class="n">annotation_method</span><span class="p">,</span>
+    <span class="n">max_annotation</span><span class="p">,</span>
+    <span class="n">prepare_reconstruction</span>
+    <span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Enforces sparsity on the result of an annotation method.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    annotation_method</span>
+<span class="sd">        A callable of signature</span>
+<span class="sd">        `method(adata, reference, annotation_key, annotation_prior)`</span>
+<span class="sd">    max_annotation</span>
+<span class="sd">        Number of different annotations to allow per observation. `1` assigns</span>
+<span class="sd">        the maximum annotation, higher values assign the top annotations and</span>
+<span class="sd">        distribute the remaining annotations equally on the top annotations.</span>
+<span class="sd">        If `None` or smaller than `1`, no restrictions are imposed. </span>
+<span class="sd">    prepare_reconstruction</span>
+<span class="sd">        This is an out-argument providing a dictionary to fill with the data</span>
+<span class="sd">        necessary for the reconstruction of &quot;denoised&quot; profiles. The necessary</span>
+<span class="sd">        data is a :class:`~pandas.DataFrame` containing the annotation on</span>
+<span class="sd">        sub-categories, another :class:`~pandas.DataFrame` containing the</span>
+<span class="sd">        profiles of the sub-categories, and a mapping of sub-categories to</span>
+<span class="sd">        their original categories.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Returns a callable of signature\</span>
+<span class="sd">    `method(adata, reference, annotation_key, annotation_prior, verbose)` which\</span>
+<span class="sd">    performs the actual annotation with maximum annotation constraint.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+        
+    <span class="k">def</span> <span class="nf">_method</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">annotation_prior</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
+        
+        <span class="k">nonlocal</span> <span class="n">annotation_method</span><span class="p">,</span> <span class="n">max_annotation</span><span class="p">,</span> <span class="n">prepare_reconstruction</span>
+        
+        <span class="n">cell_type</span> <span class="o">=</span> <span class="n">annotation_method</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">annotation_prior</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">max_annotation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">max_annotation</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">_cell_type</span> <span class="o">=</span> <span class="n">cell_type</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            <span class="n">nth_largest_values_per_observation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">_cell_type</span><span class="p">,</span> <span class="o">-</span><span class="n">max_annotation</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)[:,</span><span class="o">-</span><span class="n">max_annotation</span><span class="p">]</span>
+            <span class="n">_cell_type</span><span class="p">[</span><span class="n">_cell_type</span><span class="o">&lt;</span><span class="n">nth_largest_values_per_observation</span><span class="p">[:,</span><span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">_cell_type</span> <span class="o">/=</span> <span class="n">_cell_type</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span><span class="kc">None</span><span class="p">]</span>
+            <span class="n">cell_type</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">_cell_type</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">cell_type</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">cell_type</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">prepare_reconstruction</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">sub_anno</span> <span class="o">=</span> <span class="n">prepare_reconstruction</span><span class="p">[</span><span class="s1">&#39;annotation&#39;</span><span class="p">]</span>
+                <span class="n">sub_map</span> <span class="o">=</span> <span class="n">prepare_reconstruction</span><span class="p">[</span><span class="s1">&#39;mapping&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">sub_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">sub_anno</span> <span class="o">*=</span> <span class="p">(</span><span class="n">cell_type</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">sub_anno</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">sub_map</span><span class="p">))</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+                    <span class="n">sub_anno</span> <span class="o">/=</span> <span class="n">sub_anno</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()[:,</span><span class="kc">None</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">prepare_reconstruction</span><span class="p">[</span><span class="s1">&#39;annotation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell_type</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+
+        <span class="k">return</span> <span class="n">cell_type</span>
+    
+    <span class="k">return</span> <span class="n">_method</span>
+
+<div class="viewcode-block" id="annotate">
+<a class="viewcode-back" href="../../../_autosummary/tacco.tools.annotate.html#tacco.tools.annotate">[docs]</a>
+<span class="k">def</span> <span class="nf">annotate</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">,</span>
+    <span class="n">reference</span><span class="p">,</span>
+    <span class="n">annotation_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">result_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">counts_location</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;OT&#39;</span><span class="p">,</span>
+    <span class="n">bisections</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">bisection_divisor</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">platform_iterations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">normalize_to</span><span class="o">=</span><span class="s1">&#39;adata&#39;</span><span class="p">,</span>
+    <span class="n">annotation_prior</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">multi_center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">multi_center_amplitudes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">reconstruction_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_annotation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">min_counts_per_gene</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">min_counts_per_cell</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">min_cells_per_gene</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">min_genes_per_cell</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">remove_constant_genes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">remove_zero_cells</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">min_log2foldchange</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">min_expression</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">remove_mito</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">n_hvg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">skip_checks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">assume_valid_counts</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">return_reference</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">gene_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kw_args</span><span class="p">,</span>
+    <span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Annotates an :class:`~anndata.AnnData` using reference data.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adata</span>
+<span class="sd">        An :class:`~anndata.AnnData` including expression data in `.X`.</span>
+<span class="sd">    reference</span>
+<span class="sd">        Reference data to get the annotation definition from.</span>
+<span class="sd">    annotation_key</span>
+<span class="sd">        The `.obs` and/or `.varm` key where the annotation and/or profiles are</span>
+<span class="sd">        stored in the `reference`. If `None`, it is inferred from `reference`,</span>
+<span class="sd">        if possible.</span>
+<span class="sd">    result_key</span>
+<span class="sd">        The `.obsm` key of `adata` where to store the resulting annotation. If</span>
+<span class="sd">        `None`, do not write to `adata` and return the annotation as</span>
+<span class="sd">        :class:`~pandas.DataFrame` instead.</span>
+<span class="sd">    counts_location</span>
+<span class="sd">        A string or tuple specifying where the count matrix is stored, e.g.</span>
+<span class="sd">        `&#39;X&#39;`, `(&#39;raw&#39;,&#39;X&#39;)`, `(&#39;raw&#39;,&#39;obsm&#39;,&#39;my_counts_key&#39;)`,</span>
+<span class="sd">        `(&#39;layer&#39;,&#39;my_counts_key&#39;)`, ... For details see</span>
+<span class="sd">        :func:`~tacco.get.counts`.</span>
+<span class="sd">    method</span>
+<span class="sd">        String selecting the method to use for annotation. Can also be a</span>
+<span class="sd">        callable of signature</span>
+<span class="sd">        `method(adata, reference, annotation_key, **kw_args)` returning a</span>
+<span class="sd">        :class:`~pandas.DataFrame`.</span>
+<span class="sd">        Possible methods include:</span>
+<span class="sd">        </span>
+<span class="sd">        - &#39;OT&#39;, implemented by :func:`~tacco.tools.annotate_OT`</span>
+<span class="sd">        - &#39;nnls&#39;, implemented by :func:`~tacco.tools.annotate_nnls`</span>
+<span class="sd">        - &#39;tangram&#39;, implemented by :func:`~tacco.tools.annotate_tangram`</span>
+<span class="sd">        - &#39;novosparc&#39;, implemented by :func:`~tacco.tools.annotate_novosparc`</span>
+<span class="sd">        - &#39;projection&#39;, implemented by :func:`~tacco.tools.annotate_projection`</span>
+<span class="sd">        - &#39;RCTD&#39;, implemented by :func:`~tacco.tools.annotate_RCTD`</span>
+<span class="sd">        - &#39;NMFreg&#39;, implemented by :func:`~tacco.tools.annotate_NMFreg`</span>
+<span class="sd">        - &#39;SingleR&#39;, implemented by :func:`~tacco.tools.annotate_SingleR`</span>
+<span class="sd">        - &#39;WOT&#39;, implemented by :func:`~tacco.tools.annotate_wot`</span>
+<span class="sd">        - &#39;svm&#39;, implemented by :func:`~tacco.tools.annotate_svm`</span>
+
+<span class="sd">    bisections</span>
+<span class="sd">        If larger than 0, runs a boosted annotator using a basis annotator by</span>
+<span class="sd">        iteratively running the basis annotator and removing a reconstructed</span>
+<span class="sd">        fraction of the counts. The parameter gives the number of recursive</span>
+<span class="sd">        bisections of the annotation. If `None`, defaults to method dependent</span>
+<span class="sd">        values.</span>
+<span class="sd">    bisection_divisor</span>
+<span class="sd">        Number of parts for bisection: First, `bisections` times a fraction of</span>
+<span class="sd">        1/`bisection_divisor` of the unassigned counts of every observation is</span>
+<span class="sd">        assigned. The remainder is then split evely in `bisection_divisor`</span>
+<span class="sd">        parts. E.g. if `bisections` is `2` and `bisection_divisor` is `3`, then</span>
+<span class="sd">        the assigned fractions per round of typing are 1/3,2/3*(1/3,1/3,1/3),</span>
+<span class="sd">        if `bisections` is `3` and `bisection_divisor` is `2`, then they are</span>
+<span class="sd">        1/2,(1/2,(1/2,1/2)/2)/2. Generally, the total number of typing rounds</span>
+<span class="sd">        is `bisections + bisection_divisor - 1`.</span>
+<span class="sd">    platform_iterations</span>
+<span class="sd">        Number of platform normalization iterations before running the</span>
+<span class="sd">        annotation. If `0`, platform normalization is done once in the</span>
+<span class="sd">        beginning, but no iteration is done. If smaller than `0`, no platform</span>
+<span class="sd">        normalization is performed at all. If `None`, defaults to method</span>
+<span class="sd">        dependent values.</span>
+<span class="sd">    normalize_to</span>
+<span class="sd">        To what expression the adatas should be normalized. Can be one of:</span>
+<span class="sd">        </span>
+<span class="sd">        - &#39;adata&#39;: normalize `reference` to conform to `adata`; the resulting</span>
+<span class="sd">          annotation fractions give how many of the actual reads in `adata` are</span>
+<span class="sd">          belonging to which annotation.</span>
+<span class="sd">        - &#39;reference&#39;: normalize `adata` to conform to `reference`; the</span>
+<span class="sd">          resulting annotation fractions give how many of the reads in `adata`</span>
+<span class="sd">          would belong to which annotation if they were measured with the same</span>
+<span class="sd">          platform effects as `reference`.</span>
+<span class="sd">          </span>
+<span class="sd">    annotation_prior</span>
+<span class="sd">        A callable of signature `method(adata, reference, annotation_key)`</span>
+<span class="sd">        which returns priors for the annotation or a :class:`~pandas.Series`</span>
+<span class="sd">        containing the annotation prior distribution directly.</span>
+<span class="sd">        This parameter is used only for methods which require such a parameter.</span>
+<span class="sd">        If `None`, it is determined by summing the annotation in the reference</span>
+<span class="sd">        data weighted with the counts from `reference.X`.</span>
+<span class="sd">    multi_center</span>
+<span class="sd">        The number of sub-categories per annotation category. If a category has</span>
+<span class="sd">        less observations than this number, uses all the available observations</span>
+<span class="sd">        individually. If `None` or smaller than `1`, then the original</span>
+<span class="sd">        categories are used.</span>
+<span class="sd">    multi_center_amplitudes</span>
+<span class="sd">        Whether to run k-means on amplitudes of the observation profiles or on</span>
+<span class="sd">        the profiles directly.</span>
+<span class="sd">    reconstruction_key</span>
+<span class="sd">        The key for `.varm`, `.obsm`, and `.uns` where to put information for</span>
+<span class="sd">        reconstructing &quot;denoised&quot; data: profiles, annotation, and a mapping of</span>
+<span class="sd">        annotation sub-categories to annotation categories. If</span>
+<span class="sd">        `multi_center==1`, `reconstruction_key` can be equal to</span>
+<span class="sd">        `result_key`, as the `annotation` information is identical; a mapping</span>
+<span class="sd">        is not necessary; just the profiles are additionally stored in `.varm`.</span>
+<span class="sd">        If `None`, and `multi_center==1`, the `result_key` is used, else</span>
+<span class="sd">        &quot;{result_key}_mc{multi_center}&quot;. If `result_key` is `None`, no</span>
+<span class="sd">        reconstruction information is returned.</span>
+<span class="sd">    max_annotation</span>
+<span class="sd">        Number of different annotations to allow per observation. `1` assigns</span>
+<span class="sd">        the maximum annotation, higher values assign the top annotations and</span>
+<span class="sd">        distribute the remaining annotations equally on the top annotations.</span>
+<span class="sd">        If `None` or smaller than `1`, no restrictions are imposed. </span>
+<span class="sd">    min_counts_per_gene</span>
+<span class="sd">        The minimum number of counts genes must have in both adata and</span>
+<span class="sd">        reference to be kept.</span>
+<span class="sd">    min_counts_per_cell</span>
+<span class="sd">        The minimum number of counts cells must have in both adata and</span>
+<span class="sd">        reference to be kept.</span>
+<span class="sd">    min_cells_per_gene</span>
+<span class="sd">        The minimum number of cells genes must have in both adata and</span>
+<span class="sd">        reference to be kept.</span>
+<span class="sd">    min_genes_per_cell</span>
+<span class="sd">        The minimum number of genes cells must have in both adata and</span>
+<span class="sd">        reference to be kept.</span>
+<span class="sd">    remove_constant_genes</span>
+<span class="sd">        Whether to remove genes which do not show any variation between cells</span>
+<span class="sd">    remove_zero_cells</span>
+<span class="sd">        Whether to remove cells without non-zero genes</span>
+<span class="sd">    min_log2foldchange</span>
+<span class="sd">        Minimum log2-fold change a gene must have in at least one annotation</span>
+<span class="sd">        category relative to the mean of the other categories to be kept.</span>
+<span class="sd">    min_expression</span>
+<span class="sd">        Minimum expression level relative to all expression a gene must have in</span>
+<span class="sd">        at least one annotation category to be kept.</span>
+<span class="sd">    remove_mito</span>
+<span class="sd">        Whether to remove genes starting with &quot;mt-&quot; and &quot;MT-&quot;.</span>
+<span class="sd">    n_hvg</span>
+<span class="sd">        The number of highly variable genes to run on. If `None`, use all</span>
+<span class="sd">        genes.</span>
+<span class="sd">    skip_checks</span>
+<span class="sd">        Whether to skip data integrity checks and save time. Only recommended</span>
+<span class="sd">        for internal use - or people who really know what they are doing.</span>
+<span class="sd">    assume_valid_counts</span>
+<span class="sd">        Disable checking for invalid counts (e.g. non-integer or negative).</span>
+<span class="sd">    return_reference</span>
+<span class="sd">        Whether to return the platform normalized `reference`.</span>
+<span class="sd">    gene_keys</span>
+<span class="sd">        String or list of strings specifying additional count-like `.var` and</span>
+<span class="sd">        `.varm` annotations to scale along with the platform normalization. The</span>
+<span class="sd">        `annotation_key` is included automatically. If `True`, take all `.var`</span>
+<span class="sd">        and `.varm` keys. This makes only sense if `return_reference` is</span>
+<span class="sd">        `True`.</span>
+<span class="sd">    verbose</span>
+<span class="sd">        Level of verbosity, with `0` (no output), `1` (some output), ...</span>
+<span class="sd">    **kw_args</span>
+<span class="sd">        Additional keyword arguments are forwarded to the annotation method.</span>
+<span class="sd">        See the functions mentioned in the documentation of the parameter</span>
+<span class="sd">        `method` for details.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Depending on `result_key`, either returns the original `adata` with\</span>
+<span class="sd">    annotation written in the corresponding `.obsm` key, or just the annotation\</span>
+<span class="sd">    as a new :class:`~pandas.DataFrame`.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">adata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;&quot;adata&quot; cannot be None!&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">reference</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;&quot;reference&quot; cannot be None!&#39;</span><span class="p">)</span>
+        
+    <span class="n">annotation_key</span> <span class="o">=</span> <span class="n">_infer_annotation_key</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">)</span>
+        
+    <span class="n">gene_keys</span> <span class="o">=</span> <span class="n">_get_unique_keys</span><span class="p">(</span><span class="n">annotation_key</span><span class="p">,</span> <span class="n">gene_keys</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">skip_checks</span><span class="p">:</span>
+        <span class="n">tdata</span> <span class="o">=</span> <span class="n">adata</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Starting preprocessing&#39;</span><span class="p">)</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        
+        <span class="n">tdata</span> <span class="o">=</span> <span class="n">get</span><span class="o">.</span><span class="n">counts</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">counts_location</span><span class="o">=</span><span class="n">counts_location</span><span class="p">,</span> <span class="n">annotation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">reference</span> <span class="o">=</span> <span class="n">get</span><span class="o">.</span><span class="n">counts</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">counts_location</span><span class="o">=</span><span class="n">counts_location</span><span class="p">,</span> <span class="n">annotation</span><span class="o">=</span><span class="n">gene_keys</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">annotation_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">reference</span><span class="o">.</span><span class="n">varm</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Annotation profiles were not found in `reference.varm[&quot;</span><span class="si">{</span><span class="n">annotation_key</span><span class="si">}</span><span class="s1">&quot;]`. Constructing reference profiles with `tacco.preprocessing.construct_reference_profiles` and default arguments...&#39;</span><span class="p">)</span>
+            <span class="n">reference</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">construct_reference_profiles</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="o">=</span><span class="n">annotation_key</span><span class="p">)</span>
+        
+        <span class="n">gene_mask</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">filter_reference_genes</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="o">=</span><span class="n">annotation_key</span><span class="p">,</span> <span class="n">min_log2foldchange</span><span class="o">=</span><span class="n">min_log2foldchange</span><span class="p">,</span> <span class="n">min_expression</span><span class="o">=</span><span class="n">min_expression</span><span class="p">,</span> <span class="n">remove_mito</span><span class="o">=</span><span class="n">remove_mito</span><span class="p">,</span> <span class="n">n_hvg</span><span class="o">=</span><span class="n">n_hvg</span><span class="p">,</span> <span class="n">return_mask</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">gene_mask</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="n">reference</span> <span class="o">=</span> <span class="n">reference</span><span class="p">[:,</span><span class="n">gene_mask</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">tdata</span> <span class="o">=</span> <span class="n">tdata</span><span class="p">[:,</span><span class="n">tdata</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+
+<span class="c1">#        if annotation_key in reference.varm:</span>
+<span class="c1">#            reference = preprocessing.filter_profiles(adata=reference, annotation_key=annotation_key, fill_na=0, fill_negative=None) # filter out zero-only genes in the profiles</span>
+        <span class="k">if</span> <span class="n">annotation_key</span> <span class="ow">in</span> <span class="n">reference</span><span class="o">.</span><span class="n">obsm</span><span class="p">:</span>
+            <span class="n">reference</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">filter_annotation</span><span class="p">(</span><span class="n">adata</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="o">=</span><span class="n">annotation_key</span><span class="p">,</span> <span class="n">fill_na</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">fill_negative</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="c1"># filter out zero-only cells in the annotation</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">assume_valid_counts</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">preprocessing</span><span class="o">.</span><span class="n">check_counts_validity</span><span class="p">(</span><span class="n">tdata</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">raise_exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span> <span class="c1"># as e syntax added in ~python2.5</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s1">You can deactivate checking for invalid counts by specifying `assume_valid_counts=True`.&#39;</span><span class="p">)</span>
+        <span class="n">tdata</span><span class="p">,</span><span class="n">reference</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">adata</span><span class="o">=</span><span class="p">(</span><span class="n">tdata</span><span class="p">,</span><span class="n">reference</span><span class="p">),</span> <span class="n">min_counts_per_cell</span><span class="o">=</span><span class="n">min_counts_per_cell</span><span class="p">,</span> <span class="n">min_counts_per_gene</span><span class="o">=</span><span class="n">min_counts_per_gene</span><span class="p">,</span> <span class="n">min_cells_per_gene</span><span class="o">=</span><span class="n">min_cells_per_gene</span><span class="p">,</span> <span class="n">min_genes_per_cell</span><span class="o">=</span><span class="n">min_genes_per_cell</span><span class="p">,</span> <span class="n">remove_constant_genes</span><span class="o">=</span><span class="n">remove_constant_genes</span><span class="p">,</span> <span class="n">remove_zero_cells</span><span class="o">=</span><span class="n">remove_zero_cells</span><span class="p">,</span> <span class="n">assume_valid_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># ensure consistent gene selection</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Finished preprocessing in </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1"> seconds.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># construct the method to perform the actual annotation</span>
+    <span class="n">prior_argument_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39; annotation_prior=</span><span class="si">{</span><span class="n">annotation_prior</span><span class="si">}</span><span class="s1">&#39;</span>
+    <span class="n">kw_args_string</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39; </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">kw_args</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+    <span class="n">method_construction_info</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">&#39;+- core: method=</span><span class="si">{</span><span class="n">method</span><span class="si">}{</span><span class="n">prior_argument_string</span><span class="si">}{</span><span class="n">kw_args_string</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span>
+    <span class="n">_method</span> <span class="o">=</span> <span class="n">annotation_method</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">bisections</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;OT&#39;</span><span class="p">:</span>
+            <span class="n">bisections</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">bisections</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">bisections</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">_method</span> <span class="o">=</span> <span class="n">boost_annotation_method</span><span class="p">(</span><span class="n">annotation_method</span><span class="o">=</span><span class="n">_method</span><span class="p">,</span> <span class="n">bisections</span><span class="o">=</span><span class="n">bisections</span><span class="p">,</span> <span class="n">bisection_divisor</span><span class="o">=</span><span class="n">bisection_divisor</span><span class="p">)</span>
+        <span class="n">method_construction_info</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;   &#39;</span> <span class="o">+</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">method_construction_info</span><span class="p">]</span>
+        <span class="n">method_construction_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;+- bisection boost: bisections=</span><span class="si">{</span><span class="n">bisections</span><span class="si">}</span><span class="s1">, bisection_divisor=</span><span class="si">{</span><span class="n">bisection_divisor</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    
+    <span class="n">prepare_reconstruction</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">result_key</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
+    
+    <span class="k">if</span> <span class="n">result_key</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">reconstruction_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;`result_key` is `None`, indicating that the `adata` will not be changed, but `reconstruction_key` is &quot;</span><span class="si">{</span><span class="n">reconstruction_key</span><span class="si">}</span><span class="s1">&quot; and requires adata to be changed!&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">result_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">reconstruction_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">multi_center</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">multi_center</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">reconstruction_key</span> <span class="o">=</span> <span class="n">result_key</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">reconstruction_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">result_key</span><span class="si">}</span><span class="s1">_mc</span><span class="si">{</span><span class="n">multi_center</span><span class="si">}</span><span class="s1">&#39;</span>
+    <span class="k">if</span> <span class="n">result_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">result_key</span> <span class="o">==</span> <span class="n">reconstruction_key</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">multi_center</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">multi_center</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;`result_key` and `reconstruction_key` are identical &quot;</span><span class="si">{</span><span class="n">result_key</span><span class="si">}</span><span class="s1">&quot;, but `multi_center&gt;1`! `result_key` and `reconstruction_key` can only be equal if the annotation is identical to the reconstruction information.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">multi_center</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">reconstruction_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_method</span> <span class="o">=</span> <span class="n">multi_center_annotation_method</span><span class="p">(</span><span class="n">annotation_method</span><span class="o">=</span><span class="n">_method</span><span class="p">,</span> <span class="n">multi_center</span><span class="o">=</span><span class="n">multi_center</span><span class="p">,</span> <span class="n">multi_center_amplitudes</span><span class="o">=</span><span class="n">multi_center_amplitudes</span><span class="p">,</span> <span class="n">prepare_reconstruction</span><span class="o">=</span><span class="n">prepare_reconstruction</span><span class="p">)</span>
+        <span class="n">method_construction_info</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;   &#39;</span> <span class="o">+</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">method_construction_info</span><span class="p">]</span>
+        <span class="n">method_construction_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;+- multi center: multi_center=</span><span class="si">{</span><span class="n">multi_center</span><span class="si">}</span><span class="s1"> multi_center_amplitudes=</span><span class="si">{</span><span class="n">multi_center_amplitudes</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">platform_iterations</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;OT&#39;</span><span class="p">,</span><span class="s1">&#39;projection&#39;</span><span class="p">]:</span>
+            <span class="n">platform_iterations</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">platform_iterations</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">if</span> <span class="n">platform_iterations</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;There is no expression data available in the `reference` (`np.prod(reference.shape) == 0`)! Therefore no platform normalization is performed even though `platform_iterations=</span><span class="si">{</span><span class="n">platform_iterations</span><span class="si">}</span><span class="s1">`.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">normalize_to</span> <span class="o">==</span> <span class="s1">&#39;reference&#39;</span><span class="p">:</span>
+                <span class="n">tdata</span> <span class="o">=</span> <span class="n">tdata</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="c1"># platform normalization changes tdata inplace</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_float_dtype</span><span class="p">(</span><span class="n">tdata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+                    <span class="n">tdata</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">tdata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">reference</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="c1"># platform normalization changes reference inplace</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_float_dtype</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+                    <span class="n">reference</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">_method</span> <span class="o">=</span> <span class="n">platform_normalize_annotation_method</span><span class="p">(</span><span class="n">annotation_method</span><span class="o">=</span><span class="n">_method</span><span class="p">,</span> <span class="n">platform_iterations</span><span class="o">=</span><span class="n">platform_iterations</span><span class="p">,</span> <span class="n">gene_keys</span><span class="o">=</span><span class="n">gene_keys</span><span class="p">,</span> <span class="n">normalize_to</span><span class="o">=</span><span class="n">normalize_to</span><span class="p">)</span>
+            <span class="n">method_construction_info</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;   &#39;</span> <span class="o">+</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">method_construction_info</span><span class="p">]</span>
+            <span class="n">method_construction_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;+- platform normalization: platform_iterations=</span><span class="si">{</span><span class="n">platform_iterations</span><span class="si">}</span><span class="s1">, gene_keys=</span><span class="si">{</span><span class="n">gene_keys</span><span class="si">}</span><span class="s1">, normalize_to=</span><span class="si">{</span><span class="n">normalize_to</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">max_annotation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_method</span> <span class="o">=</span> <span class="n">max_annotation_method</span><span class="p">(</span><span class="n">annotation_method</span><span class="o">=</span><span class="n">_method</span><span class="p">,</span> <span class="n">max_annotation</span><span class="o">=</span><span class="n">max_annotation</span><span class="p">,</span> <span class="n">prepare_reconstruction</span><span class="o">=</span><span class="n">prepare_reconstruction</span><span class="p">)</span>
+        <span class="n">method_construction_info</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;   &#39;</span> <span class="o">+</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">method_construction_info</span><span class="p">]</span>
+        <span class="n">method_construction_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;+- maximum annotation: max_annotation=</span><span class="si">{</span><span class="n">max_annotation</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Starting annotation of data with shape </span><span class="si">{</span><span class="n">tdata</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1"> and a reference of shape </span><span class="si">{</span><span class="n">reference</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1"> using the following wrapped method:&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">method_construction_info</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">cell_type</span> <span class="o">=</span> <span class="n">_method</span><span class="p">(</span><span class="n">tdata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">annotation_prior</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Finished annotation in </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1"> seconds.&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">reconstruction_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">annotation</span> <span class="o">=</span> <span class="n">prepare_reconstruction</span><span class="p">[</span><span class="s1">&#39;annotation&#39;</span><span class="p">]</span>
+        <span class="n">profiles</span> <span class="o">=</span> <span class="n">prepare_reconstruction</span><span class="p">[</span><span class="s1">&#39;profiles&#39;</span><span class="p">]</span>
+        <span class="n">mapping</span> <span class="o">=</span> <span class="n">prepare_reconstruction</span><span class="p">[</span><span class="s1">&#39;mapping&#39;</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">mapping</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="n">reconstruction_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">mapping</span>
+        
+        <span class="n">adata</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="n">reconstruction_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">profiles</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            
+        <span class="k">if</span> <span class="n">result_key</span> <span class="o">!=</span> <span class="n">reconstruction_key</span><span class="p">:</span>
+            <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">reconstruction_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">annotation</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    
+    <span class="c1"># conserve/define types and names</span>
+    <span class="k">if</span> <span class="n">annotation_key</span> <span class="ow">in</span> <span class="n">reference</span><span class="o">.</span><span class="n">obs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">],</span> <span class="s1">&#39;cat&#39;</span><span class="p">):</span>
+            <span class="n">cell_type</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">cell_type</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">cell_type</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">cell_type</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">annotation_key</span> <span class="ow">in</span> <span class="n">reference</span><span class="o">.</span><span class="n">obsm</span><span class="p">:</span>
+        <span class="n">cell_type</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">cell_type</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">annotation_key</span> <span class="ow">in</span> <span class="n">reference</span><span class="o">.</span><span class="n">varm</span><span class="p">:</span>
+        <span class="n">cell_type</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">cell_type</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">cell_type</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">annotation_key</span>
+    <span class="n">cell_type</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">cell_type</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">result_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">result_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell_type</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">adata</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">cell_type</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">reference</span><span class="p">)</span> <span class="k">if</span> <span class="n">return_reference</span> <span class="k">else</span> <span class="n">result</span>
+    
+    <span class="k">del</span> <span class="n">tdata</span><span class="p">,</span> <span class="n">reference</span> <span class="c1"># clean up the copies.</span>
+    <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span> <span class="c1"># anndata copies are not well garbage collected and accumulate in memory</span>
+    
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<span class="k">def</span> <span class="nf">_estimate_bin_size</span><span class="p">(</span><span class="n">coordinates</span><span class="p">,</span> <span class="n">target_number</span><span class="o">=</span><span class="mi">250</span><span class="p">):</span>
+    
+    <span class="c1"># find order of magnitude of extent assuming a hyper-cube of data</span>
+    <span class="n">maxs</span><span class="p">,</span> <span class="n">mins</span> <span class="o">=</span> <span class="n">coordinates</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">coordinates</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">extents</span> <span class="o">=</span> <span class="n">maxs</span> <span class="o">-</span> <span class="n">mins</span>
+    <span class="n">volume</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">extents</span><span class="p">)</span>
+    <span class="n">density</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coordinates</span><span class="p">)</span> <span class="o">/</span> <span class="n">volume</span>
+    
+    <span class="n">bin_volume</span> <span class="o">=</span> <span class="n">target_number</span> <span class="o">/</span> <span class="n">density</span>
+    
+    <span class="n">bin_size</span> <span class="o">=</span> <span class="n">bin_volume</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">extents</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">bin_size</span>
+
+<span class="k">def</span> <span class="nf">_enum_shifts</span><span class="p">(</span><span class="n">n_shifts</span><span class="p">,</span><span class="n">n_dim</span><span class="p">,</span><span class="n">shifts</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">n_dim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">shifts</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">shifts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">shifts</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_shifts</span><span class="p">)</span> <span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">shifts</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span><span class="n">s</span><span class="p">,</span><span class="o">*</span><span class="n">shift</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_shifts</span><span class="p">)</span> <span class="k">for</span> <span class="n">shift</span> <span class="ow">in</span> <span class="n">shifts</span> <span class="p">]</span>
+    <span class="k">return</span> <span class="n">_enum_shifts</span><span class="p">(</span><span class="n">n_shifts</span><span class="p">,</span><span class="n">n_dim</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">shifts</span><span class="o">=</span><span class="n">shifts</span><span class="p">)</span>
+
+<div class="viewcode-block" id="annotate_single_molecules">
+<a class="viewcode-back" href="../../../_autosummary/tacco.tools.annotate_single_molecules.html#tacco.tools.annotate_single_molecules">[docs]</a>
+<span class="k">def</span> <span class="nf">annotate_single_molecules</span><span class="p">(</span>
+    <span class="n">molecules</span><span class="p">,</span>
+    <span class="n">reference</span><span class="p">,</span>
+    <span class="n">annotation_key</span><span class="p">,</span>
+    <span class="n">result_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">bin_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">position_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">],</span>
+    <span class="n">gene_key</span><span class="o">=</span><span class="s1">&#39;gene&#39;</span><span class="p">,</span>
+    <span class="n">n_shifts</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kw_args</span><span class="p">,</span>
+    <span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Annotates single molecules in space using reference data.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    molecules</span>
+<span class="sd">        A :class:`~pandas.DataFrame` with columns containing spatial</span>
+<span class="sd">        coordinates and molecule species annotation.</span>
+<span class="sd">    reference</span>
+<span class="sd">        Reference data to get the annotation definition from.</span>
+<span class="sd">    annotation_key</span>
+<span class="sd">        The `.obs` and/or `.varm` key where the annotation and/or profiles are</span>
+<span class="sd">        stored in the `reference`. If `None`, it is inferred from `reference`,</span>
+<span class="sd">        if possible.</span>
+<span class="sd">    result_key</span>
+<span class="sd">        The key of `molecules` where to store the resulting annotation. If</span>
+<span class="sd">        `None`, do not write to `molecules` and return the annotation as</span>
+<span class="sd">        :class:`~pandas.Series` instead.</span>
+<span class="sd">    bin_size</span>
+<span class="sd">        The spatial size of a bin. Bins are of the same size in all</span>
+<span class="sd">        dimensions. A bin should be large enough to contain enough molecules</span>
+<span class="sd">        to enable statements about its type composition. If `None`, use a</span>
+<span class="sd">        heuristic to choose a value.</span>
+<span class="sd">    position_keys</span>
+<span class="sd">        Array-like of column keys which contain the position of the molecules.</span>
+<span class="sd">    gene_key</span>
+<span class="sd">        The name of the column which contains the molecule species annotation.</span>
+<span class="sd">    n_shifts</span>
+<span class="sd">        An integer giving the number of independent binnings per dimension.</span>
+<span class="sd">        Larger values give a better majority vote for the molecule annotation.</span>
+<span class="sd">        But computing time scales with `n_shifts**dimension`.</span>
+<span class="sd">    verbose</span>
+<span class="sd">        Level of verbosity, with `0` (no output), `1` (some output), ...</span>
+<span class="sd">    **kw_args</span>
+<span class="sd">        Additional keyword arguments are forwarded to</span>
+<span class="sd">        :func:`~tacco.tools.annotate`.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Depending on `result_key`, either returns the original `molecules` with\</span>
+<span class="sd">    annotation written in the corresponding column, or just the annotation\</span>
+<span class="sd">    as a new :class:`~pandas.Series`.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+        
+    <span class="n">annotation_key</span> <span class="o">=</span> <span class="n">_infer_annotation_key</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">bin_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bin_size</span> <span class="o">=</span> <span class="n">_estimate_bin_size</span><span class="p">(</span><span class="n">molecules</span><span class="p">[</span><span class="n">position_keys</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;estimated bin_size: </span><span class="si">{</span><span class="n">bin_size</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    
+    <span class="n">shift_annos</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">molecules</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    
+    <span class="n">n_dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">position_keys</span><span class="p">)</span>
+
+    <span class="n">shifts</span> <span class="o">=</span> <span class="n">_enum_shifts</span><span class="p">(</span><span class="n">n_shifts</span><span class="o">=</span><span class="n">n_shifts</span><span class="p">,</span><span class="n">n_dim</span><span class="o">=</span><span class="n">n_dim</span><span class="p">)</span>
+    
+    <span class="c1"># do the binning, typing, splitting, mapping for multiple shifted bins</span>
+    <span class="k">for</span> <span class="n">shift</span> <span class="ow">in</span> <span class="n">shifts</span><span class="p">:</span>
+
+        <span class="n">bins</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">bin</span><span class="p">(</span><span class="n">molecules</span><span class="p">,</span> <span class="n">bin_size</span><span class="o">=</span><span class="n">bin_size</span><span class="p">,</span> <span class="n">position_keys</span><span class="o">=</span><span class="n">position_keys</span><span class="p">,</span> <span class="n">shift</span><span class="o">=-</span><span class="n">shift</span><span class="o">*</span><span class="n">bin_size</span><span class="o">/</span><span class="n">n_shifts</span><span class="p">);</span> <span class="c1"># shift bin to negaive directions to not exclude points</span>
+
+        <span class="n">hashes</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">hash</span><span class="p">(</span><span class="n">bins</span><span class="p">);</span>
+
+        <span class="n">bingene</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;bin&#39;</span><span class="p">:</span><span class="n">hashes</span><span class="p">,</span><span class="s1">&#39;gene&#39;</span><span class="p">:</span><span class="n">molecules</span><span class="p">[</span><span class="n">gene_key</span><span class="p">]})</span>
+
+        <span class="n">rdata</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">dataframe2anndata</span><span class="p">(</span><span class="n">bingene</span><span class="p">,</span> <span class="n">obs_key</span><span class="o">=</span><span class="s1">&#39;bin&#39;</span><span class="p">,</span> <span class="n">var_key</span><span class="o">=</span><span class="s1">&#39;gene&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># annotate bins and get the reference, because the annotation profiles are needed for bead splitting and might have been generated in annotate()</span>
+        <span class="n">result</span><span class="p">,</span> <span class="n">_reference</span> <span class="o">=</span> <span class="n">annotate</span><span class="p">(</span><span class="n">adata</span><span class="o">=</span><span class="n">rdata</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="o">=</span><span class="n">annotation_key</span><span class="p">,</span> <span class="n">result_key</span><span class="o">=</span><span class="s1">&#39;anno&#39;</span><span class="p">,</span> <span class="n">return_reference</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">);</span>
+    
+        <span class="n">rdata</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="s1">&#39;anno&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_reference</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">rdata</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">_reference</span> <span class="c1"># clean up</span>
+        <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span> <span class="c1"># anndata copies are not well garbage collected and accumulate in memory</span>
+    
+        <span class="n">sdata</span> <span class="o">=</span> <span class="n">split_observations</span><span class="p">(</span><span class="n">adata</span><span class="o">=</span><span class="n">rdata</span><span class="p">,</span> <span class="n">annotation_key</span><span class="o">=</span><span class="s1">&#39;anno&#39;</span><span class="p">,</span> <span class="n">min_counts</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">);</span>
+        <span class="k">del</span> <span class="n">rdata</span> <span class="c1"># clean up</span>
+        <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span> <span class="c1"># anndata copies are not well garbage collected and accumulate in memory</span>
+
+        <span class="n">ldata</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">anndata2dataframe</span><span class="p">(</span><span class="n">adata</span><span class="o">=</span><span class="n">sdata</span><span class="p">,</span> <span class="n">obs_name</span><span class="o">=</span><span class="s1">&#39;split&#39;</span><span class="p">,</span> <span class="n">obs_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;bin&#39;</span><span class="p">,</span> <span class="s1">&#39;anno&#39;</span><span class="p">]);</span>
+        <span class="k">del</span> <span class="n">sdata</span> <span class="c1"># clean up</span>
+        <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span> <span class="c1"># anndata copies are not well garbage collected and accumulate in memory</span>
+
+        <span class="c1"># align dtypes as anndata converted the index to str above</span>
+        <span class="n">ldata</span><span class="p">[</span><span class="s1">&#39;bin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ldata</span><span class="p">[</span><span class="s1">&#39;bin&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">bingene</span><span class="p">[</span><span class="s1">&#39;bin&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">bingene</span><span class="p">[</span><span class="s1">&#39;gene&#39;</span><span class="p">],</span> <span class="s1">&#39;cat&#39;</span><span class="p">):</span>
+            <span class="n">ldata</span><span class="p">[</span><span class="s1">&#39;gene&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ldata</span><span class="p">[</span><span class="s1">&#39;gene&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">bingene</span><span class="p">[</span><span class="s1">&#39;gene&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">ldata</span><span class="p">[</span><span class="s1">&#39;gene&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ldata</span><span class="p">[</span><span class="s1">&#39;gene&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">bingene</span><span class="p">[</span><span class="s1">&#39;gene&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">hash</span><span class="p">(</span><span class="n">bingene</span><span class="p">,</span> <span class="n">hash_key</span><span class="o">=</span><span class="s1">&#39;bingene&#39;</span><span class="p">,</span> <span class="n">other</span><span class="o">=</span><span class="n">ldata</span><span class="p">);</span>
+
+        <span class="n">bingene</span> <span class="o">=</span> <span class="n">bingene</span><span class="p">[</span><span class="n">bingene</span><span class="p">[</span><span class="s1">&#39;bingene&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">ldata</span><span class="p">[</span><span class="s1">&#39;bingene&#39;</span><span class="p">])]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    
+        <span class="n">anno</span> <span class="o">=</span> <span class="n">_map_hash_annotation</span><span class="p">(</span><span class="n">bingene</span><span class="p">,</span> <span class="n">abcdata</span><span class="o">=</span><span class="n">ldata</span><span class="p">,</span> <span class="n">annotation_key</span><span class="o">=</span><span class="s1">&#39;anno&#39;</span><span class="p">,</span> <span class="n">hash_key</span><span class="o">=</span><span class="s1">&#39;bingene&#39;</span><span class="p">,</span> <span class="n">count_key</span><span class="o">=</span><span class="s1">&#39;X&#39;</span><span class="p">)</span>
+        
+        <span class="n">shift_annos</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">shift</span><span class="p">)]</span> <span class="o">=</span> <span class="n">anno</span>
+    
+    <span class="n">anno</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="n">shift_annos</span><span class="p">)</span>
+    
+    <span class="c1"># conserve index dtype</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">molecules</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="s1">&#39;categories&#39;</span><span class="p">):</span> <span class="c1"># categorical index</span>
+        <span class="n">anno</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">anno</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">molecules</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">categories</span><span class="p">))</span>
+    <span class="n">anno</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">anno</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">molecules</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">anno</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">annotation_key</span>
+    
+    <span class="k">if</span> <span class="n">result_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">molecules</span><span class="p">[</span><span class="n">result_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">anno</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">molecules</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">molecules</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">anno</span>
+    
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="segment">
+<a class="viewcode-back" href="../../../_autosummary/tacco.tools.segment.html#tacco.tools.segment">[docs]</a>
+<span class="k">def</span> <span class="nf">segment</span><span class="p">(</span>
+    <span class="n">molecules</span><span class="p">,</span>
+    <span class="n">distance_scale</span><span class="p">,</span>
+    <span class="n">max_size</span><span class="p">,</span>
+    <span class="n">position_scale</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span>
+    <span class="n">position_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">],</span>
+    <span class="n">result_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_distance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">annotation_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">annotation_distance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">distance_kw_args</span><span class="o">=</span><span class="p">{},</span>
+    <span class="n">gene_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kw_args</span><span class="p">,</span>
+    <span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Segment single molecules in space to get a cell-like annotation.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    molecules</span>
+<span class="sd">        A :class:`~pandas.DataFrame` with columns containing spatial</span>
+<span class="sd">        coordinates and annotation.</span>
+<span class="sd">    distance_scale</span>
+<span class="sd">        This is a smooth size of the molecule neighborhood to be considered in</span>
+<span class="sd">        clustering (the width parameter of the Gaussian for affinity</span>
+<span class="sd">        calculation).</span>
+<span class="sd">    max_size</span>
+<span class="sd">        The most important parameter for the hierarchical spectral clustering in</span>
+<span class="sd">        :func:`~tacco.tools.spectral_clustering`: The clustering goes on until</span>
+<span class="sd">        no cluster has more elements than this. Additional arguments can be</span>
+<span class="sd">        supplied as key word arguments.</span>
+<span class="sd">    position_scale</span>
+<span class="sd">        The most important parameter for the hierarchical spectral clustering</span>
+<span class="sd">        in :func:`~tacco.tools.spectral_clustering` when spatial information is</span>
+<span class="sd">        provided: The expected feature size to use for splitting the problem</span>
+<span class="sd">        spatially. If `position_key` or `position_scale` is `None`, do hirarchical</span>
+<span class="sd">        clustering to iteratively split the problems in smaller subproblems.</span>
+<span class="sd">        If `position_scale` is &quot;auto&quot;, it is estimated based on a heuristic.</span>
+<span class="sd">    position_keys</span>
+<span class="sd">        Array-like of column keys which contain the position of the molecules.</span>
+<span class="sd">    result_key</span>
+<span class="sd">        The key of `molecules` where to store the resulting annotation. If</span>
+<span class="sd">        `None`, do not write to `molecules` and return the annotation as</span>
+<span class="sd">        :class:`~pandas.Series` instead.</span>
+<span class="sd">    max_distance</span>
+<span class="sd">        The maximum distance to consider in the distance matrix. This should be</span>
+<span class="sd">        large enough to capture the wider local connectivity between molecules.</span>
+<span class="sd">        `max_distance` and `sigma` have similar effects, with `max_distance`</span>
+<span class="sd">        giving a hard cutoff which is crucial for fast computations, while</span>
+<span class="sd">        `sigma` gives a smooth cutoff. If `None`, `max_distance` is taken to be</span>
+<span class="sd">        `2*distance_scale`.</span>
+<span class="sd">    annotation_key</span>
+<span class="sd">        The column containing categorical annotation information to support the</span>
+<span class="sd">        segmentation, e.g. cell type. If `None`, the segmentation is done using</span>
+<span class="sd">        the molecule distribution without any further annotation.</span>
+<span class="sd">    annotation_distance</span>
+<span class="sd">        Specifies the effect of `annotation_key` in adding a distances</span>
+<span class="sd">        between two observations of different type. It can be:</span>
+<span class="sd">        </span>
+<span class="sd">        - a scalar to use for all annotation pairs</span>
+<span class="sd">        - a :class:`~pandas.DataFrame` to give every annotation pair its own</span>
+<span class="sd">          finite distance. If some should retain infinite distance, use</span>
+<span class="sd">          `np.inf`, `np.nan` or negative values</span>
+<span class="sd">        - `None` to use an infinite distance between different annotations</span>
+<span class="sd">        - a metric to calculate a distance between the annotation profiles.</span>
+<span class="sd">          This is forwarded to :func:`~tacco.utils.cdist` as the `metric`</span>
+<span class="sd">          argument, so everything available there is also posible here, e.g.</span>
+<span class="sd">          &#39;h2&#39;.</span>
+<span class="sd">          </span>
+<span class="sd">    distance_kw_args</span>
+<span class="sd">        A dictionary of additional keyword arguments to be forwarded to</span>
+<span class="sd">        :func:`~tacco.tools.distance_matrix`.</span>
+<span class="sd">    gene_key</span>
+<span class="sd">        The name of the column which contains the molecule species annotation.</span>
+<span class="sd">        This is used iff the annotation distance is to be calculated with a</span>
+<span class="sd">        metric specified by a string via `annotation_distance`.</span>
+<span class="sd">    verbose</span>
+<span class="sd">        Level of verbosity, with `0` (no output), `1` (some output), ...</span>
+<span class="sd">    **kw_args</span>
+<span class="sd">        Additional keyword arguments are forwarded to</span>
+<span class="sd">        :func:`~tacco.tools.spectral_clustering`.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Depending on `result_key`, either returns the original `molecules` with\</span>
+<span class="sd">    cell-like annotation written in the corresponding column, or just the\</span>
+<span class="sd">    cell-like annotation as a new :class:`~pandas.Series`.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">max_distance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">max_distance</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">distance_scale</span>
+    
+    <span class="k">if</span> <span class="n">annotation_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">annotation_distance</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">gene_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;`annotation_key` is not `None`, a metric is supplied for `annotation_distance` &quot;</span><span class="si">{</span><span class="n">annotation_distance</span><span class="si">}</span><span class="s1">&quot;, but `gene_key` is `None`, so nothing is available to calculate the distance on!&#39;</span><span class="p">)</span>
+    
+    <span class="n">fdata</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">dataframe2anndata</span><span class="p">(</span><span class="n">molecules</span><span class="p">,</span> <span class="n">obs_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">var_key</span><span class="o">=</span><span class="n">gene_key</span><span class="p">)</span>
+    <span class="n">distance_key</span> <span class="o">=</span> <span class="s1">&#39;distance&#39;</span>
+    <span class="n">distance_matrix</span><span class="p">(</span>
+        <span class="n">adata</span><span class="o">=</span><span class="n">fdata</span><span class="p">,</span>
+        <span class="n">max_distance</span><span class="o">=</span><span class="n">max_distance</span><span class="p">,</span>
+        <span class="n">position_key</span><span class="o">=</span><span class="n">position_keys</span><span class="p">,</span>
+        <span class="n">result_key</span><span class="o">=</span><span class="n">distance_key</span><span class="p">,</span>
+        <span class="n">annotation_key</span><span class="o">=</span><span class="n">annotation_key</span><span class="p">,</span>
+        <span class="n">annotation_distance</span><span class="o">=</span><span class="n">annotation_distance</span><span class="p">,</span>
+        <span class="n">distance_scale</span><span class="o">=</span><span class="n">distance_scale</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">distance_kw_args</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">affinity_key</span> <span class="o">=</span> <span class="s1">&#39;affinity&#39;</span>
+    <span class="n">affinity</span><span class="p">(</span>
+        <span class="n">adata</span><span class="o">=</span><span class="n">fdata</span><span class="p">,</span>
+        <span class="n">sigma</span><span class="o">=</span><span class="n">distance_scale</span><span class="p">,</span>
+        <span class="n">distance_key</span><span class="o">=</span><span class="n">distance_key</span><span class="p">,</span>
+        <span class="n">result_key</span><span class="o">=</span><span class="n">affinity_key</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">position_scale</span> <span class="o">==</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
+        <span class="n">position_scale</span> <span class="o">=</span> <span class="n">_estimate_bin_size</span><span class="p">(</span><span class="n">molecules</span><span class="p">[</span><span class="n">position_keys</span><span class="p">],</span> <span class="n">target_number</span><span class="o">=</span><span class="n">max_size</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;estimated position_scale: </span><span class="si">{</span><span class="n">position_scale</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">anno</span> <span class="o">=</span> <span class="n">spectral_clustering</span><span class="p">(</span>
+        <span class="n">adata</span><span class="o">=</span><span class="n">fdata</span><span class="p">,</span>
+        <span class="n">max_size</span><span class="o">=</span><span class="n">max_size</span><span class="p">,</span>
+        <span class="n">affinity_key</span><span class="o">=</span><span class="n">affinity_key</span><span class="p">,</span>
+        <span class="n">position_key</span><span class="o">=</span><span class="n">position_keys</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kw_args</span><span class="p">,</span>
+    <span class="p">)</span>
+    
+    <span class="c1"># conserve index dtype</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">molecules</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="s1">&#39;categories&#39;</span><span class="p">):</span> <span class="c1"># categorical index</span>
+        <span class="n">anno</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">anno</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">molecules</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">categories</span><span class="p">))</span>
+    <span class="n">anno</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">anno</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">molecules</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">result_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">molecules</span><span class="p">[</span><span class="n">result_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">anno</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">molecules</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">molecules</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">anno</span>
+    
+    <span class="k">return</span> <span class="n">result</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

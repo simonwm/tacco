@@ -1,0 +1,6 @@
+tacco.plots.subplots
+====================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: subplots

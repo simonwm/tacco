@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.tools.annotate &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tacco.tools.annotate_NMFreg" href="tacco.tools.annotate_NMFreg.html" />
+    <link rel="prev" title="tacco.tools.affinity" href="tacco.tools.affinity.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tacco.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tacco.benchmarking.html">tacco.benchmarking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.get.html">tacco.get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.plots.html">tacco.plots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.preprocessing.html">tacco.preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.testing.html">tacco.testing</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="tacco.tools.html">tacco.tools</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.affinity.html">tacco.tools.affinity</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">tacco.tools.annotate</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tacco.tools.annotate"><code class="docutils literal notranslate"><span class="pre">annotate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_NMFreg.html">tacco.tools.annotate_NMFreg</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_OT.html">tacco.tools.annotate_OT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_RCTD.html">tacco.tools.annotate_RCTD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_SingleR.html">tacco.tools.annotate_SingleR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_nnls.html">tacco.tools.annotate_nnls</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_novosparc.html">tacco.tools.annotate_novosparc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_projection.html">tacco.tools.annotate_projection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_single_molecules.html">tacco.tools.annotate_single_molecules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_svm.html">tacco.tools.annotate_svm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_tangram.html">tacco.tools.annotate_tangram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_wot.html">tacco.tools.annotate_wot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotation_coordinate.html">tacco.tools.annotation_coordinate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.co_occurrence.html">tacco.tools.co_occurrence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.co_occurrence_matrix.html">tacco.tools.co_occurrence_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.distance_matrix.html">tacco.tools.distance_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.distribute_molecules.html">tacco.tools.distribute_molecules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.enrichments.html">tacco.tools.enrichments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.fill_regions.html">tacco.tools.fill_regions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.find_regions.html">tacco.tools.find_regions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.get_compositions.html">tacco.tools.get_compositions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.get_contributions.html">tacco.tools.get_contributions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.merge_observations.html">tacco.tools.merge_observations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.mix_in_silico.html">tacco.tools.mix_in_silico</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.run_goa_analysis.html">tacco.tools.run_goa_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.run_orthology_converter.html">tacco.tools.run_orthology_converter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.segment.html">tacco.tools.segment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.setup_goa_analysis.html">tacco.tools.setup_goa_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.setup_orthology_converter.html">tacco.tools.setup_orthology_converter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.spectral_clustering.html">tacco.tools.spectral_clustering</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.split_observations.html">tacco.tools.split_observations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.utils.html">tacco.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.sum.html">tacco.sum</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="tacco.html">tacco</a></li>
+          <li class="breadcrumb-item"><a href="tacco.tools.html">tacco.tools</a></li>
+      <li class="breadcrumb-item active">tacco.tools.annotate</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tacco-tools-annotate">
+<h1>tacco.tools.annotate<a class="headerlink" href="#tacco-tools-annotate" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="tacco.tools.annotate">
+<span class="sig-name descname"><span class="pre">annotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotation_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">counts_location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'OT'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bisections</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bisection_divisor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">platform_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'adata'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotation_prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_center_amplitudes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reconstruction_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_annotation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_counts_per_gene</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_counts_per_cell</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_cells_per_gene</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_genes_per_cell</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_constant_genes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_zero_cells</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_log2foldchange</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_expression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_mito</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_hvg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_checks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assume_valid_counts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gene_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw_args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tacco/tools/_annotate.html#annotate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tacco.tools.annotate" title="Link to this definition">¶</a></dt>
+<dd><p>Annotates an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> using reference data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>adata</strong> – An <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> including expression data in <cite>.X</cite>.</p></li>
+<li><p><strong>reference</strong> – Reference data to get the annotation definition from.</p></li>
+<li><p><strong>annotation_key</strong> – The <cite>.obs</cite> and/or <cite>.varm</cite> key where the annotation and/or profiles are
+stored in the <cite>reference</cite>. If <cite>None</cite>, it is inferred from <cite>reference</cite>,
+if possible.</p></li>
+<li><p><strong>result_key</strong> – The <cite>.obsm</cite> key of <cite>adata</cite> where to store the resulting annotation. If
+<cite>None</cite>, do not write to <cite>adata</cite> and return the annotation as
+<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> instead.</p></li>
+<li><p><strong>counts_location</strong> – A string or tuple specifying where the count matrix is stored, e.g.
+<cite>‘X’</cite>, <cite>(‘raw’,’X’)</cite>, <cite>(‘raw’,’obsm’,’my_counts_key’)</cite>,
+<cite>(‘layer’,’my_counts_key’)</cite>, … For details see
+<a class="reference internal" href="tacco.get.counts.html#tacco.get.counts" title="tacco.get.counts"><code class="xref py py-func docutils literal notranslate"><span class="pre">counts()</span></code></a>.</p></li>
+<li><p><strong>method</strong> – <p>String selecting the method to use for annotation. Can also be a
+callable of signature
+<cite>method(adata, reference, annotation_key, **kw_args)</cite> returning a
+<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>.
+Possible methods include:</p>
+<ul>
+<li><p>’OT’, implemented by <a class="reference internal" href="tacco.tools.annotate_OT.html#tacco.tools.annotate_OT" title="tacco.tools.annotate_OT"><code class="xref py py-func docutils literal notranslate"><span class="pre">annotate_OT()</span></code></a></p></li>
+<li><p>’nnls’, implemented by <a class="reference internal" href="tacco.tools.annotate_nnls.html#tacco.tools.annotate_nnls" title="tacco.tools.annotate_nnls"><code class="xref py py-func docutils literal notranslate"><span class="pre">annotate_nnls()</span></code></a></p></li>
+<li><p>’tangram’, implemented by <a class="reference internal" href="tacco.tools.annotate_tangram.html#tacco.tools.annotate_tangram" title="tacco.tools.annotate_tangram"><code class="xref py py-func docutils literal notranslate"><span class="pre">annotate_tangram()</span></code></a></p></li>
+<li><p>’novosparc’, implemented by <a class="reference internal" href="tacco.tools.annotate_novosparc.html#tacco.tools.annotate_novosparc" title="tacco.tools.annotate_novosparc"><code class="xref py py-func docutils literal notranslate"><span class="pre">annotate_novosparc()</span></code></a></p></li>
+<li><p>’projection’, implemented by <a class="reference internal" href="tacco.tools.annotate_projection.html#tacco.tools.annotate_projection" title="tacco.tools.annotate_projection"><code class="xref py py-func docutils literal notranslate"><span class="pre">annotate_projection()</span></code></a></p></li>
+<li><p>’RCTD’, implemented by <a class="reference internal" href="tacco.tools.annotate_RCTD.html#tacco.tools.annotate_RCTD" title="tacco.tools.annotate_RCTD"><code class="xref py py-func docutils literal notranslate"><span class="pre">annotate_RCTD()</span></code></a></p></li>
+<li><p>’NMFreg’, implemented by <a class="reference internal" href="tacco.tools.annotate_NMFreg.html#tacco.tools.annotate_NMFreg" title="tacco.tools.annotate_NMFreg"><code class="xref py py-func docutils literal notranslate"><span class="pre">annotate_NMFreg()</span></code></a></p></li>
+<li><p>’SingleR’, implemented by <a class="reference internal" href="tacco.tools.annotate_SingleR.html#tacco.tools.annotate_SingleR" title="tacco.tools.annotate_SingleR"><code class="xref py py-func docutils literal notranslate"><span class="pre">annotate_SingleR()</span></code></a></p></li>
+<li><p>’WOT’, implemented by <a class="reference internal" href="tacco.tools.annotate_wot.html#tacco.tools.annotate_wot" title="tacco.tools.annotate_wot"><code class="xref py py-func docutils literal notranslate"><span class="pre">annotate_wot()</span></code></a></p></li>
+<li><p>’svm’, implemented by <a class="reference internal" href="tacco.tools.annotate_svm.html#tacco.tools.annotate_svm" title="tacco.tools.annotate_svm"><code class="xref py py-func docutils literal notranslate"><span class="pre">annotate_svm()</span></code></a></p></li>
+</ul>
+</p></li>
+<li><p><strong>bisections</strong> – If larger than 0, runs a boosted annotator using a basis annotator by
+iteratively running the basis annotator and removing a reconstructed
+fraction of the counts. The parameter gives the number of recursive
+bisections of the annotation. If <cite>None</cite>, defaults to method dependent
+values.</p></li>
+<li><p><strong>bisection_divisor</strong> – Number of parts for bisection: First, <cite>bisections</cite> times a fraction of
+1/<cite>bisection_divisor</cite> of the unassigned counts of every observation is
+assigned. The remainder is then split evely in <cite>bisection_divisor</cite>
+parts. E.g. if <cite>bisections</cite> is <cite>2</cite> and <cite>bisection_divisor</cite> is <cite>3</cite>, then
+the assigned fractions per round of typing are 1/3,2/3*(1/3,1/3,1/3),
+if <cite>bisections</cite> is <cite>3</cite> and <cite>bisection_divisor</cite> is <cite>2</cite>, then they are
+1/2,(1/2,(1/2,1/2)/2)/2. Generally, the total number of typing rounds
+is <cite>bisections + bisection_divisor - 1</cite>.</p></li>
+<li><p><strong>platform_iterations</strong> – Number of platform normalization iterations before running the
+annotation. If <cite>0</cite>, platform normalization is done once in the
+beginning, but no iteration is done. If smaller than <cite>0</cite>, no platform
+normalization is performed at all. If <cite>None</cite>, defaults to method
+dependent values.</p></li>
+<li><p><strong>normalize_to</strong> – <p>To what expression the adatas should be normalized. Can be one of:</p>
+<ul>
+<li><p>’adata’: normalize <cite>reference</cite> to conform to <cite>adata</cite>; the resulting
+annotation fractions give how many of the actual reads in <cite>adata</cite> are
+belonging to which annotation.</p></li>
+<li><p>’reference’: normalize <cite>adata</cite> to conform to <cite>reference</cite>; the
+resulting annotation fractions give how many of the reads in <cite>adata</cite>
+would belong to which annotation if they were measured with the same
+platform effects as <cite>reference</cite>.</p></li>
+</ul>
+</p></li>
+<li><p><strong>annotation_prior</strong> – A callable of signature <cite>method(adata, reference, annotation_key)</cite>
+which returns priors for the annotation or a <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a>
+containing the annotation prior distribution directly.
+This parameter is used only for methods which require such a parameter.
+If <cite>None</cite>, it is determined by summing the annotation in the reference
+data weighted with the counts from <cite>reference.X</cite>.</p></li>
+<li><p><strong>multi_center</strong> – The number of sub-categories per annotation category. If a category has
+less observations than this number, uses all the available observations
+individually. If <cite>None</cite> or smaller than <cite>1</cite>, then the original
+categories are used.</p></li>
+<li><p><strong>multi_center_amplitudes</strong> – Whether to run k-means on amplitudes of the observation profiles or on
+the profiles directly.</p></li>
+<li><p><strong>reconstruction_key</strong> – The key for <cite>.varm</cite>, <cite>.obsm</cite>, and <cite>.uns</cite> where to put information for
+reconstructing “denoised” data: profiles, annotation, and a mapping of
+annotation sub-categories to annotation categories. If
+<cite>multi_center==1</cite>, <cite>reconstruction_key</cite> can be equal to
+<cite>result_key</cite>, as the <cite>annotation</cite> information is identical; a mapping
+is not necessary; just the profiles are additionally stored in <cite>.varm</cite>.
+If <cite>None</cite>, and <cite>multi_center==1</cite>, the <cite>result_key</cite> is used, else
+“{result_key}_mc{multi_center}”. If <cite>result_key</cite> is <cite>None</cite>, no
+reconstruction information is returned.</p></li>
+<li><p><strong>max_annotation</strong> – Number of different annotations to allow per observation. <cite>1</cite> assigns
+the maximum annotation, higher values assign the top annotations and
+distribute the remaining annotations equally on the top annotations.
+If <cite>None</cite> or smaller than <cite>1</cite>, no restrictions are imposed.</p></li>
+<li><p><strong>min_counts_per_gene</strong> – The minimum number of counts genes must have in both adata and
+reference to be kept.</p></li>
+<li><p><strong>min_counts_per_cell</strong> – The minimum number of counts cells must have in both adata and
+reference to be kept.</p></li>
+<li><p><strong>min_cells_per_gene</strong> – The minimum number of cells genes must have in both adata and
+reference to be kept.</p></li>
+<li><p><strong>min_genes_per_cell</strong> – The minimum number of genes cells must have in both adata and
+reference to be kept.</p></li>
+<li><p><strong>remove_constant_genes</strong> – Whether to remove genes which do not show any variation between cells</p></li>
+<li><p><strong>remove_zero_cells</strong> – Whether to remove cells without non-zero genes</p></li>
+<li><p><strong>min_log2foldchange</strong> – Minimum log2-fold change a gene must have in at least one annotation
+category relative to the mean of the other categories to be kept.</p></li>
+<li><p><strong>min_expression</strong> – Minimum expression level relative to all expression a gene must have in
+at least one annotation category to be kept.</p></li>
+<li><p><strong>remove_mito</strong> – Whether to remove genes starting with “mt-” and “MT-“.</p></li>
+<li><p><strong>n_hvg</strong> – The number of highly variable genes to run on. If <cite>None</cite>, use all
+genes.</p></li>
+<li><p><strong>skip_checks</strong> – Whether to skip data integrity checks and save time. Only recommended
+for internal use - or people who really know what they are doing.</p></li>
+<li><p><strong>assume_valid_counts</strong> – Disable checking for invalid counts (e.g. non-integer or negative).</p></li>
+<li><p><strong>return_reference</strong> – Whether to return the platform normalized <cite>reference</cite>.</p></li>
+<li><p><strong>gene_keys</strong> – String or list of strings specifying additional count-like <cite>.var</cite> and
+<cite>.varm</cite> annotations to scale along with the platform normalization. The
+<cite>annotation_key</cite> is included automatically. If <cite>True</cite>, take all <cite>.var</cite>
+and <cite>.varm</cite> keys. This makes only sense if <cite>return_reference</cite> is
+<cite>True</cite>.</p></li>
+<li><p><strong>verbose</strong> – Level of verbosity, with <cite>0</cite> (no output), <cite>1</cite> (some output), …</p></li>
+<li><p><strong>**kw_args</strong> – Additional keyword arguments are forwarded to the annotation method.
+See the functions mentioned in the documentation of the parameter
+<cite>method</cite> for details.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Depending on <cite>result_key</cite>, either returns the original <cite>adata</cite> with    annotation written in the corresponding <cite>.obsm</cite> key, or just the annotation    as a new <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tacco.tools.affinity.html" class="btn btn-neutral float-left" title="tacco.tools.affinity" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tacco.tools.annotate_NMFreg.html" class="btn btn-neutral float-right" title="tacco.tools.annotate_NMFreg" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

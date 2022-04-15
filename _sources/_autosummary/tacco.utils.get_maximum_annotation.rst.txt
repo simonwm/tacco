@@ -1,0 +1,6 @@
+tacco.utils.get\_maximum\_annotation
+====================================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: get_maximum_annotation

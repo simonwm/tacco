@@ -1,0 +1,6 @@
+tacco.testing.assert\_sparse\_equal
+===================================
+
+.. currentmodule:: tacco.testing
+
+.. autofunction:: assert_sparse_equal

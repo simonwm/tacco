@@ -1,0 +1,6 @@
+tacco.utils.find\_unused\_key
+=============================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: find_unused_key

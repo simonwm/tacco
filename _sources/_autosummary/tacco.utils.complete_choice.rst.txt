@@ -1,0 +1,6 @@
+tacco.utils.complete\_choice
+============================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: complete_choice

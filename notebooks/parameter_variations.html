@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parameter Variations for annotation using Optimal Transport &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Simulated single cell expression data with ambient contamination" href="simulated_ambient.html" />
+    <link rel="prev" title="TACCO overview" href="overview.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../examples.html">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="benchmarking.html">Benchmarking runtime and memory of annotation methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cooccurrence.html">Co-occurrence computations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="insilico_mouse_colon.html">In-silico mixed Mouse Colon scRNA-seq data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mapping_single_cells_into_space.html">Mapping single cells into space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_splitting.html">Object splitting for in-silico mixed scRNA-seq data and Slide-Seq data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="osmFISH_single_molecule_annotation.html">Single molecule data: osmFISH mouse somato-sensory cortex</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview.html">TACCO overview</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Parameter Variations for annotation using Optimal Transport</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Load-data">Load data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Simulate-data">Simulate data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#In-silico-mixture">In-silico mixture</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Dropout">Dropout</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Ambient">Ambient</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Plotting-options">Plotting options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Run-annotation">Run annotation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Plot-results">Plot results</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="simulated_ambient.html">Simulated single cell expression data with ambient contamination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulated_dropout.html">Simulated single cell expression data with dropout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="single_cell_differentiation.html">Single-cell differentiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slideseq_mouse_colon.html">Slide-Seq Mouse Colon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slideseq_mouse_olfactory_bulb.html">Slide-Seq Mouse Olfactory Bulb - multiple pucks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slideseq_mouse_olfactory_bulb_single.html">Slide-Seq Mouse Olfactory Bulb - single puck</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visium_mouse_kidney.html">Visium Mouse Kidney</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../_autosummary/tacco.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../examples.html">Examples</a></li>
+      <li class="breadcrumb-item active">Parameter Variations for annotation using Optimal Transport</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Parameter-Variations-for-annotation-using-Optimal-Transport">
+<h1>Parameter Variations for annotation using Optimal Transport<a class="headerlink" href="#Parameter-Variations-for-annotation-using-Optimal-Transport" title="Link to this heading">¶</a></h1>
+<p>This example uses TACCO with core annotation method OT and several parameter variations to show the dependence of the parameter choices on the quality of the annotation. The datasets are are taken from (Weinreb et al.) and (Avraham-Davidi et al.) or simulated using (Moriel) and (Kotliar).</p>
+<p>(Weinreb et al.): Weinreb C, Rodriguez-Fraticelli A, Camargo FD, Klein AM. Lineage tracing on transcriptional landscapes links state to fate during differentiation. Science. 2020 Feb 14;367(6479):eaaw3381. doi: 10.1126/science.aaw3381. Epub 2020 Jan 23. PMID: 31974159; PMCID: PMC7608074.</p>
+<p>(Avraham-Davidi et al.): Avraham-Davidi I, Mages S, Klughammer J, et al. Integrative single cell and spatial transcriptomics of colorectal cancer reveals multicellular functional units that support tumor progression. doi: <a class="reference external" href="https://doi.org/10.1101/2022.10.02.508492">https://doi.org/10.1101/2022.10.02.508492</a></p>
+<p>(Moriel): Moriel, N. Extension of scsim single-cell RNA-sequencing data simulations. github.com/nitzanlab/scsim-ext (2023)</p>
+<p>(Kotliar): Kotliar, D. scsim: simulate single-cell RNA-SEQ data using the Splatter statistical framework but implemented in python. github.com/dylkot/scsim (2021)</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">anndata</span> <span class="k">as</span> <span class="nn">ad</span>
+<span class="kn">import</span> <span class="nn">scipy.sparse</span>
+<span class="kn">from</span> <span class="nn">scsim</span> <span class="kn">import</span> <span class="n">scsim</span>
+
+<span class="kn">import</span> <span class="nn">tacco</span> <span class="k">as</span> <span class="nn">tc</span>
+
+<span class="c1"># The notebook expects to be executed either in the workflow directory or in the repository root folder...</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s1">&#39;workflow&#39;</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s1">&#39;workflow/common_code.py&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;..&#39;</span><span class="p">))</span>
+<span class="kn">import</span> <span class="nn">common_code</span>
+</pre></div>
+</div>
+</div>
+<section id="Load-data">
+<h2>Load data<a class="headerlink" href="#Load-data" title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">env_path</span> <span class="o">=</span> <span class="n">common_code</span><span class="o">.</span><span class="n">find_path</span><span class="p">(</span><span class="s1">&#39;results/env_links&#39;</span><span class="p">)</span>
+<span class="n">datasets</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># collect all datasets</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">differentiation_data_path</span> <span class="o">=</span> <span class="n">common_code</span><span class="o">.</span><span class="n">find_path</span><span class="p">(</span><span class="s1">&#39;results/single_cell_differentiation/data&#39;</span><span class="p">)</span>
+<span class="n">d4d6</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">differentiation_data_path</span><span class="si">}</span><span class="s1">/d4_d6_differentiation.h5ad&#39;</span><span class="p">)</span>
+<span class="n">d2</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">differentiation_data_path</span><span class="si">}</span><span class="s1">/d2_differentiation.h5ad&#39;</span><span class="p">)</span>
+<span class="n">datasets</span><span class="p">[</span><span class="s1">&#39;Differentiation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">d2</span><span class="p">,</span> <span class="s1">&#39;ref&#39;</span><span class="p">:</span> <span class="n">d4d6</span><span class="p">,</span> <span class="s1">&#39;ref_key&#39;</span><span class="p">:</span> <span class="s1">&#39;Cell type annotation&#39;</span><span class="p">,</span> <span class="s1">&#39;true_key&#39;</span><span class="p">:</span> <span class="s1">&#39;clone_fate&#39;</span><span class="p">,</span> <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">scrnaseq_data_path</span> <span class="o">=</span> <span class="n">common_code</span><span class="o">.</span><span class="n">find_path</span><span class="p">(</span><span class="s1">&#39;results/slideseq_mouse_colon/data&#39;</span><span class="p">)</span>
+<span class="n">scrnaseq</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">scrnaseq_data_path</span><span class="si">}</span><span class="s1">/scrnaseq.h5ad&#39;</span><span class="p">)</span>
+<span class="n">datasets</span><span class="p">[</span><span class="s1">&#39;Single cell&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">scrnaseq</span><span class="p">,</span> <span class="s1">&#39;ref&#39;</span><span class="p">:</span> <span class="n">scrnaseq</span><span class="p">,</span> <span class="s1">&#39;ref_key&#39;</span><span class="p">:</span> <span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="s1">&#39;true_key&#39;</span><span class="p">:</span> <span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Simulate-data">
+<h2>Simulate data<a class="headerlink" href="#Simulate-data" title="Link to this heading">¶</a></h2>
+</section>
+<section id="In-silico-mixture">
+<h2>In-silico mixture<a class="headerlink" href="#In-silico-mixture" title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">capture_rate</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">bead_shape</span> <span class="o">=</span> <span class="s1">&#39;gauss&#39;</span>
+<span class="n">ntdata_max</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="mi">4</span>
+<span class="n">bead_size</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">is_data</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">mix_in_silico</span><span class="p">(</span><span class="n">scrnaseq</span><span class="p">,</span> <span class="n">type_key</span><span class="o">=</span><span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="n">ntdata_max</span><span class="p">,</span> <span class="n">bead_shape</span><span class="o">=</span><span class="n">bead_shape</span><span class="p">,</span> <span class="n">bead_size</span><span class="o">=</span><span class="n">bead_size</span><span class="p">,</span> <span class="n">capture_rate</span><span class="o">=</span><span class="n">capture_rate</span><span class="p">,)</span>
+<span class="n">is_data</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;reads_labels&#39;</span><span class="p">]</span> <span class="o">/=</span> <span class="n">is_data</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;reads_labels&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span><span class="kc">None</span><span class="p">]</span>
+<span class="n">datasets</span><span class="p">[</span><span class="s1">&#39;Mixture&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">is_data</span><span class="p">,</span> <span class="s1">&#39;ref&#39;</span><span class="p">:</span> <span class="n">scrnaseq</span><span class="p">,</span> <span class="s1">&#39;ref_key&#39;</span><span class="p">:</span> <span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="s1">&#39;true_key&#39;</span><span class="p">:</span> <span class="s1">&#39;reads_labels&#39;</span><span class="p">,</span> <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<section id="Dropout">
+<h3>Dropout<a class="headerlink" href="#Dropout" title="Link to this heading">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ngenes</span> <span class="o">=</span> <span class="mi">25000</span>
+<span class="n">descale</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">ndoublets</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">K</span> <span class="o">=</span> <span class="mi">13</span>
+<span class="n">nproggenes</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">proggroups</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span>
+<span class="n">progcellfrac</span> <span class="o">=</span> <span class="mf">.35</span>
+<span class="n">ncells</span> <span class="o">=</span> <span class="mi">1500</span>
+<span class="n">deprob</span> <span class="o">=</span> <span class="mf">.025</span>
+
+<span class="n">seed</span> <span class="o">=</span> <span class="mi">111</span>
+
+<span class="n">deloc</span> <span class="o">=</span> <span class="mf">2.0</span>
+
+<span class="c1"># simulating true counts (in simulator.counts)</span>
+<span class="n">simulator</span> <span class="o">=</span> <span class="n">scsim</span><span class="p">(</span><span class="n">ngenes</span><span class="o">=</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">ncells</span><span class="o">=</span><span class="n">ncells</span><span class="p">,</span> <span class="n">ngroups</span><span class="o">=</span><span class="n">K</span><span class="p">,</span> <span class="n">libloc</span><span class="o">=</span><span class="mf">7.64</span><span class="p">,</span> <span class="n">libscale</span><span class="o">=</span><span class="mf">0.78</span><span class="p">,</span>
+             <span class="n">mean_rate</span><span class="o">=</span><span class="mf">7.68</span><span class="p">,</span><span class="n">mean_shape</span><span class="o">=</span><span class="mf">0.34</span><span class="p">,</span> <span class="n">expoutprob</span><span class="o">=</span><span class="mf">0.00286</span><span class="p">,</span>
+             <span class="n">expoutloc</span><span class="o">=</span><span class="mf">6.15</span><span class="p">,</span> <span class="n">expoutscale</span><span class="o">=</span><span class="mf">0.49</span><span class="p">,</span>
+             <span class="n">diffexpprob</span><span class="o">=</span><span class="n">deprob</span><span class="p">,</span> <span class="n">diffexpdownprob</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">diffexploc</span><span class="o">=</span><span class="n">deloc</span><span class="p">,</span> <span class="n">diffexpscale</span><span class="o">=</span><span class="n">descale</span><span class="p">,</span>
+             <span class="n">bcv_dispersion</span><span class="o">=</span><span class="mf">0.448</span><span class="p">,</span> <span class="n">bcv_dof</span><span class="o">=</span><span class="mf">22.087</span><span class="p">,</span> <span class="n">ndoublets</span><span class="o">=</span><span class="n">ndoublets</span><span class="p">,</span>
+             <span class="n">nproggenes</span><span class="o">=</span><span class="n">nproggenes</span><span class="p">,</span> <span class="n">progdownprob</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">progdeloc</span><span class="o">=</span><span class="n">deloc</span><span class="p">,</span>
+             <span class="n">progdescale</span><span class="o">=</span><span class="n">descale</span><span class="p">,</span> <span class="n">progcellfrac</span><span class="o">=</span><span class="n">progcellfrac</span><span class="p">,</span> <span class="n">proggoups</span><span class="o">=</span><span class="n">proggroups</span><span class="p">,</span>
+             <span class="n">minprogusage</span><span class="o">=</span><span class="mf">.1</span><span class="p">,</span> <span class="n">maxprogusage</span><span class="o">=</span><span class="mf">.7</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+<span class="n">simulator</span><span class="o">.</span><span class="n">simulate</span><span class="p">()</span>
+
+<span class="n">drop_ref</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">AnnData</span><span class="p">(</span><span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">(</span><span class="n">simulator</span><span class="o">.</span><span class="n">counts</span><span class="p">),</span> <span class="n">obs</span><span class="o">=</span><span class="n">simulator</span><span class="o">.</span><span class="n">cellparams</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">simulator</span><span class="o">.</span><span class="n">geneparams</span><span class="p">)</span>
+<span class="n">drop_ref</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;group&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">drop_ref</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;group&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span>
+
+<span class="n">dropshape</span><span class="p">,</span> <span class="n">dropmidpoint</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">fit_dropout</span><span class="p">()</span>
+
+<span class="n">simulator</span><span class="o">.</span><span class="n">dropshape</span> <span class="o">=</span> <span class="n">dropshape</span>
+<span class="n">simulator</span><span class="o">.</span><span class="n">dropmidpoint</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+<span class="n">simulator</span><span class="o">.</span><span class="n">simulate_dropouts</span><span class="p">()</span>
+
+<span class="n">drop_data</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">AnnData</span><span class="p">(</span><span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">(</span><span class="n">simulator</span><span class="o">.</span><span class="n">countswdrop</span><span class="p">),</span> <span class="n">obs</span><span class="o">=</span><span class="n">simulator</span><span class="o">.</span><span class="n">cellparams</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">simulator</span><span class="o">.</span><span class="n">geneparams</span><span class="p">)</span>
+<span class="n">drop_data</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;group&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">drop_data</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;group&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span>
+
+<span class="n">datasets</span><span class="p">[</span><span class="s1">&#39;Dropout&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">drop_data</span><span class="p">,</span> <span class="s1">&#39;ref&#39;</span><span class="p">:</span> <span class="n">drop_ref</span><span class="p">,</span> <span class="s1">&#39;ref_key&#39;</span><span class="p">:</span> <span class="s1">&#39;group&#39;</span><span class="p">,</span> <span class="s1">&#39;true_key&#39;</span><span class="p">:</span> <span class="s1">&#39;group&#39;</span><span class="p">,</span> <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Simulating cells
+Simulating gene params
+Simulating program
+Simulating DE
+Simulating cell-gene means
+   - Getting mean for activity program carrying cells
+   - Getting mean for non activity program carrying cells
+   - Normalizing by cell libsize
+Simulating doublets
+Adjusting means
+Simulating counts with scsim
+</pre></div></div>
+</div>
+</section>
+<section id="Ambient">
+<h3>Ambient<a class="headerlink" href="#Ambient" title="Link to this heading">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ngenes</span> <span class="o">=</span> <span class="mi">25000</span>
+<span class="n">descale</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">ndoublets</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">K</span> <span class="o">=</span> <span class="mi">13</span>
+<span class="n">nproggenes</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">proggroups</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span>
+<span class="n">progcellfrac</span> <span class="o">=</span> <span class="mf">.35</span>
+<span class="n">ncells</span> <span class="o">=</span> <span class="mi">1500</span>
+<span class="n">deprob</span> <span class="o">=</span> <span class="mf">.025</span>
+
+<span class="n">libloc</span><span class="o">=</span><span class="mf">7.64</span>
+<span class="n">libscale</span><span class="o">=</span><span class="mf">0.78</span>
+
+
+<span class="n">deloc</span> <span class="o">=</span> <span class="mf">5.0</span>
+
+<span class="n">seed</span><span class="o">=</span><span class="mi">2</span>
+
+<span class="c1"># simulating true counts (in simulator.counts)</span>
+<span class="n">simulator</span> <span class="o">=</span> <span class="n">scsim</span><span class="p">(</span><span class="n">ngenes</span><span class="o">=</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">ncells</span><span class="o">=</span><span class="n">ncells</span><span class="p">,</span> <span class="n">ngroups</span><span class="o">=</span><span class="n">K</span><span class="p">,</span> <span class="n">libloc</span><span class="o">=</span><span class="n">libloc</span><span class="p">,</span> <span class="n">libscale</span><span class="o">=</span><span class="n">libscale</span><span class="p">,</span>
+             <span class="n">mean_rate</span><span class="o">=</span><span class="mf">7.68</span><span class="p">,</span><span class="n">mean_shape</span><span class="o">=</span><span class="mf">0.34</span><span class="p">,</span> <span class="n">expoutprob</span><span class="o">=</span><span class="mf">0.00286</span><span class="p">,</span>
+             <span class="n">expoutloc</span><span class="o">=</span><span class="mf">6.15</span><span class="p">,</span> <span class="n">expoutscale</span><span class="o">=</span><span class="mf">0.49</span><span class="p">,</span>
+             <span class="n">diffexpprob</span><span class="o">=</span><span class="n">deprob</span><span class="p">,</span> <span class="n">diffexpdownprob</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">diffexploc</span><span class="o">=</span><span class="n">deloc</span><span class="p">,</span> <span class="n">diffexpscale</span><span class="o">=</span><span class="n">descale</span><span class="p">,</span>
+             <span class="n">bcv_dispersion</span><span class="o">=</span><span class="mf">0.448</span><span class="p">,</span> <span class="n">bcv_dof</span><span class="o">=</span><span class="mf">22.087</span><span class="p">,</span> <span class="n">ndoublets</span><span class="o">=</span><span class="n">ndoublets</span><span class="p">,</span>
+             <span class="n">nproggenes</span><span class="o">=</span><span class="n">nproggenes</span><span class="p">,</span> <span class="n">progdownprob</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">progdeloc</span><span class="o">=</span><span class="n">deloc</span><span class="p">,</span>
+             <span class="n">progdescale</span><span class="o">=</span><span class="n">descale</span><span class="p">,</span> <span class="n">progcellfrac</span><span class="o">=</span><span class="n">progcellfrac</span><span class="p">,</span> <span class="n">proggoups</span><span class="o">=</span><span class="n">proggroups</span><span class="p">,</span>
+             <span class="n">cellbender</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cb_ambient</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1">#cb_droploc=0, cb_dropscale=1,</span>
+                  <span class="n">cb_dispshape</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cb_dispscale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+             <span class="n">minprogusage</span><span class="o">=</span><span class="mf">.1</span><span class="p">,</span> <span class="n">maxprogusage</span><span class="o">=</span><span class="mf">.7</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+<span class="n">simulator</span><span class="o">.</span><span class="n">simulate</span><span class="p">()</span>
+
+<span class="n">amb_ref</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">AnnData</span><span class="p">(</span><span class="n">simulator</span><span class="o">.</span><span class="n">counts</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">simulator</span><span class="o">.</span><span class="n">cellparams</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">simulator</span><span class="o">.</span><span class="n">geneparams</span><span class="p">[[]])</span>
+<span class="n">amb_ref</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;group&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">amb_ref</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;group&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span>
+
+<span class="c1"># get counts with ambient RNA (cellbender)</span>
+<span class="n">simulator</span><span class="o">.</span><span class="n">cb_ambient</span><span class="o">=</span><span class="kc">True</span>
+
+<span class="n">simulator</span><span class="o">.</span><span class="n">cb_fraclib</span> <span class="o">=</span> <span class="mf">0.2</span>
+<span class="n">simulator</span><span class="o">.</span><span class="n">simulate_cellbender</span><span class="p">()</span>
+
+<span class="n">amb_data</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">AnnData</span><span class="p">(</span><span class="n">simulator</span><span class="o">.</span><span class="n">counts</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">simulator</span><span class="o">.</span><span class="n">cellparams</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">simulator</span><span class="o">.</span><span class="n">geneparams</span><span class="p">[[]])</span>
+<span class="n">amb_data</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;group&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">amb_data</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;group&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span>
+
+<span class="n">datasets</span><span class="p">[</span><span class="s1">&#39;Ambient&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">amb_data</span><span class="p">,</span> <span class="s1">&#39;ref&#39;</span><span class="p">:</span> <span class="n">amb_ref</span><span class="p">,</span> <span class="s1">&#39;ref_key&#39;</span><span class="p">:</span> <span class="s1">&#39;group&#39;</span><span class="p">,</span> <span class="s1">&#39;true_key&#39;</span><span class="p">:</span> <span class="s1">&#39;group&#39;</span><span class="p">,</span> <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Simulating cells
+Simulating gene params
+Simulating program
+Simulating DE
+Simulating cell-gene means
+   - Getting mean for activity program carrying cells
+   - Getting mean for non activity program carrying cells
+   - Normalizing by cell libsize
+Simulating doublets
+Adjusting means
+Simulating counts with cellbender
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Plotting-options">
+<h2>Plotting options<a class="headerlink" href="#Plotting-options" title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">highres</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">default_dpi</span> <span class="o">=</span> <span class="mf">100.0</span> <span class="c1"># matplotlib.rcParams[&#39;figure.dpi&#39;]</span>
+<span class="k">if</span> <span class="n">highres</span><span class="p">:</span>
+    <span class="n">matplotlib</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.dpi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">648.0</span>
+    <span class="n">hr_ext</span> <span class="o">=</span> <span class="s1">&#39;_hd&#39;</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">matplotlib</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.dpi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">default_dpi</span>
+    <span class="n">hr_ext</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+<span class="n">axsize</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span><span class="o">*</span><span class="mf">0.5</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Run-annotation">
+<h2>Run annotation<a class="headerlink" href="#Run-annotation" title="Link to this heading">¶</a></h2>
+<p>Define a set of parameters and use them to annotate all collected datasets</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">methods</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;TACCO&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;OT&#39;</span><span class="p">,</span> <span class="s1">&#39;metric&#39;</span><span class="p">:</span><span class="s1">&#39;bc&#39;</span><span class="p">,</span> <span class="s1">&#39;multi_center&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;platform_iterations&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span><span class="s1">&#39;bisections&#39;</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;bisection_divisor&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">,},</span>
+    <span class="s1">&#39;TACCO w/ cosine metric&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;OT&#39;</span><span class="p">,</span> <span class="s1">&#39;metric&#39;</span><span class="p">:</span><span class="s1">&#39;cosine&#39;</span><span class="p">,</span> <span class="s1">&#39;multi_center&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;platform_iterations&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span><span class="s1">&#39;bisections&#39;</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;bisection_divisor&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">,},</span>
+    <span class="s1">&#39;TACCO w/ cosine metric, log-normalization&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;OT&#39;</span><span class="p">,</span> <span class="s1">&#39;metric&#39;</span><span class="p">:</span><span class="s1">&#39;cosine&#39;</span><span class="p">,</span> <span class="s1">&#39;log_norm&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;multi_center&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;platform_iterations&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span><span class="s1">&#39;bisections&#39;</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;bisection_divisor&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">,},</span>
+    <span class="s1">&#39;TACCO w/o platform normalization&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;OT&#39;</span><span class="p">,</span> <span class="s1">&#39;metric&#39;</span><span class="p">:</span><span class="s1">&#39;bc&#39;</span><span class="p">,</span> <span class="s1">&#39;multi_center&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;bisections&#39;</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;bisection_divisor&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;platform_iterations&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,},</span>
+    <span class="s1">&#39;TACCO w/o multicenter&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;OT&#39;</span><span class="p">,</span> <span class="s1">&#39;metric&#39;</span><span class="p">:</span><span class="s1">&#39;bc&#39;</span><span class="p">,</span> <span class="s1">&#39;platform_iterations&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span><span class="s1">&#39;bisections&#39;</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;bisection_divisor&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">,},</span>
+    <span class="s1">&#39;TACCO w/o bisection&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;OT&#39;</span><span class="p">,</span> <span class="s1">&#39;metric&#39;</span><span class="p">:</span><span class="s1">&#39;bc&#39;</span><span class="p">,</span> <span class="s1">&#39;multi_center&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span><span class="s1">&#39;bisections&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s1">&#39;platform_iterations&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,},</span>
+<span class="p">}</span>
+
+<span class="k">for</span> <span class="n">dname</span><span class="p">,</span><span class="n">dataset</span> <span class="ow">in</span> <span class="n">datasets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">method</span><span class="p">,</span><span class="n">params</span> <span class="ow">in</span> <span class="n">methods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;running method </span><span class="si">{</span><span class="n">method</span><span class="si">!r}</span><span class="s1"> on data </span><span class="si">{</span><span class="n">dname</span><span class="si">!r}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">],</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;ref&#39;</span><span class="p">],</span> <span class="n">annotation_key</span><span class="o">=</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;ref_key&#39;</span><span class="p">],</span> <span class="n">result_key</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">,</span> <span class="n">assume_valid_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span> <span class="c1"># catch failing methods</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+running method &#39;TACCO&#39; on data &#39;Differentiation&#39;
+running method &#39;TACCO w/ cosine metric&#39; on data &#39;Differentiation&#39;
+running method &#39;TACCO w/ cosine metric, log-normalization&#39; on data &#39;Differentiation&#39;
+running method &#39;TACCO w/o platform normalization&#39; on data &#39;Differentiation&#39;
+running method &#39;TACCO w/o multicenter&#39; on data &#39;Differentiation&#39;
+running method &#39;TACCO w/o bisection&#39; on data &#39;Differentiation&#39;
+running method &#39;TACCO&#39; on data &#39;Single cell&#39;
+running method &#39;TACCO w/ cosine metric&#39; on data &#39;Single cell&#39;
+running method &#39;TACCO w/ cosine metric, log-normalization&#39; on data &#39;Single cell&#39;
+running method &#39;TACCO w/o platform normalization&#39; on data &#39;Single cell&#39;
+running method &#39;TACCO w/o multicenter&#39; on data &#39;Single cell&#39;
+running method &#39;TACCO w/o bisection&#39; on data &#39;Single cell&#39;
+running method &#39;TACCO&#39; on data &#39;Mixture&#39;
+running method &#39;TACCO w/ cosine metric&#39; on data &#39;Mixture&#39;
+running method &#39;TACCO w/ cosine metric, log-normalization&#39; on data &#39;Mixture&#39;
+running method &#39;TACCO w/o platform normalization&#39; on data &#39;Mixture&#39;
+running method &#39;TACCO w/o multicenter&#39; on data &#39;Mixture&#39;
+running method &#39;TACCO w/o bisection&#39; on data &#39;Mixture&#39;
+running method &#39;TACCO&#39; on data &#39;Dropout&#39;
+running method &#39;TACCO w/ cosine metric&#39; on data &#39;Dropout&#39;
+running method &#39;TACCO w/ cosine metric, log-normalization&#39; on data &#39;Dropout&#39;
+running method &#39;TACCO w/o platform normalization&#39; on data &#39;Dropout&#39;
+running method &#39;TACCO w/o multicenter&#39; on data &#39;Dropout&#39;
+running method &#39;TACCO w/o bisection&#39; on data &#39;Dropout&#39;
+running method &#39;TACCO&#39; on data &#39;Ambient&#39;
+running method &#39;TACCO w/ cosine metric&#39; on data &#39;Ambient&#39;
+running method &#39;TACCO w/ cosine metric, log-normalization&#39; on data &#39;Ambient&#39;
+running method &#39;TACCO w/o platform normalization&#39; on data &#39;Ambient&#39;
+running method &#39;TACCO w/o multicenter&#39; on data &#39;Ambient&#39;
+running method &#39;TACCO w/o bisection&#39; on data &#39;Ambient&#39;
+</pre></div></div>
+</div>
+<p>Collect results</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">dname</span><span class="p">,</span><span class="n">dataset</span> <span class="ow">in</span> <span class="n">datasets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">method</span><span class="p">,</span><span class="n">params</span> <span class="ow">in</span> <span class="n">methods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">results</span><span class="p">[(</span><span class="n">dname</span><span class="p">,</span><span class="n">method</span><span class="p">)]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">results</span><span class="p">[(</span><span class="n">dname</span><span class="p">,</span><span class="n">method</span><span class="p">)][</span><span class="s1">&#39;l2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">compute_err</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">],</span> <span class="n">method</span><span class="p">,</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;true_key&#39;</span><span class="p">],</span> <span class="n">err_method</span><span class="o">=</span><span class="s1">&#39;lp&#39;</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">)[</span><span class="n">method</span><span class="p">]</span>
+        <span class="n">results</span><span class="p">[(</span><span class="n">dname</span><span class="p">,</span><span class="n">method</span><span class="p">)][</span><span class="s1">&#39;max_correct&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">compute_err</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">],</span> <span class="n">method</span><span class="p">,</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;true_key&#39;</span><span class="p">],</span> <span class="n">err_method</span><span class="o">=</span><span class="s1">&#39;max_correct&#39;</span><span class="p">)[</span><span class="n">method</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">res_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span>
+    <span class="p">[</span><span class="n">dname</span><span class="p">,</span><span class="n">method</span><span class="p">,</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;l2&#39;</span><span class="p">],</span><span class="mi">1</span><span class="o">-</span><span class="n">v</span><span class="p">[</span><span class="s1">&#39;max_correct&#39;</span><span class="p">],]</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">dname</span><span class="p">,</span><span class="n">method</span><span class="p">),</span><span class="n">v</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+<span class="p">],</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;dataset&#39;</span><span class="p">,</span><span class="s1">&#39;method&#39;</span><span class="p">,</span><span class="s1">&#39;L2 error&#39;</span><span class="p">,</span><span class="s1">&#39;max error rate&#39;</span><span class="p">])</span>
+<span class="n">res_df</span><span class="p">[</span><span class="s1">&#39;dataset&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_df</span><span class="p">[</span><span class="s1">&#39;dataset&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">CategoricalDtype</span><span class="p">(</span><span class="n">categories</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Single cell&#39;</span><span class="p">,</span> <span class="s1">&#39;Mixture&#39;</span><span class="p">,</span> <span class="s1">&#39;Dropout&#39;</span><span class="p">,</span> <span class="s1">&#39;Ambient&#39;</span><span class="p">,</span> <span class="s1">&#39;Differentiation&#39;</span><span class="p">,</span> <span class="p">]))</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Plot-results">
+<h2>Plot results<a class="headerlink" href="#Plot-results" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">all_method_names</span> <span class="o">=</span> <span class="n">res_df</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+<span class="n">quantities</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;L2 error&#39;</span><span class="p">,</span><span class="s1">&#39;max error rate&#39;</span><span class="p">,]</span>
+
+<span class="n">comparisons</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;metric&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;TACCO&#39;</span><span class="p">,</span> <span class="s1">&#39;TACCO w/ cosine metric&#39;</span><span class="p">,</span> <span class="s1">&#39;TACCO w/ cosine metric, log-normalization&#39;</span><span class="p">],</span>
+    <span class="s1">&#39;platform normalization&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;TACCO&#39;</span><span class="p">,</span> <span class="s1">&#39;TACCO w/o platform normalization&#39;</span><span class="p">],</span>
+    <span class="s1">&#39;multicenter&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;TACCO&#39;</span><span class="p">,</span> <span class="s1">&#39;TACCO w/o multicenter&#39;</span><span class="p">],</span>
+    <span class="s1">&#39;bisection&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;TACCO&#39;</span><span class="p">,</span> <span class="s1">&#39;TACCO w/o bisection&#39;</span><span class="p">,],</span>
+<span class="p">}</span>
+
+<span class="n">fig</span><span class="p">,</span><span class="n">axs</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">comparisons</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">quantities</span><span class="p">),</span> <span class="n">axsize</span><span class="o">=</span><span class="n">axsize</span><span class="p">,</span> <span class="n">x_padding</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">y_padding</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="s1">&#39;row&#39;</span><span class="p">)</span>
+<span class="n">colors</span> <span class="o">=</span> <span class="p">{</span><span class="n">m</span><span class="p">:</span><span class="n">common_code</span><span class="o">.</span><span class="n">method_color</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">all_method_names</span><span class="p">}</span>
+
+<span class="k">for</span> <span class="n">jx_ax</span><span class="p">,(</span><span class="n">comp</span><span class="p">,</span> <span class="n">method_names</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">comparisons</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+    <span class="n">res_sub</span> <span class="o">=</span> <span class="n">res_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">res_df</span><span class="p">[</span><span class="n">quantities</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+    <span class="n">res_sub</span> <span class="o">=</span> <span class="n">res_sub</span><span class="p">[</span><span class="n">res_sub</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">method_names</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">res_sub</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_sub</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">iy_ax</span><span class="p">,</span> <span class="n">qty</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">quantities</span><span class="p">):</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axs</span><span class="p">[</span><span class="n">iy_ax</span><span class="p">,</span><span class="n">jx_ax</span><span class="p">]</span>
+
+        <span class="n">sns</span><span class="o">.</span><span class="n">barplot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">qty</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">&quot;method&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">res_sub</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="p">[</span><span class="n">colors</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">method_names</span><span class="p">])</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">res_sub</span><span class="p">[</span><span class="s1">&#39;dataset&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">)))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([])</span>
+        <span class="k">if</span> <span class="n">iy_ax</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">comp</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">iy_ax</span> <span class="o">==</span> <span class="n">axs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">res_sub</span><span class="p">[</span><span class="s1">&#39;dataset&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;dataset&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">jx_ax</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">qty</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">get_legend</span><span class="p">()</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">iy_ax</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">jx_ax</span> <span class="o">==</span> <span class="n">axs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">matplotlib.lines</span> <span class="k">as</span> <span class="nn">mlines</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="o">=</span><span class="p">[</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">patches</span><span class="o">.</span><span class="n">Patch</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">ind</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">ind</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span> <span class="ow">in</span> <span class="n">colors</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="p">],</span>
+                <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">ncol</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_parameter_variations_23_0.png" src="../_images/notebooks_parameter_variations_23_0.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="overview.html" class="btn btn-neutral float-left" title="TACCO overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="simulated_ambient.html" class="btn btn-neutral float-right" title="Simulated single cell expression data with ambient contamination" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

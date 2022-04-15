@@ -1,0 +1,6 @@
+tacco.preprocessing.subsample\_annotation
+=========================================
+
+.. currentmodule:: tacco.preprocessing
+
+.. autofunction:: subsample_annotation

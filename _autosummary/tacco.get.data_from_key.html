@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.get.data_from_key &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tacco.get.positions" href="tacco.get.positions.html" />
+    <link rel="prev" title="tacco.get.counts" href="tacco.get.counts.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tacco.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tacco.benchmarking.html">tacco.benchmarking</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="tacco.get.html">tacco.get</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="tacco.get.counts.html">tacco.get.counts</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">tacco.get.data_from_key</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tacco.get.data_from_key"><code class="docutils literal notranslate"><span class="pre">data_from_key()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.get.positions.html">tacco.get.positions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.plots.html">tacco.plots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.preprocessing.html">tacco.preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.testing.html">tacco.testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.tools.html">tacco.tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.utils.html">tacco.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.sum.html">tacco.sum</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="tacco.html">tacco</a></li>
+          <li class="breadcrumb-item"><a href="tacco.get.html">tacco.get</a></li>
+      <li class="breadcrumb-item active">tacco.get.data_from_key</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tacco-get-data-from-key">
+<h1>tacco.get.data_from_key<a class="headerlink" href="#tacco-get-data-from-key" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="tacco.get.data_from_key">
+<span class="sig-name descname"><span class="pre">data_from_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'key'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_uns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('X',</span> <span class="pre">'layer',</span> <span class="pre">'obs',</span> <span class="pre">'var',</span> <span class="pre">'obsm',</span> <span class="pre">'varm')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_uniqueness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'obs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raise_on_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tacco.get.data_from_key" title="Link to this definition">¶</a></dt>
+<dd><p>Given a short key for data stored somewhere in an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a>
+find the data associated with it following a deterministic scheme.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>adata</strong> – A <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a>; if it is a <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>, use
+it in place of a <cite>adata.obs</cite> or <cite>adata.var</cite> data frame.</p></li>
+<li><p><strong>key</strong> – <p>The short key or “path” in <cite>adata</cite> where the data is stored as a string
+(e.g. “X”) or as a list-like of strings, e.g. <cite>(“raw”,”obsm”,”counts”)</cite>,
+where the last element can be a list-like of stings, e.g.
+<cite>(“obsm”,”types”,[“B”,”T”])</cite>.
+Possible parts of paths are:</p>
+<ul>
+<li><p>”X”</p></li>
+<li><p>”layer”</p></li>
+<li><p>”obs”</p></li>
+<li><p>”var”</p></li>
+<li><p>”obsm”</p></li>
+<li><p>”varm”</p></li>
+<li><p>”raw”</p></li>
+</ul>
+<p>If <cite>None</cite> and <cite>check_uns</cite> is not <cite>False</cite>, looks in
+<cite>adata.uns[key_name]</cite> for the key and if unsuccessful uses
+<cite>default_key</cite>.</p>
+</p></li>
+<li><p><strong>default_key</strong> – The default location to use; see <cite>key</cite>.</p></li>
+<li><p><strong>key_name</strong> – The name of the key to use for lookup in <cite>.uns</cite>; see <cite>key</cite>. Also used
+for meaningful error messages.</p></li>
+<li><p><strong>check_uns</strong> – Whether to check <cite>.uns</cite> for the key; if a string, overrides the value
+of <cite>key_name</cite> for the lookup; see <cite>key</cite> and <cite>key_name</cite>.</p></li>
+<li><p><strong>search_order</strong> – In which order to check the properties of <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> for
+the <cite>key</cite>, if it is a string. The first hit will be returned. If
+<cite>check_uniqueness</cite>, the remaining properties will be checked for
+uniqueness of the hit, generating a warning for non-unique hits. In
+addition to the properties ‘X’,’layer’,’obs’,’var’,’obsm’, and ‘varm’,
+the two pseudo properties ‘multi-obs’ and ‘multi-var’ can be specified
+to allow for the selection of multiple obs/var columns.</p></li>
+<li><p><strong>check_uniqueness</strong> – Whether to check for uniqueness of the hit; see <cite>search_order</cite>.</p></li>
+<li><p><strong>result_type</strong> – <p>What type of data to look for. Options are:</p>
+<ul>
+<li><p>”obs”: return a <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a> with index like a <cite>.obs</cite>
+column</p></li>
+<li><p>”var”: return a <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a> with index like a <cite>.var</cite>
+column</p></li>
+<li><p>”obsm”: return a <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> with index like a <cite>.obs</cite>
+column</p></li>
+<li><p>”varm”: return a <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> with index like a <cite>.var</cite>
+column</p></li>
+<li><p>”X”: return an array-like of shape compatible with <cite>adata</cite></p></li>
+</ul>
+<p>If “obs” or “obsm”, then “var” and “varm” will be excluded from the
+<cite>search_order</cite>. If “var” or “varm”, then “obs” and “obsm” will be
+excluded from the <cite>search_order</cite>. If “X”, then “obs” and “var” will be
+excluded from the <cite>search_order</cite>.</p>
+</p></li>
+<li><p><strong>verbose</strong> – Level of verbosity, with <cite>0</cite> (no output), <cite>1</cite> (some output), …</p></li>
+<li><p><strong>raise_on_error</strong> – Whether to raise on errors. Alternatively just return <cite>None</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Depending on result_type, a <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a>,    <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>, or array-like containing the data (or <cite>None</cite>    on failure it not <cite>raise_on_error</cite>).</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tacco.get.counts.html" class="btn btn-neutral float-left" title="tacco.get.counts" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tacco.get.positions.html" class="btn btn-neutral float-right" title="tacco.get.positions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

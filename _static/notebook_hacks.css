@@ -1,0 +1,4 @@
+/* make plots in notebooks be as large as they are and scrollable*/
+.output_area.docutils.container > img {
+    max-width: 10000%;
+}

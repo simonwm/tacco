@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visium Mouse Kidney &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tacco" href="../_autosummary/tacco.html" />
+    <link rel="prev" title="Slide-Seq Mouse Olfactory Bulb - single puck" href="slideseq_mouse_olfactory_bulb_single.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../examples.html">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="benchmarking.html">Benchmarking runtime and memory of annotation methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cooccurrence.html">Co-occurrence computations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="insilico_mouse_colon.html">In-silico mixed Mouse Colon scRNA-seq data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mapping_single_cells_into_space.html">Mapping single cells into space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_splitting.html">Object splitting for in-silico mixed scRNA-seq data and Slide-Seq data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="osmFISH_single_molecule_annotation.html">Single molecule data: osmFISH mouse somato-sensory cortex</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview.html">TACCO overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameter_variations.html">Parameter Variations for annotation using Optimal Transport</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulated_ambient.html">Simulated single cell expression data with ambient contamination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulated_dropout.html">Simulated single cell expression data with dropout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="single_cell_differentiation.html">Single-cell differentiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slideseq_mouse_colon.html">Slide-Seq Mouse Colon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slideseq_mouse_olfactory_bulb.html">Slide-Seq Mouse Olfactory Bulb - multiple pucks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slideseq_mouse_olfactory_bulb_single.html">Slide-Seq Mouse Olfactory Bulb - single puck</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Visium Mouse Kidney</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Load-data">Load data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Plotting-options">Plotting options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Cell-types">Cell types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Regions">Regions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Squidpy-Plots">Squidpy Plots</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../_autosummary/tacco.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../examples.html">Examples</a></li>
+      <li class="breadcrumb-item active">Visium Mouse Kidney</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Visium-Mouse-Kidney">
+<h1>Visium Mouse Kidney<a class="headerlink" href="#Visium-Mouse-Kidney" title="Link to this heading">¶</a></h1>
+<p>This example uses TACCO to annotate and analyse 2 mouse kidney Visium samples (1), (2) with mouse kidney scRNA-seq data as reference (3).</p>
+<ol class="arabic simple">
+<li><p>Visium spatial gene expression from adult C57BL/6 mouse kidney, (v1, FFPE), Spatial Gene Expression Dataset by Space Ranger 1.3.0, 10x Genomics, (2021, August 16). <a class="reference external" href="https://www.10xgenomics.com/resources/datasets/adult-mouse-kidney-ffpe-1-standard-1-3-0">https://www.10xgenomics.com/resources/datasets/adult-mouse-kidney-ffpe-1-standard-1-3-0</a></p></li>
+<li><p>Visium spatial gene expression from adult C57BL/6 mouse kidney section (coronal), (v1, FF), Spatial Gene Expression Dataset by Space Ranger 1.1.0, 10x Genomics (2020, June 23). <a class="reference external" href="https://www.10xgenomics.com/resources/datasets/mouse-kidney-section-coronal-1-standard-1-1-0">https://www.10xgenomics.com/resources/datasets/mouse-kidney-section-coronal-1-standard-1-1-0</a></p></li>
+<li><p>The Tabula Muris Consortium., Overall coordination., Logistical coordination. et al. Single-cell transcriptomics of 20 mouse organs creates a Tabula Muris. Nature 562, 367–372 (2018). <a class="reference external" href="https://doi.org/10.1038/s41586-018-0590-4">https://doi.org/10.1038/s41586-018-0590-4</a>.</p></li>
+</ol>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">anndata</span> <span class="k">as</span> <span class="nn">ad</span>
+<span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
+
+<span class="kn">import</span> <span class="nn">squidpy</span> <span class="k">as</span> <span class="nn">sq</span>
+<span class="kn">import</span> <span class="nn">tacco</span> <span class="k">as</span> <span class="nn">tc</span>
+
+<span class="c1"># The notebook expects to be executed either in the workflow directory or in the repository root folder...</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s1">&#39;workflow&#39;</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s1">&#39;workflow/common_code.py&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;..&#39;</span><span class="p">))</span>
+<span class="kn">import</span> <span class="nn">common_code</span>
+</pre></div>
+</div>
+</div>
+<section id="Load-data">
+<h2>Load data<a class="headerlink" href="#Load-data" title="Link to this heading">¶</a></h2>
+<p>Visium data is loaded from a prepared <code class="docutils literal notranslate"><span class="pre">.h5ad</span></code> file, which is created in file <code class="docutils literal notranslate"><span class="pre">workflow/visium_mouse_kidney/prepVisium_mouse_spatial_data.py</span></code> using squidpy, e.g., <code class="docutils literal notranslate"><span class="pre">adata</span> <span class="pre">=</span> <span class="pre">sq.read.visium(visium_path)</span></code></p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data_path</span> <span class="o">=</span> <span class="n">common_code</span><span class="o">.</span><span class="n">find_path</span><span class="p">(</span><span class="s1">&#39;results/visium_mouse_kidney/data&#39;</span><span class="p">)</span>
+<span class="n">plot_path</span> <span class="o">=</span> <span class="n">common_code</span><span class="o">.</span><span class="n">find_path</span><span class="p">(</span><span class="s1">&#39;results/visium_mouse_kidney&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">reference</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s1">/TabulaMurisKidney.h5ad&#39;</span><span class="p">)</span>
+<span class="n">slide_1</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s1">/MouseKidney_visium.h5ad&#39;</span><span class="p">)</span>
+<span class="n">slide_1</span><span class="o">.</span><span class="n">var_names_make_unique</span><span class="p">()</span>
+<span class="n">slide_2</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s1">/MouseKidneyCoronal_v110_visium.h5ad&#39;</span><span class="p">)</span>
+<span class="n">slide_2</span><span class="o">.</span><span class="n">var_names_make_unique</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<p>Later, we want to annotate both slides consistently, so we merge their data into a single Anndata object.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Merge slides</span>
+<span class="n">slide_m</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">slide_1</span><span class="p">,</span><span class="n">slide_2</span><span class="p">],</span> <span class="n">index_unique</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+<span class="n">slide_m</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;slide&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">slide_m</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;slide&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;category&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Plotting-options">
+<h2>Plotting options<a class="headerlink" href="#Plotting-options" title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">matplotlib</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.dpi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">100.0</span>
+
+<span class="n">axsize</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span><span class="o">*</span><span class="mf">0.5</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Cell-types">
+<h2>Cell types<a class="headerlink" href="#Cell-types" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Annotate with merged slides</span>
+<span class="n">tc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">slide_m</span><span class="p">,</span><span class="n">reference</span><span class="p">,</span><span class="s1">&#39;cell_ontology_class&#39;</span><span class="p">,</span><span class="n">result_key</span><span class="o">=</span><span class="s1">&#39;cell_ontology_class&#39;</span><span class="p">,</span><span class="n">multi_center</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">lamb</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Starting preprocessing
+Annotation profiles were not found in `reference.varm[&#34;cell_ontology_class&#34;]`. Constructing reference profiles with `tacco.preprocessing.construct_reference_profiles` and default arguments...
+Finished preprocessing in 3.86 seconds.
+Starting annotation of data with shape (4562, 13585) and a reference of shape (2781, 13585) using the following wrapped method:
++- platform normalization: platform_iterations=0, gene_keys=cell_ontology_class, normalize_to=adata
+   +- multi center: multi_center=3 multi_center_amplitudes=True
+      +- bisection boost: bisections=4, bisection_divisor=3
+         +- core: method=OT annotation_prior=None lamb=0.001
+mean,std( rescaling(gene) )  26.4315379362136 236.33741338800488
+bisection run on 1
+bisection run on 0.6666666666666667
+bisection run on 0.4444444444444444
+bisection run on 0.2962962962962963
+bisection run on 0.19753086419753085
+bisection run on 0.09876543209876543
+Finished annotation in 24.69 seconds.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+AnnData object with n_obs × n_vars = 4562 × 19465
+    obs: &#39;in_tissue&#39;, &#39;array_row&#39;, &#39;array_col&#39;, &#39;x&#39;, &#39;y&#39;, &#39;slide&#39;
+    uns: &#39;cell_ontology_class_mc3&#39;
+    obsm: &#39;spatial&#39;, &#39;cell_ontology_class_mc3&#39;, &#39;cell_ontology_class&#39;
+    varm: &#39;cell_ontology_class_mc3&#39;
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">slide_m</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="s1">&#39;cell_ontology_class&#39;</span><span class="p">,</span> <span class="n">group_key</span><span class="o">=</span><span class="s1">&#39;slide&#39;</span><span class="p">,</span> <span class="n">position_key</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">joint</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">point_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">axsize</span><span class="o">=</span><span class="n">axsize</span><span class="p">,</span> <span class="n">noticks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axes_labels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">,</span><span class="s1">&#39;Y&#39;</span><span class="p">],</span> <span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_visium_mouse_kidney_12_0.png" src="../_images/notebooks_visium_mouse_kidney_12_0.png" />
+</div>
+</div>
+</section>
+<section id="Regions">
+<h2>Regions<a class="headerlink" href="#Regions" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Find consistent regions on merged slides</span>
+<span class="n">tc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">find_regions</span><span class="p">(</span><span class="n">slide_m</span><span class="p">,</span><span class="n">key_added</span><span class="o">=</span><span class="s1">&#39;regions&#39;</span><span class="p">,</span><span class="n">batch_key</span><span class="o">=</span><span class="s1">&#39;slide&#39;</span><span class="p">,</span><span class="n">position_weight</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span><span class="n">resolution</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span><span class="n">annotation_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">amplitudes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">cross_batch_overweight_factor</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span><span class="n">n_neighbors</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">slide_m</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;regions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">slide_m</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;regions&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;region_</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+WARNING: You’re trying to run this on 19465 dimensions of `.X`, if you really want this, set `use_rep=&#39;X&#39;`.
+         Falling back to preprocessing with `sc.pp.pca` and default params.
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">slide_m</span><span class="p">,</span><span class="n">keys</span><span class="o">=</span><span class="s1">&#39;regions&#39;</span><span class="p">,</span><span class="n">group_key</span><span class="o">=</span><span class="s1">&#39;slide&#39;</span><span class="p">,</span><span class="n">joint</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">axsize</span><span class="o">=</span><span class="n">axsize</span><span class="p">,</span><span class="n">point_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">noticks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">axes_labels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">,</span><span class="s1">&#39;Y&#39;</span><span class="p">],</span><span class="n">share_scaling</span><span class="o">=</span><span class="kc">True</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_visium_mouse_kidney_15_0.png" src="../_images/notebooks_visium_mouse_kidney_15_0.png" />
+</div>
+</div>
+</section>
+<section id="Squidpy-Plots">
+<h2>Squidpy Plots<a class="headerlink" href="#Squidpy-Plots" title="Link to this heading">¶</a></h2>
+<p>Tacco’s analysis does not create custom objects, and relies on the functionality in Anndata instead. Therefore other Anndata-based tools can be included in Tacco workflows, as well, e.g., Squidpy for the visualization of annotation on top of the Visium H&amp;E image.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">slide_1</span><span class="o">.</span><span class="n">obs_names</span> <span class="o">=</span> <span class="n">slide_1</span><span class="o">.</span><span class="n">obs_names</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="s2">&quot;_0&quot;</span><span class="p">)</span>
+<span class="n">slide_2</span><span class="o">.</span><span class="n">obs_names</span> <span class="o">=</span> <span class="n">slide_2</span><span class="o">.</span><span class="n">obs_names</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="s2">&quot;_1&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Map annotations back to original adatas</span>
+<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">slide_m</span><span class="p">[</span><span class="n">slide_m</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;slide&quot;</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;slide_1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;cell_ontology_class&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+    <span class="n">slide_1</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">slide_m</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;cell_ontology_class&quot;</span><span class="p">][</span><span class="n">col</span><span class="p">]</span>
+
+<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">slide_m</span><span class="p">[</span><span class="n">slide_m</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;slide&quot;</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;slide_2&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;cell_ontology_class&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+    <span class="n">slide_2</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">slide_m</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;cell_ontology_class&quot;</span><span class="p">][</span><span class="n">col</span><span class="p">]</span>
+
+<span class="n">slide_1</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;regions&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">slide_m</span><span class="p">[</span><span class="n">slide_m</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;slide&quot;</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;slide_1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;regions&quot;</span><span class="p">]</span>
+<span class="n">slide_2</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;regions&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">slide_m</span><span class="p">[</span><span class="n">slide_m</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;slide&quot;</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;slide_2&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;regions&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">celltypes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;endothelial cell&#39;</span><span class="p">,</span> <span class="s1">&#39;fenestrated cell&#39;</span><span class="p">,</span> <span class="s1">&#39;fibroblast&#39;</span><span class="p">,</span> <span class="s1">&#39;kidney collecting duct cell&#39;</span><span class="p">,</span> <span class="s1">&#39;kidney tubule cell&#39;</span><span class="p">,</span> <span class="s1">&#39;leukocyte&#39;</span><span class="p">,</span> <span class="s1">&#39;macrophage&#39;</span><span class="p">,</span> <span class="s1">&#39;smooth muscle cell&#39;</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">slide</span> <span class="ow">in</span> <span class="p">[</span><span class="n">slide_1</span><span class="p">,</span> <span class="n">slide_2</span><span class="p">]:</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">n_x</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">n_y</span> <span class="o">=</span> <span class="mi">2</span><span class="p">);</span>
+    <span class="n">axes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">celltype</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">celltypes</span><span class="p">):</span>
+        <span class="n">sq</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spatial_scatter</span><span class="p">(</span><span class="n">slide</span><span class="p">,</span> <span class="n">library_key</span><span class="o">=</span><span class="s1">&#39;hires&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">celltype</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">img_alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">axes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_visium_mouse_kidney_20_0.png" src="../_images/notebooks_visium_mouse_kidney_20_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_visium_mouse_kidney_20_1.png" src="../_images/notebooks_visium_mouse_kidney_20_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">n_x</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_y</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">.5</span><span class="p">)</span>
+<span class="n">sq</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spatial_scatter</span><span class="p">(</span><span class="n">slide_1</span><span class="p">,</span> <span class="n">library_key</span><span class="o">=</span><span class="s1">&#39;hires&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;regions&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">img_alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">);</span>
+<span class="n">sq</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spatial_scatter</span><span class="p">(</span><span class="n">slide_2</span><span class="p">,</span> <span class="n">library_key</span><span class="o">=</span><span class="s1">&#39;hires&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;regions&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">img_alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_visium_mouse_kidney_21_0.png" src="../_images/notebooks_visium_mouse_kidney_21_0.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="slideseq_mouse_olfactory_bulb_single.html" class="btn btn-neutral float-left" title="Slide-Seq Mouse Olfactory Bulb - single puck" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../_autosummary/tacco.html" class="btn btn-neutral float-right" title="tacco" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

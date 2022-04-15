@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.tools &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tacco.tools.affinity" href="tacco.tools.affinity.html" />
+    <link rel="prev" title="tacco.testing.string_encode" href="tacco.testing.string_encode.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tacco.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tacco.benchmarking.html">tacco.benchmarking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.get.html">tacco.get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.plots.html">tacco.plots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.preprocessing.html">tacco.preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.testing.html">tacco.testing</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">tacco.tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.affinity.html">tacco.tools.affinity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate.html">tacco.tools.annotate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_NMFreg.html">tacco.tools.annotate_NMFreg</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_OT.html">tacco.tools.annotate_OT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_RCTD.html">tacco.tools.annotate_RCTD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_SingleR.html">tacco.tools.annotate_SingleR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_nnls.html">tacco.tools.annotate_nnls</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_novosparc.html">tacco.tools.annotate_novosparc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_projection.html">tacco.tools.annotate_projection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_single_molecules.html">tacco.tools.annotate_single_molecules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_svm.html">tacco.tools.annotate_svm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_tangram.html">tacco.tools.annotate_tangram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_wot.html">tacco.tools.annotate_wot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotation_coordinate.html">tacco.tools.annotation_coordinate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.co_occurrence.html">tacco.tools.co_occurrence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.co_occurrence_matrix.html">tacco.tools.co_occurrence_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.distance_matrix.html">tacco.tools.distance_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.distribute_molecules.html">tacco.tools.distribute_molecules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.enrichments.html">tacco.tools.enrichments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.fill_regions.html">tacco.tools.fill_regions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.find_regions.html">tacco.tools.find_regions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.get_compositions.html">tacco.tools.get_compositions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.get_contributions.html">tacco.tools.get_contributions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.merge_observations.html">tacco.tools.merge_observations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.mix_in_silico.html">tacco.tools.mix_in_silico</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.run_goa_analysis.html">tacco.tools.run_goa_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.run_orthology_converter.html">tacco.tools.run_orthology_converter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.segment.html">tacco.tools.segment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.setup_goa_analysis.html">tacco.tools.setup_goa_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.setup_orthology_converter.html">tacco.tools.setup_orthology_converter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.spectral_clustering.html">tacco.tools.spectral_clustering</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.split_observations.html">tacco.tools.split_observations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.utils.html">tacco.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.sum.html">tacco.sum</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="tacco.html">tacco</a></li>
+      <li class="breadcrumb-item active">tacco.tools</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-tacco.tools">
+<span id="tacco-tools"></span><h1>tacco.tools<a class="headerlink" href="#module-tacco.tools" title="Link to this heading">¶</a></h1>
+<p>Tools for annotation transfer and related tasks</p>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.tools.affinity.html#tacco.tools.affinity" title="tacco.tools.affinity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">affinity</span></code></a></p></td>
+<td><p>Calculates an affinity from a distance matrix.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.tools.annotate.html#tacco.tools.annotate" title="tacco.tools.annotate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">annotate</span></code></a></p></td>
+<td><p>Annotates an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> using reference data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.tools.annotate_NMFreg.html#tacco.tools.annotate_NMFreg" title="tacco.tools.annotate_NMFreg"><code class="xref py py-obj docutils literal notranslate"><span class="pre">annotate_NMFreg</span></code></a></p></td>
+<td><p>Annotates an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> using reference data by NMFreg <a class="reference internal" href="../references.html#rodriques19" id="id1"><span>[Rodriques19]</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.tools.annotate_OT.html#tacco.tools.annotate_OT" title="tacco.tools.annotate_OT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">annotate_OT</span></code></a></p></td>
+<td><p>Annotates an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> using reference data by semi-balanced optimal transport.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.tools.annotate_RCTD.html#tacco.tools.annotate_RCTD" title="tacco.tools.annotate_RCTD"><code class="xref py py-obj docutils literal notranslate"><span class="pre">annotate_RCTD</span></code></a></p></td>
+<td><p>Annotates an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> using reference data by RCTD <a class="reference internal" href="../references.html#cable21" id="id2"><span>[Cable21]</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.tools.annotate_SingleR.html#tacco.tools.annotate_SingleR" title="tacco.tools.annotate_SingleR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">annotate_SingleR</span></code></a></p></td>
+<td><p>Annotates an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> using reference data by SingleR <a class="reference internal" href="../references.html#aran19" id="id3"><span>[Aran19]</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.tools.annotate_nnls.html#tacco.tools.annotate_nnls" title="tacco.tools.annotate_nnls"><code class="xref py py-obj docutils literal notranslate"><span class="pre">annotate_nnls</span></code></a></p></td>
+<td><p>Annotates an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> using reference data by NNLS (non-negative least squares).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.tools.annotate_novosparc.html#tacco.tools.annotate_novosparc" title="tacco.tools.annotate_novosparc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">annotate_novosparc</span></code></a></p></td>
+<td><p>Annotates an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> using reference data by NovoSpaRc <a class="reference internal" href="../references.html#nitzan19" id="id4"><span>[Nitzan19]</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.tools.annotate_projection.html#tacco.tools.annotate_projection" title="tacco.tools.annotate_projection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">annotate_projection</span></code></a></p></td>
+<td><p>Annotates an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> using reference data by projection.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.tools.annotate_single_molecules.html#tacco.tools.annotate_single_molecules" title="tacco.tools.annotate_single_molecules"><code class="xref py py-obj docutils literal notranslate"><span class="pre">annotate_single_molecules</span></code></a></p></td>
+<td><p>Annotates single molecules in space using reference data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.tools.annotate_svm.html#tacco.tools.annotate_svm" title="tacco.tools.annotate_svm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">annotate_svm</span></code></a></p></td>
+<td><p>Annotates an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> using reference data by an SVM <a class="reference internal" href="../references.html#abdelaal19" id="id5"><span>[Abdelaal19]</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.tools.annotate_tangram.html#tacco.tools.annotate_tangram" title="tacco.tools.annotate_tangram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">annotate_tangram</span></code></a></p></td>
+<td><p>Annotates an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> using reference data by Tangram <a class="reference internal" href="../references.html#biancalani20" id="id6"><span>[Biancalani20]</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.tools.annotate_wot.html#tacco.tools.annotate_wot" title="tacco.tools.annotate_wot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">annotate_wot</span></code></a></p></td>
+<td><p>Annotates an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> using reference data by Waddington-OT <a class="reference internal" href="../references.html#schiebinger19" id="id7"><span>[Schiebinger19]</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.tools.annotation_coordinate.html#tacco.tools.annotation_coordinate" title="tacco.tools.annotation_coordinate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">annotation_coordinate</span></code></a></p></td>
+<td><p>Calculates a distance-like quantity from an annotation in space.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.tools.co_occurrence.html#tacco.tools.co_occurrence" title="tacco.tools.co_occurrence"><code class="xref py py-obj docutils literal notranslate"><span class="pre">co_occurrence</span></code></a></p></td>
+<td><p>Calculates a spatial co-occurence score given by the conditional probability to find an annotation <cite>a</cite> at some distance <cite>d</cite> from an observation with annotation <cite>b</cite>, normalized by the probability to find an annotation <cite>a</cite> at distance <cite>d</cite> from an observation disregarding the value of its annotation: <cite>p(a|bd)/p(a|d)</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.tools.co_occurrence_matrix.html#tacco.tools.co_occurrence_matrix" title="tacco.tools.co_occurrence_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">co_occurrence_matrix</span></code></a></p></td>
+<td><p>Calculates a spatial co-occurence score given by the conditional probability to find an annotation <cite>a</cite> at some distance <cite>d</cite> from an observation with annotation <cite>b</cite>, normalized by the probability to find an annotation <cite>a</cite> at distance <cite>d</cite> from an observation disregarding the value of its annotation: <cite>p(a|bd)/p(a|d)</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.tools.distance_matrix.html#tacco.tools.distance_matrix" title="tacco.tools.distance_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distance_matrix</span></code></a></p></td>
+<td><p>Calculates a sparse or dense distance matrix.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.tools.distribute_molecules.html#tacco.tools.distribute_molecules" title="tacco.tools.distribute_molecules"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distribute_molecules</span></code></a></p></td>
+<td><p>Distributes the counts of observations randomly in space.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.tools.enrichments.html#tacco.tools.enrichments" title="tacco.tools.enrichments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enrichments</span></code></a></p></td>
+<td><p>Find enrichments in groups.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.tools.fill_regions.html#tacco.tools.fill_regions" title="tacco.tools.fill_regions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fill_regions</span></code></a></p></td>
+<td><p>Fills the region annotation of not annotated observation (i.e. na values) with the annotation of the spatially closest annotated observation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.tools.find_regions.html#tacco.tools.find_regions" title="tacco.tools.find_regions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_regions</span></code></a></p></td>
+<td><p>Find regions in position space defined by proximity in position space and in expression (or annotation) space.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.tools.get_compositions.html#tacco.tools.get_compositions" title="tacco.tools.get_compositions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_compositions</span></code></a></p></td>
+<td><p>Get the compositions of groups.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.tools.get_contributions.html#tacco.tools.get_contributions" title="tacco.tools.get_contributions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_contributions</span></code></a></p></td>
+<td><p>Get the contributions of groups.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.tools.merge_observations.html#tacco.tools.merge_observations" title="tacco.tools.merge_observations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_observations</span></code></a></p></td>
+<td><p>Merges equivalent observations of an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> by summing over the expression.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.tools.mix_in_silico.html#tacco.tools.mix_in_silico" title="tacco.tools.mix_in_silico"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mix_in_silico</span></code></a></p></td>
+<td><p>Given single cell data, create an in-silico mixed dataset.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.tools.run_goa_analysis.html#tacco.tools.run_goa_analysis" title="tacco.tools.run_goa_analysis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_goa_analysis</span></code></a></p></td>
+<td><p>Run a GO analysis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.tools.run_orthology_converter.html#tacco.tools.run_orthology_converter" title="tacco.tools.run_orthology_converter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_orthology_converter</span></code></a></p></td>
+<td><p>Run orthology conversion between species using MGI homology information information (Mouse Genome Informatics Web Site, <cite>http://www.informatics.jax.org/homology.shtml</cite>).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.tools.segment.html#tacco.tools.segment" title="tacco.tools.segment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">segment</span></code></a></p></td>
+<td><p>Segment single molecules in space to get a cell-like annotation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.tools.setup_goa_analysis.html#tacco.tools.setup_goa_analysis" title="tacco.tools.setup_goa_analysis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_goa_analysis</span></code></a></p></td>
+<td><p>Setup a GO analysis.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.tools.setup_orthology_converter.html#tacco.tools.setup_orthology_converter" title="tacco.tools.setup_orthology_converter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_orthology_converter</span></code></a></p></td>
+<td><p>Setup for converting gene names between species using MGI homology information (Mouse Genome Informatics Web Site, <cite>http://www.informatics.jax.org/homology.shtml</cite>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.tools.spectral_clustering.html#tacco.tools.spectral_clustering" title="tacco.tools.spectral_clustering"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spectral_clustering</span></code></a></p></td>
+<td><p>Performs spectral clustering on an affinity matrix.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.tools.split_observations.html#tacco.tools.split_observations" title="tacco.tools.split_observations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_observations</span></code></a></p></td>
+<td><p>Splits expression data with a &quot;soft&quot; weights annotation in <cite>.obsm</cite> into multiple &quot;virtual&quot; observations per input observation e.g. splits expression data for cell type mixtures with annotated cell type fractions into expression of single type observations with categorical annotation.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tacco.testing.string_encode.html" class="btn btn-neutral float-left" title="tacco.testing.string_encode" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tacco.tools.affinity.html" class="btn btn-neutral float-right" title="tacco.tools.affinity" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

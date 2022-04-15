@@ -1,0 +1,6 @@
+tacco.utils.dataframe2anndata
+=============================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: dataframe2anndata

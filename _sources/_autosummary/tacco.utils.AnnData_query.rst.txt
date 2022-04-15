@@ -1,0 +1,6 @@
+tacco.utils.AnnData\_query
+==========================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: AnnData_query

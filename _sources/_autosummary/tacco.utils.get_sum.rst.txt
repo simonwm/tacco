@@ -1,0 +1,6 @@
+tacco.utils.get\_sum
+====================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: get_sum

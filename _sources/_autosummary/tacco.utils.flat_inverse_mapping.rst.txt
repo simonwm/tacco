@@ -1,0 +1,6 @@
+tacco.utils.flat\_inverse\_mapping
+==================================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: flat_inverse_mapping

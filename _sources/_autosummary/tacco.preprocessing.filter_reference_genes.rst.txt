@@ -1,0 +1,6 @@
+tacco.preprocessing.filter\_reference\_genes
+============================================
+
+.. currentmodule:: tacco.preprocessing
+
+.. autofunction:: filter_reference_genes

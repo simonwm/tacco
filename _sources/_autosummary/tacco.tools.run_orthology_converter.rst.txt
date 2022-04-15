@@ -1,0 +1,6 @@
+tacco.tools.run\_orthology\_converter
+=====================================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: run_orthology_converter

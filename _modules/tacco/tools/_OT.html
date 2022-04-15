@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.tools._OT &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/tacco.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tacco.tools._OT</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tacco.tools._OT</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">anndata</span> <span class="k">as</span> <span class="nn">ad</span>
+<span class="kn">import</span> <span class="nn">gc</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">get</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">preprocessing</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">_math</span>
+<span class="kn">from</span> <span class="nn">..utils._utils</span> <span class="kn">import</span> <span class="n">_run_OT</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_helper</span> <span class="k">as</span> <span class="n">helper</span>
+<span class="kn">from</span> <span class="nn">._annotate</span> <span class="kn">import</span> <span class="n">annotate</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">issparse</span><span class="p">,</span> <span class="n">csr_matrix</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">njit</span><span class="p">,</span> <span class="n">prange</span>
+
+<span class="nd">@njit</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_get_minimal_transitions</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span> <span class="n">vos</span><span class="p">):</span>
+    <span class="n">transitions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">vis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">vis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">vos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="n">vis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">vi</span> <span class="o">=</span> <span class="n">vis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">vo</span> <span class="o">=</span> <span class="n">vos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">vo</span> <span class="o">-</span> <span class="n">vi</span>
+        <span class="n">delta_p</span> <span class="o">=</span> <span class="n">delta</span> <span class="o">*</span> <span class="p">(</span><span class="n">delta</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">delta_m</span> <span class="o">=</span> <span class="n">delta</span> <span class="o">*</span> <span class="p">(</span><span class="n">delta</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">sum_p</span> <span class="o">=</span> <span class="n">delta_p</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">sum_m</span> <span class="o">=</span> <span class="n">delta_m</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">sum_m</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">sum_p</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">delta_m</span> <span class="o">*=</span> <span class="n">sum_p</span><span class="o">/</span><span class="n">sum_m</span>
+            <span class="n">transitions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">delta_m</span><span class="p">,</span> <span class="n">delta_p</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">sum_p</span><span class="p">))</span>
+        <span class="n">transitions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">vi</span><span class="o">-</span><span class="n">delta_m</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">transitions</span>
+
+<span class="k">def</span> <span class="nf">get_minimal_transitions</span><span class="p">(</span>
+    <span class="n">aa</span><span class="p">,</span>
+    <span class="n">bb</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">aa</span><span class="o">.</span><span class="n">shape</span><span class="o">==</span><span class="n">bb</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">aa</span><span class="p">):</span>
+        <span class="n">aa</span> <span class="o">=</span> <span class="n">aa</span><span class="o">.</span><span class="n">A</span>
+    <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">bb</span><span class="p">):</span>
+        <span class="n">bb</span> <span class="o">=</span> <span class="n">bb</span><span class="o">.</span><span class="n">A</span>
+    
+    <span class="n">res</span> <span class="o">=</span> <span class="n">_get_minimal_transitions</span><span class="p">(</span><span class="n">aa</span><span class="p">,</span><span class="n">bb</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">res</span>
+
+<span class="k">def</span> <span class="nf">_annotate_OT</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">,</span>
+    <span class="n">reference</span><span class="p">,</span>
+    <span class="n">annotation_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">annotation_prior</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">epsilon</span><span class="o">=</span><span class="mf">5e-3</span><span class="p">,</span>
+    <span class="n">lamb</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">decomposition</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">deconvolution</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kw_args</span><span class="p">,</span>
+    <span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Implements the functionality of :func:`~annotate_OT` without data</span>
+<span class="sd">    integrity checks.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">cell_prior</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">prep_cell_priors</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reads</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="n">type_cell_dist</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">prep_distance</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">decomposition</span><span class="o">=</span><span class="n">decomposition</span><span class="p">,</span> <span class="n">deconvolution</span><span class="o">=</span><span class="n">deconvolution</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">decomposition</span><span class="p">:</span>
+        <span class="n">type_cell_dist</span><span class="p">,</span> <span class="n">mixtures</span> <span class="o">=</span> <span class="n">type_cell_dist</span>
+    <span class="n">types</span> <span class="o">=</span> <span class="n">type_cell_dist</span><span class="o">.</span><span class="n">index</span>
+    
+    <span class="k">if</span> <span class="n">decomposition</span><span class="p">:</span> <span class="c1"># include the annotation profiles themselves to obtain a measurement of confusion</span>
+        <span class="n">test_weight</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="o">*</span><span class="n">cell_prior</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">/</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">type_cell_dist</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">cell_prior</span><span class="o">.</span><span class="n">index</span><span class="p">))</span> <span class="c1"># keep a low weight to not influence the actual typing (much)</span>
+        <span class="n">cell_prior</span> <span class="o">=</span> <span class="n">cell_prior</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">type_cell_dist</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span><span class="n">fill_value</span><span class="o">=</span><span class="n">test_weight</span><span class="p">)</span>
+
+    <span class="n">cell_type</span> <span class="o">=</span> <span class="n">_run_OT</span><span class="p">(</span><span class="n">type_cell_dist</span><span class="p">,</span> <span class="n">annotation_prior</span><span class="p">,</span> <span class="n">cell_prior</span><span class="o">=</span><span class="n">cell_prior</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="n">epsilon</span><span class="p">,</span> <span class="n">lamb</span><span class="o">=</span><span class="n">lamb</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">decomposition</span><span class="p">:</span>
+        <span class="n">cell_type</span> <span class="o">/=</span> <span class="n">cell_type</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()[:,</span><span class="kc">None</span><span class="p">]</span>
+        <span class="c1"># need to run measurement on mixtures instead of pure profiles to get the confusion as pure profiles should never be confused at all.</span>
+        <span class="c1"># miXture Measurements</span>
+        <span class="n">xm</span> <span class="o">=</span> <span class="n">cell_type</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">cell_type</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        
+        <span class="c1"># Observation Measurements</span>
+        <span class="n">om</span> <span class="o">=</span> <span class="n">cell_type</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        <span class="c1"># miXture Annotation joint probability distribution</span>
+        <span class="n">xa</span> <span class="o">=</span> <span class="n">mixtures</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># get probability of miXture given Annotation</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">col_scale</span><span class="p">(</span><span class="n">xa</span><span class="p">,</span><span class="mi">1</span><span class="o">/</span><span class="n">xa</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">A</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+        <span class="c1"># get measurement given annotation</span>
+
+        <span class="c1"># assume independent m and a</span>
+        <span class="c1"># ma = utils.gemmT(xm.T, xa.T)</span>
+
+        <span class="c1"># get probability of Annotation given mixture</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">mixtures</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">col_scale</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span><span class="mi">1</span><span class="o">/</span><span class="n">ax</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">A</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+        <span class="c1"># assume minimal error between m and a</span>
+        <span class="n">xam</span> <span class="o">=</span> <span class="n">get_minimal_transitions</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">xm</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">eliminate_zeros</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">ax</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">ma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;xam,xa,ax-&gt;ma&#39;</span><span class="p">,</span> <span class="n">xam</span><span class="p">,</span> <span class="n">xa</span><span class="o">.</span><span class="n">A</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">A</span><span class="p">)</span>
+        
+        <span class="n">cell_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">parallel_nnls</span><span class="p">(</span><span class="n">ma</span><span class="p">,</span> <span class="n">om</span><span class="p">)</span>
+        
+        <span class="n">cell_type</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">cell_type</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">types</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    
+    <span class="n">cell_type</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">normalize_result_format</span><span class="p">(</span><span class="n">cell_type</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">cell_type</span>
+
+<div class="viewcode-block" id="annotate_OT">
+<a class="viewcode-back" href="../../../_autosummary/tacco.tools.annotate_OT.html#tacco.tools.annotate_OT">[docs]</a>
+<span class="k">def</span> <span class="nf">annotate_OT</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">,</span>
+    <span class="n">reference</span><span class="p">,</span>
+    <span class="n">annotation_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">counts_location</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">annotation_prior</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">epsilon</span><span class="o">=</span><span class="mf">5e-3</span><span class="p">,</span>
+    <span class="n">lamb</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">decomposition</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">deconvolution</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kw_args</span><span class="p">,</span>
+    <span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Annotates an :class:`~anndata.AnnData` using reference data by</span>
+<span class="sd">    semi-balanced optimal transport.</span>
+
+<span class="sd">    This is the direct interface to this annotation method. In practice using</span>
+<span class="sd">    the general wrapper :func:`~tacco.tools.annotate` is recommended due to its</span>
+<span class="sd">    higher flexibility.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adata</span>
+<span class="sd">        An :class:`~anndata.AnnData` including expression data in `.X`.</span>
+<span class="sd">    reference</span>
+<span class="sd">        Reference data to get the annotation definition from.</span>
+<span class="sd">    annotation_key</span>
+<span class="sd">        The `.obs` and/or `.varm` key where the annotation and/or profiles are</span>
+<span class="sd">        stored in the `reference`. If `None`, it is inferred from `reference`,</span>
+<span class="sd">        if possible.</span>
+<span class="sd">    counts_location</span>
+<span class="sd">        A string or tuple specifying where the count matrix is stored, e.g.</span>
+<span class="sd">        `&#39;X&#39;`, `(&#39;raw&#39;,&#39;X&#39;)`, `(&#39;raw&#39;,&#39;obsm&#39;,&#39;my_counts_key&#39;)`,</span>
+<span class="sd">        `(&#39;layer&#39;,&#39;my_counts_key&#39;)`, ... For details see</span>
+<span class="sd">        :func:`~tacco.get.counts`.</span>
+<span class="sd">    annotation_prior</span>
+<span class="sd">        A :class:`~pandas.Series` containing the annotation prior distribution.</span>
+<span class="sd">        This argument is required and will throw a :class:`~ValueError` if it</span>
+<span class="sd">        is unset.</span>
+<span class="sd">    epsilon</span>
+<span class="sd">        The prefactor for entropy regularization in Optimal Transport. Small</span>
+<span class="sd">        values like `5e-3` tend to give only a few or a single annotation</span>
+<span class="sd">        category per observation, while large values like `5e-1` give many</span>
+<span class="sd">        annotation categories per observation.</span>
+<span class="sd">    lamb</span>
+<span class="sd">        The prefactor for prior constraint relaxation by KL divergence in</span>
+<span class="sd">        unbalanced Optimal Transport. Smaller values like `1e-2` relax the</span>
+<span class="sd">        constraint more than larger ones like `1e0`. If `None`, do not relax</span>
+<span class="sd">        the prior constraint and fix the annotation fraction at</span>
+<span class="sd">        `annotation_prior`.</span>
+<span class="sd">    decomposition</span>
+<span class="sd">        Whether to decompose the annotation using information from injected</span>
+<span class="sd">        in-silico type mixtures.</span>
+<span class="sd">    deconvolution</span>
+<span class="sd">        Which method to use for deconvolution of the cost based on similarity of</span>
+<span class="sd">        different annotation profiles. If `False`, no deconvolution is done.</span>
+<span class="sd">        Available methods are:</span>
+<span class="sd">        </span>
+<span class="sd">        - &#39;nnls&#39;: solves nnls to get only non-negative deconvolved projections</span>
+<span class="sd">        - &#39;linear&#39;: solves a linear system to disentangle contributions; can</span>
+<span class="sd">          result in negative values which makes sense for general vectors and</span>
+<span class="sd">          amplitudes, i.e.</span>
+<span class="sd">          </span>
+<span class="sd">    **kw_args</span>
+<span class="sd">        Additional keyword arguments are forwarded to</span>
+<span class="sd">        :func:`~tacco.tools._helper.prep_distance`.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Returns the annotation in a :class:`~pandas.DataFrame`.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">validate_annotation_args</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">counts_location</span><span class="p">)</span>
+
+    <span class="c1"># call typing without data integrity checks</span>
+    <span class="n">cell_type</span> <span class="o">=</span> <span class="n">_annotate_OT</span><span class="p">(</span>
+        <span class="n">adata</span><span class="o">=</span><span class="n">adata</span><span class="p">,</span>
+        <span class="n">reference</span><span class="o">=</span><span class="n">reference</span><span class="p">,</span>
+        <span class="n">annotation_key</span><span class="o">=</span><span class="n">annotation_key</span><span class="p">,</span>
+        <span class="n">annotation_prior</span><span class="o">=</span><span class="n">annotation_prior</span><span class="p">,</span>
+        <span class="n">epsilon</span><span class="o">=</span><span class="n">epsilon</span><span class="p">,</span>
+        <span class="n">lamb</span><span class="o">=</span><span class="n">lamb</span><span class="p">,</span>
+        <span class="n">decomposition</span><span class="o">=</span><span class="n">decomposition</span><span class="p">,</span>
+        <span class="n">deconvolution</span><span class="o">=</span><span class="n">deconvolution</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kw_args</span><span class="p">,</span>
+    <span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">cell_type</span></div>
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

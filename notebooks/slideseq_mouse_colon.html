@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide-Seq Mouse Colon &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Slide-Seq Mouse Olfactory Bulb - multiple pucks" href="slideseq_mouse_olfactory_bulb.html" />
+    <link rel="prev" title="Single-cell differentiation" href="single_cell_differentiation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../examples.html">Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="benchmarking.html">Benchmarking runtime and memory of annotation methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cooccurrence.html">Co-occurrence computations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="insilico_mouse_colon.html">In-silico mixed Mouse Colon scRNA-seq data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mapping_single_cells_into_space.html">Mapping single cells into space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_splitting.html">Object splitting for in-silico mixed scRNA-seq data and Slide-Seq data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="osmFISH_single_molecule_annotation.html">Single molecule data: osmFISH mouse somato-sensory cortex</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview.html">TACCO overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameter_variations.html">Parameter Variations for annotation using Optimal Transport</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulated_ambient.html">Simulated single cell expression data with ambient contamination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulated_dropout.html">Simulated single cell expression data with dropout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="single_cell_differentiation.html">Single-cell differentiation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Slide-Seq Mouse Colon</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Load-data">Load data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Plotting-options">Plotting options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Visualize-scRNA-seq-data">Visualize scRNA-seq data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Annotate-the-spatial-data-with-compositions-of-cell-types">Annotate the spatial data with compositions of cell types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Visualize-the-spatial-cell-type-distribution">Visualize the spatial cell type distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Find-spatially-contiguous-regions-of-comparable-expression-patterns">Find spatially contiguous regions of comparable expression patterns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Get-regularized-distances-from-these-regions">Get regularized distances from these regions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Cell-type-composition-in-the-regions">Cell type composition in the regions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Subdivide-the-single-spatial-sample-spatially-into-several-parts">Subdivide the single spatial sample spatially into several parts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Analyse-neighbourhips">Analyse neighbourhips</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Analyse-cell-type-composition-relative-to-a-region-annotation">Analyse cell type composition relative to a region annotation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="slideseq_mouse_olfactory_bulb.html">Slide-Seq Mouse Olfactory Bulb - multiple pucks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slideseq_mouse_olfactory_bulb_single.html">Slide-Seq Mouse Olfactory Bulb - single puck</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visium_mouse_kidney.html">Visium Mouse Kidney</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../_autosummary/tacco.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../examples.html">Examples</a></li>
+      <li class="breadcrumb-item active">Slide-Seq Mouse Colon</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Slide-Seq-Mouse-Colon">
+<h1>Slide-Seq Mouse Colon<a class="headerlink" href="#Slide-Seq-Mouse-Colon" title="Link to this heading">¶</a></h1>
+<p>This example uses TACCO to annotate and analyse mouse colon Slide-Seq data with mouse colon scRNA-seq data as reference (Avraham-Davidi et al.).</p>
+<p>(Avraham-Davidi et al.): Avraham-Davidi I, Mages S, Klughammer J, et al. Integrative single cell and spatial transcriptomics of colorectal cancer reveals multicellular functional units that support tumor progression. doi: <a class="reference external" href="https://doi.org/10.1101/2022.10.02.508492">https://doi.org/10.1101/2022.10.02.508492</a></p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">anndata</span> <span class="k">as</span> <span class="nn">ad</span>
+
+<span class="kn">import</span> <span class="nn">tacco</span> <span class="k">as</span> <span class="nn">tc</span>
+
+<span class="c1"># The notebook expects to be executed either in the workflow directory or in the repository root folder...</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s1">&#39;workflow&#39;</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s1">&#39;workflow/common_code.py&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;..&#39;</span><span class="p">))</span>
+<span class="kn">import</span> <span class="nn">common_code</span>
+</pre></div>
+</div>
+</div>
+<section id="Load-data">
+<h2>Load data<a class="headerlink" href="#Load-data" title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data_path</span> <span class="o">=</span> <span class="n">common_code</span><span class="o">.</span><span class="n">find_path</span><span class="p">(</span><span class="s1">&#39;results/slideseq_mouse_colon/data&#39;</span><span class="p">)</span>
+<span class="n">plot_path</span> <span class="o">=</span> <span class="n">common_code</span><span class="o">.</span><span class="n">find_path</span><span class="p">(</span><span class="s1">&#39;results/slideseq_mouse_colon&#39;</span><span class="p">)</span>
+<span class="n">reference</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s1">/scrnaseq.h5ad&#39;</span><span class="p">)</span>
+<span class="n">puck</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s1">/slideseq.h5ad&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Plotting-options">
+<h2>Plotting options<a class="headerlink" href="#Plotting-options" title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">highres</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">default_dpi</span> <span class="o">=</span> <span class="mf">100.0</span>
+<span class="k">if</span> <span class="n">highres</span><span class="p">:</span>
+    <span class="n">matplotlib</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.dpi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">648.0</span>
+    <span class="n">hr_ext</span> <span class="o">=</span> <span class="s1">&#39;_hd&#39;</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">matplotlib</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.dpi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">default_dpi</span>
+    <span class="n">hr_ext</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+<span class="n">axsize</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span><span class="o">*</span><span class="mf">0.5</span>
+
+<span class="n">labels_colors</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">({</span><span class="s1">&#39;Epi&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.00784313725490196</span><span class="p">,</span> <span class="mf">0.24313725490196078</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.10196078431372549</span><span class="p">,</span> <span class="mf">0.788235294117647</span><span class="p">,</span> <span class="mf">0.2196078431372549</span><span class="p">),</span> <span class="s1">&#39;TNK&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.48627450980392156</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="s1">&#39;Mono&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.5490196078431373</span><span class="p">,</span> <span class="mf">0.03137254901960784</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="s1">&#39;Mac&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.9098039215686274</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.043137254901960784</span><span class="p">),</span> <span class="s1">&#39;Gran&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.34901960784313724</span><span class="p">,</span> <span class="mf">0.11764705882352941</span><span class="p">,</span> <span class="mf">0.44313725490196076</span><span class="p">),</span> <span class="s1">&#39;Mast&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.23529411764705882</span><span class="p">,</span> <span class="mf">0.23529411764705882</span><span class="p">,</span> <span class="mf">0.23529411764705882</span><span class="p">),</span> <span class="s1">&#39;Endo&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.8549019607843137</span><span class="p">,</span> <span class="mf">0.5450980392156862</span><span class="p">,</span> <span class="mf">0.7647058823529411</span><span class="p">),</span> <span class="s1">&#39;Fibro&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.6235294117647059</span><span class="p">,</span> <span class="mf">0.2823529411764706</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)})</span>
+<span class="n">region_colors</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">get_default_colors</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;region_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)],</span> <span class="n">offset</span><span class="o">=</span><span class="mi">17</span><span class="p">)</span>
+<span class="n">split_names</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;sub_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)])</span>
+<span class="n">split_colors</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">get_default_colors</span><span class="p">(</span><span class="n">split_names</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Visualize-scRNA-seq-data">
+<h2>Visualize scRNA-seq data<a class="headerlink" href="#Visualize-scRNA-seq-data" title="Link to this heading">¶</a></h2>
+<p>Create UMAPs for the scRNA-seq data</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ref_umap</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">umap_single_cell_data</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">ref_umap</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="n">position_key</span><span class="o">=</span><span class="s1">&#39;X_umap&#39;</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">labels_colors</span><span class="p">,</span> <span class="n">joint</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">point_size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">axsize</span><span class="o">=</span><span class="n">axsize</span><span class="p">,</span> <span class="n">noticks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="n">axes_labels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;UMAP 0&#39;</span><span class="p">,</span><span class="s1">&#39;UMAP 1&#39;</span><span class="p">]);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+SCumap...SCprep...time 7.727412223815918
+time 68.7538959980011
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_slideseq_mouse_colon_7_1.png" src="../_images/notebooks_slideseq_mouse_colon_7_1.png" />
+</div>
+</div>
+</section>
+<section id="Annotate-the-spatial-data-with-compositions-of-cell-types">
+<h2>Annotate the spatial data with compositions of cell types<a class="headerlink" href="#Annotate-the-spatial-data-with-compositions-of-cell-types" title="Link to this heading">¶</a></h2>
+<p>Annotation is done on cell type level with multi_center=10 to capture variation within a cell type</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">puck</span><span class="p">,</span><span class="n">reference</span><span class="p">,</span><span class="s1">&#39;labels&#39;</span><span class="p">,</span><span class="n">result_key</span><span class="o">=</span><span class="s1">&#39;labels&#39;</span><span class="p">,</span><span class="n">multi_center</span><span class="o">=</span><span class="mi">10</span><span class="p">,);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Starting preprocessing
+Annotation profiles were not found in `reference.varm[&#34;labels&#34;]`. Constructing reference profiles with `tacco.preprocessing.construct_reference_profiles` and default arguments...
+Finished preprocessing in 14.11 seconds.
+Starting annotation of data with shape (33673, 16879) and a reference of shape (17512, 16879) using the following wrapped method:
++- platform normalization: platform_iterations=0, gene_keys=labels, normalize_to=adata
+   +- multi center: multi_center=10 multi_center_amplitudes=True
+      +- bisection boost: bisections=4, bisection_divisor=3
+         +- core: method=OT annotation_prior=None
+mean,std( rescaling(gene) )  0.7410490029315331 10.559549576241444
+bisection run on 1
+bisection run on 0.6666666666666667
+bisection run on 0.4444444444444444
+bisection run on 0.2962962962962963
+bisection run on 0.19753086419753085
+bisection run on 0.09876543209876543
+Finished annotation in 23.6 seconds.
+</pre></div></div>
+</div>
+</section>
+<section id="Visualize-the-spatial-cell-type-distribution">
+<h2>Visualize the spatial cell type distribution<a class="headerlink" href="#Visualize-the-spatial-cell-type-distribution" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">puck</span> <span class="o">=</span> <span class="n">puck</span><span class="p">[</span><span class="n">tc</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">puck</span><span class="o">.</span><span class="n">X</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">&gt;=</span><span class="mi">50</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="c1"># restrict downstream analysis to &quot;good&quot; beads</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">puck</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="n">position_key</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">colors</span><span class="o">=</span><span class="n">labels_colors</span><span class="p">,</span> <span class="n">joint</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">point_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">axsize</span><span class="o">=</span><span class="n">axsize</span><span class="p">,</span> <span class="n">noticks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axes_labels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">,</span><span class="s1">&#39;Y&#39;</span><span class="p">]);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_slideseq_mouse_colon_11_0.png" src="../_images/notebooks_slideseq_mouse_colon_11_0.png" />
+</div>
+</div>
+</section>
+<section id="Find-spatially-contiguous-regions-of-comparable-expression-patterns">
+<h2>Find spatially contiguous regions of comparable expression patterns<a class="headerlink" href="#Find-spatially-contiguous-regions-of-comparable-expression-patterns" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">find_regions</span><span class="p">(</span><span class="n">puck</span><span class="p">,</span><span class="n">key_added</span><span class="o">=</span><span class="s1">&#39;regions&#39;</span><span class="p">,</span><span class="n">position_weight</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mf">0.55</span><span class="p">);</span>
+<span class="n">puck</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;regions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">puck</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;regions&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;region_</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+WARNING: You’re trying to run this on 20388 dimensions of `.X`, if you really want this, set `use_rep=&#39;X&#39;`.
+         Falling back to preprocessing with `sc.pp.pca` and default params.
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># ensure that the region naming is deterministic</span>
+<span class="n">ordered_regions</span> <span class="o">=</span> <span class="n">puck</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;regions&#39;</span><span class="p">)[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span>
+<span class="n">puck</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;regions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">puck</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;regions&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">({</span><span class="n">r0</span><span class="p">:</span><span class="n">r1</span> <span class="k">for</span> <span class="n">r0</span><span class="p">,</span><span class="n">r1</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ordered_regions</span><span class="o">.</span><span class="n">index</span><span class="p">,[</span><span class="s1">&#39;region_2&#39;</span><span class="p">,</span><span class="s1">&#39;region_1&#39;</span><span class="p">,</span><span class="s1">&#39;region_3&#39;</span><span class="p">,</span><span class="s1">&#39;region_0&#39;</span><span class="p">])})</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">CategoricalDtype</span><span class="p">([</span><span class="s1">&#39;region_0&#39;</span><span class="p">,</span><span class="s1">&#39;region_1&#39;</span><span class="p">,</span><span class="s1">&#39;region_2&#39;</span><span class="p">,</span><span class="s1">&#39;region_3&#39;</span><span class="p">],</span><span class="n">ordered</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">puck</span><span class="p">,</span><span class="s1">&#39;regions&#39;</span><span class="p">,</span><span class="n">joint</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">axsize</span><span class="o">=</span><span class="n">axsize</span><span class="p">,</span> <span class="n">point_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">noticks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axes_labels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">,</span><span class="s1">&#39;Y&#39;</span><span class="p">],</span> <span class="n">colors</span><span class="o">=</span><span class="n">region_colors</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_slideseq_mouse_colon_15_0.png" src="../_images/notebooks_slideseq_mouse_colon_15_0.png" />
+</div>
+</div>
+</section>
+<section id="Get-regularized-distances-from-these-regions">
+<h2>Get regularized distances from these regions<a class="headerlink" href="#Get-regularized-distances-from-these-regions" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">annotation_coordinate</span><span class="p">(</span><span class="n">puck</span><span class="p">,</span><span class="n">annotation_key</span><span class="o">=</span><span class="s1">&#39;regions&#39;</span><span class="p">,</span><span class="n">result_key</span><span class="o">=</span><span class="s1">&#39;region_dist&#39;</span><span class="p">,</span><span class="n">max_distance</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span><span class="n">delta_distance</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span><span class="n">sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+annotation_distance: The argument `distance_key` is `None`, meaning that the distance which is now calculated on the fly will not be saved. Providing a precalculated distance saves time in multiple calls to this function.
+calculating distance for sample 1/1
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span><span class="n">axs</span><span class="o">=</span><span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">axsize</span><span class="o">=</span><span class="n">axsize</span><span class="p">,</span><span class="n">x_padding</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span><span class="n">y_padding</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">axs</span><span class="o">=</span><span class="n">axs</span><span class="o">.</span><span class="n">flatten</span><span class="p">()[:,</span><span class="kc">None</span><span class="p">]</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">puck</span><span class="p">,</span><span class="s1">&#39;region_dist&#39;</span><span class="p">,</span><span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;jet&#39;</span><span class="p">,</span> <span class="n">joint</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">axsize</span><span class="o">=</span><span class="n">axsize</span><span class="p">,</span> <span class="n">point_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">noticks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axes_labels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">,</span><span class="s1">&#39;Y&#39;</span><span class="p">],</span> <span class="n">ax</span><span class="o">=</span><span class="n">axs</span><span class="p">);</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_slideseq_mouse_colon_18_0.png" src="../_images/notebooks_slideseq_mouse_colon_18_0.png" />
+</div>
+</div>
+<p>Cell type composition at a certain regularized distance</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">annotation_coordinate</span><span class="p">(</span><span class="n">puck</span><span class="p">,</span><span class="n">annotation_key</span><span class="o">=</span><span class="s1">&#39;labels&#39;</span><span class="p">,</span><span class="n">coordinate_key</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;region_dist&#39;</span><span class="p">,</span><span class="s1">&#39;region_2&#39;</span><span class="p">),</span><span class="n">colors</span><span class="o">=</span><span class="n">labels_colors</span><span class="p">,</span><span class="n">max_coordinate</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span><span class="n">delta_coordinate</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">axsize</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mf">0.45</span><span class="p">));</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_slideseq_mouse_colon_20_0.png" src="../_images/notebooks_slideseq_mouse_colon_20_0.png" />
+</div>
+</div>
+</section>
+<section id="Cell-type-composition-in-the-regions">
+<h2>Cell type composition in the regions<a class="headerlink" href="#Cell-type-composition-in-the-regions" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">compositions</span><span class="p">(</span><span class="n">puck</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="s1">&#39;regions&#39;</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">labels_colors</span><span class="p">,</span> <span class="n">axsize</span><span class="o">=</span><span class="p">(</span><span class="mf">2.4</span><span class="p">,</span><span class="mf">2.5</span><span class="p">));</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_slideseq_mouse_colon_22_0.png" src="../_images/notebooks_slideseq_mouse_colon_22_0.png" />
+</div>
+</div>
+</section>
+<section id="Subdivide-the-single-spatial-sample-spatially-into-several-parts">
+<h2>Subdivide the single spatial sample spatially into several parts<a class="headerlink" href="#Subdivide-the-single-spatial-sample-spatially-into-several-parts" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tc</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">spatial_split</span><span class="p">(</span><span class="n">puck</span><span class="p">,</span> <span class="n">position_key</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">position_split</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">result_key</span><span class="o">=</span><span class="s1">&#39;split&#39;</span><span class="p">);</span>
+<span class="n">puck</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;split&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">split_names</span><span class="p">[</span><span class="n">puck</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;split&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">codes</span><span class="p">]</span>
+<span class="n">puck</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;split&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">puck</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;split&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">puck</span><span class="p">,</span> <span class="s1">&#39;split&#39;</span><span class="p">,</span> <span class="n">joint</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">axsize</span><span class="o">=</span><span class="n">axsize</span><span class="p">,</span> <span class="n">point_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">noticks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axes_labels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">,</span><span class="s1">&#39;Y&#39;</span><span class="p">],</span> <span class="n">colors</span><span class="o">=</span><span class="n">split_colors</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_slideseq_mouse_colon_24_0.png" src="../_images/notebooks_slideseq_mouse_colon_24_0.png" />
+</div>
+</div>
+<p>Compare cell type composition across these parts</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">contribution</span><span class="p">(</span><span class="n">puck</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="s1">&#39;regions&#39;</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">labels_colors</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;gmean&#39;</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="n">sample_key</span><span class="o">=</span><span class="s1">&#39;split&#39;</span><span class="p">,</span> <span class="n">axsize</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">puck</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">0.2</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mf">.1</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.25</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">));</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_slideseq_mouse_colon_26_0.png" src="../_images/notebooks_slideseq_mouse_colon_26_0.png" />
+</div>
+</div>
+<p>Do statistics on these parts treating them as independent samples</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">enr</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">enrichments</span><span class="p">(</span><span class="n">puck</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="s1">&#39;regions&#39;</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;gmean&#39;</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="n">sample_key</span><span class="o">=</span><span class="s1">&#39;split&#39;</span><span class="p">);</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">significances</span><span class="p">(</span><span class="n">enr</span><span class="p">,</span> <span class="n">p_key</span><span class="o">=</span><span class="s1">&#39;p_mwu_fdr_bh&#39;</span><span class="p">,</span> <span class="n">value_key</span><span class="o">=</span><span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="n">group_key</span><span class="o">=</span><span class="s1">&#39;regions&#39;</span><span class="p">,</span> <span class="n">axsize</span><span class="o">=</span><span class="p">(</span><span class="mf">2.5</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">puck</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span><span class="o">*</span><span class="mf">0.25</span><span class="p">));</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_slideseq_mouse_colon_28_0.png" src="../_images/notebooks_slideseq_mouse_colon_28_0.png" />
+</div>
+</div>
+</section>
+<section id="Analyse-neighbourhips">
+<h2>Analyse neighbourhips<a class="headerlink" href="#Analyse-neighbourhips" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">co_occurrence_matrix</span><span class="p">(</span><span class="n">puck</span><span class="p">,</span><span class="n">annotation_key</span><span class="o">=</span><span class="s1">&#39;labels&#39;</span><span class="p">,</span><span class="n">result_key</span><span class="o">=</span><span class="s1">&#39;labels-labels&#39;</span><span class="p">,</span><span class="n">max_distance</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span><span class="n">n_permutation</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="p">);</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">co_occurrence_matrix</span><span class="p">(</span><span class="n">puck</span><span class="p">,</span><span class="n">analysis_key</span><span class="o">=</span><span class="s1">&#39;labels-labels&#39;</span><span class="p">,</span><span class="n">score_key</span><span class="o">=</span><span class="s1">&#39;z&#39;</span><span class="p">,</span><span class="n">cmap_vmin_vmax</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span> <span class="n">axsize</span><span class="o">=</span><span class="p">(</span><span class="mf">1.3</span><span class="p">,</span><span class="mf">1.3</span><span class="p">));</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+co_occurrence: The argument `distance_key` is `None`, meaning that the distance which is now calculated on the fly will not be saved. Providing a precalculated distance saves time in multiple calls to this function.
+calculating distance for sample 1/1
+The heuristic value for the parameter `numba_blocksize` is 160.0. Consider specifying this directly as argument to avoid (possibly significant) overhead and/or experiment with this value on (a subset of) the actual dataset at hand to obtain an optimal value in terms of speed and memory requirements.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_slideseq_mouse_colon_30_1.png" src="../_images/notebooks_slideseq_mouse_colon_30_1.png" />
+</div>
+</div>
+</section>
+<section id="Analyse-cell-type-composition-relative-to-a-region-annotation">
+<h2>Analyse cell type composition relative to a region annotation<a class="headerlink" href="#Analyse-cell-type-composition-relative-to-a-region-annotation" title="Link to this heading">¶</a></h2>
+<p>Calculate cell type composition in dependence of the distance to region_2. In contrast to the analysis above using a gobally defined regularized distance, the distance here is defined for all pairs of observations and aggregated over the pairs.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tc</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">co_occurrence</span><span class="p">(</span><span class="n">puck</span><span class="p">,</span><span class="n">annotation_key</span><span class="o">=</span><span class="s1">&#39;labels&#39;</span><span class="p">,</span><span class="n">center_key</span><span class="o">=</span><span class="s1">&#39;regions&#39;</span><span class="p">,</span><span class="n">result_key</span><span class="o">=</span><span class="s1">&#39;labels-regions&#39;</span><span class="p">,</span><span class="n">delta_distance</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span><span class="n">max_distance</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span><span class="n">n_permutation</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="p">);</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">tc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">co_occurrence</span><span class="p">(</span><span class="n">puck</span><span class="p">,</span><span class="n">analysis_key</span><span class="o">=</span><span class="s1">&#39;labels-regions&#39;</span><span class="p">,</span><span class="n">score_key</span><span class="o">=</span><span class="s1">&#39;log_composition&#39;</span><span class="p">,</span><span class="n">colors</span><span class="o">=</span><span class="n">labels_colors</span><span class="p">,</span> <span class="n">log_base</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">show_only_center</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;region_2&#39;</span><span class="p">],</span> <span class="n">axsize</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span><span class="o">*</span><span class="mf">0.4</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+co_occurrence: The argument `distance_key` is `None`, meaning that the distance which is now calculated on the fly will not be saved. Providing a precalculated distance saves time in multiple calls to this function.
+calculating distance for sample 1/1
+The heuristic value for the parameter `numba_blocksize` is 500.0. Consider specifying this directly as argument to avoid (possibly significant) overhead and/or experiment with this value on (a subset of) the actual dataset at hand to obtain an optimal value in terms of speed and memory requirements.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_slideseq_mouse_colon_32_1.png" src="../_images/notebooks_slideseq_mouse_colon_32_1.png" />
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="single_cell_differentiation.html" class="btn btn-neutral float-left" title="Single-cell differentiation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="slideseq_mouse_olfactory_bulb.html" class="btn btn-neutral float-right" title="Slide-Seq Mouse Olfactory Bulb - multiple pucks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

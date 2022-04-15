@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.tools._in_silico &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/tacco.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tacco.tools._in_silico</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tacco.tools._in_silico</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
+<span class="kn">import</span> <span class="nn">anndata</span> <span class="k">as</span> <span class="nn">ad</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">PCG64</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">distance_matrix</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">csc_matrix</span><span class="p">,</span> <span class="n">issparse</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">integrate</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">njit</span>
+
+<span class="kn">from</span> <span class="nn">..preprocessing._platform</span> <span class="kn">import</span> <span class="n">_get_random_platform_factors</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">utils</span>
+
+<span class="k">def</span> <span class="nf">add_random_coordinates</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">df</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+<span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_inplace_minimium</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">):</span>
+    <span class="n">n0</span><span class="p">,</span><span class="n">n1</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="o">==</span><span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n0</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]:</span>
+                <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">A</span>
+
+<span class="k">def</span> <span class="nf">get_distances</span><span class="p">(</span><span class="n">sampling_df</span><span class="p">,</span> <span class="n">obs_df</span><span class="p">):</span>
+    <span class="c1"># use periodic boundaries to use all data equally </span>
+    <span class="n">prime_x</span> <span class="o">=</span> <span class="n">sampling_df</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+    <span class="n">shift_x</span> <span class="o">=</span> <span class="n">prime_x</span> <span class="o">+</span> <span class="p">(</span><span class="n">prime_x</span><span class="o">&lt;</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">prime_x</span><span class="o">&gt;</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">prime_y</span> <span class="o">=</span> <span class="n">sampling_df</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
+    <span class="n">shift_y</span> <span class="o">=</span> <span class="n">prime_y</span> <span class="o">+</span> <span class="p">(</span><span class="n">prime_y</span><span class="o">&lt;</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">prime_y</span><span class="o">&gt;</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">x_y</span> <span class="o">=</span> <span class="n">obs_df</span><span class="p">[[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="n">distances</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">dense_distance_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">prime_x</span><span class="p">,</span><span class="n">prime_y</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">x_y</span><span class="p">)</span>
+    <span class="n">_inplace_minimium</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">utils</span><span class="o">.</span><span class="n">dense_distance_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">shift_x</span><span class="p">,</span><span class="n">prime_y</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">x_y</span><span class="p">))</span>
+    <span class="n">_inplace_minimium</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">utils</span><span class="o">.</span><span class="n">dense_distance_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">shift_x</span><span class="p">,</span><span class="n">shift_y</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">x_y</span><span class="p">))</span>
+    <span class="n">_inplace_minimium</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">utils</span><span class="o">.</span><span class="n">dense_distance_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">prime_x</span><span class="p">,</span><span class="n">shift_y</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">x_y</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">distances</span>
+
+<span class="k">def</span> <span class="nf">get_weights</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">length_scale</span><span class="p">,</span> <span class="n">psf</span> <span class="o">=</span> <span class="s1">&#39;gauss&#39;</span><span class="p">):</span>
+    <span class="c1">#psf = 0.25 # 0.001 ~ circle, 1.0 ~ gauss</span>
+    <span class="n">n_samples</span><span class="p">,</span> <span class="n">n_cells</span> <span class="o">=</span> <span class="n">distances</span><span class="o">.</span><span class="n">shape</span>
+    
+    <span class="c1"># get consistently normalized weights: sum_cells int_space psf(distance)</span>
+    <span class="n">dV</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">n_cells</span>
+    <span class="k">if</span> <span class="n">psf</span> <span class="o">==</span> <span class="s1">&#39;gauss&#39;</span><span class="p">:</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="p">(</span><span class="n">length_scale</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">dV</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">distances</span><span class="o">/</span><span class="n">length_scale</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">norm</span>
+    <span class="k">elif</span> <span class="n">psf</span> <span class="o">==</span> <span class="s1">&#39;disc&#39;</span><span class="p">:</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">length_scale</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">dV</span> <span class="o">*</span> <span class="p">(</span><span class="n">distances</span> <span class="o">&lt;</span> <span class="n">length_scale</span><span class="p">)</span> <span class="o">/</span> <span class="n">norm</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">g_scale</span> <span class="o">=</span> <span class="mf">1.16</span> <span class="c1"># makes width == 1.0 correspond (approximately) to the gaussian case</span>
+        <span class="n">psf</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">psf</span><span class="p">)</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">psf</span><span class="o">*</span><span class="n">length_scale</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">length_scale</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">g_scale</span><span class="o">*</span><span class="n">width</span><span class="p">))</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mf">0.5</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">g</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span> <span class="o">*</span> <span class="p">(</span><span class="n">length_scale</span> <span class="o">+</span> <span class="n">g_scale</span><span class="o">*</span><span class="n">width</span><span class="p">))</span> <span class="c1"># restrict numerical integration range for better convergence</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">integrate</span><span class="o">.</span><span class="n">dblquad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">-</span><span class="n">x0</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="o">-</span><span class="n">x0</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x0</span><span class="p">,</span><span class="n">epsabs</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">dV</span> <span class="o">*</span> <span class="n">g</span><span class="p">(</span><span class="n">distances</span><span class="p">)</span> <span class="o">/</span> <span class="n">norm</span>
+
+    <span class="c1"># cutoff small weights: does not really matter, but makes the matrix sparse and calculations faster</span>
+    <span class="n">weights</span><span class="p">[</span><span class="n">weights</span> <span class="o">&lt;</span> <span class="mf">1e-3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">csc_matrix</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+
+    <span class="n">weight_per_cell</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">n_cells</span><span class="o">*</span><span class="n">norm</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> weight_per_cell: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">psf</span><span class="p">,</span> <span class="n">weight_per_cell</span><span class="p">))</span>
+        
+    <span class="k">return</span> <span class="n">weights</span>
+
+<span class="k">def</span> <span class="nf">get_weights_yield</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">length_scale</span><span class="p">,</span> <span class="n">psf</span> <span class="o">=</span> <span class="s1">&#39;gauss&#39;</span><span class="p">,</span> <span class="n">capture_rate</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="c1">#psf = 0.25 # 0.001 ~ circle, 1.0 ~ gauss</span>
+    <span class="n">n_samples</span><span class="p">,</span> <span class="n">n_cells</span> <span class="o">=</span> <span class="n">distances</span><span class="o">.</span><span class="n">shape</span>
+    
+    <span class="c1"># get consistently normalized weights: psf(0) = capture_rate</span>
+    <span class="k">if</span> <span class="n">psf</span> <span class="o">==</span> <span class="s1">&#39;gauss&#39;</span><span class="p">:</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">distances</span><span class="o">/</span><span class="n">length_scale</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">psf</span> <span class="o">==</span> <span class="s1">&#39;disc&#39;</span><span class="p">:</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">distances</span> <span class="o">&lt;</span> <span class="n">length_scale</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">g_scale</span> <span class="o">=</span> <span class="mf">1.16</span> <span class="c1"># makes width == 1.0 correspond (approximately) to the gaussian case</span>
+        <span class="n">psf</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">psf</span><span class="p">)</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">psf</span><span class="o">*</span><span class="n">length_scale</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">length_scale</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">g_scale</span><span class="o">*</span><span class="n">width</span><span class="p">))</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mf">0.5</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">g</span><span class="p">(</span><span class="n">distances</span><span class="p">)</span> <span class="o">/</span> <span class="n">g</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">capture_rate</span> <span class="o">==</span> <span class="s1">&#39;normalized&#39;</span><span class="p">:</span>
+        <span class="n">weights</span> <span class="o">/=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_sum</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span><span class="kc">None</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">weights</span> <span class="o">*=</span> <span class="n">capture_rate</span>
+
+    <span class="c1"># cutoff small weights: does not really matter, but makes the matrix sparse and calculations faster</span>
+    <span class="n">weights</span><span class="p">[</span><span class="n">weights</span> <span class="o">&lt;</span> <span class="mf">1e-3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">csc_matrix</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">weights</span>
+
+<div class="viewcode-block" id="mix_in_silico">
+<a class="viewcode-back" href="../../../_autosummary/tacco.tools.mix_in_silico.html#tacco.tools.mix_in_silico">[docs]</a>
+<span class="k">def</span> <span class="nf">mix_in_silico</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">,</span>
+    <span class="n">type_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">topic_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_samples</span><span class="o">=</span><span class="mi">30000</span><span class="p">,</span>
+    <span class="n">bead_shape</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">bead_size</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">norm_cells</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">platform_log10_mean</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">platform_log10_std</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+    <span class="nb">round</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">min_counts</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">capture_rate</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+<span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Given single cell data, create an in-silico mixed dataset. The mixtures are</span>
+<span class="sd">    generated by placing the cells randomly in space, placing measurement points</span>
+<span class="sd">    (&quot;beads&quot;) randomly in space, and convoluting them with some spatial profile,</span>
+<span class="sd">    e.g. a gaussian.</span>
+<span class="sd">    Optionally also applies a random log-laplace distributed rescaling per gene.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adata</span>
+<span class="sd">        An :class:`~anndata.AnnData` with annotation in `.obs`.</span>
+<span class="sd">    type_key</span>
+<span class="sd">        An `.obs` key with categorical information to propagate through to the</span>
+<span class="sd">        mixed data, e.g. cell types.</span>
+<span class="sd">    topic_key</span>
+<span class="sd">        An `.obsm` key with continuous information to propagate through to the</span>
+<span class="sd">        mixed data, e.g. transciptional topics.</span>
+<span class="sd">    n_samples</span>
+<span class="sd">        The number of measurement points (&quot;beads&quot;) which are put randomly in</span>
+<span class="sd">        space. Note that depending on `min_counts` and the mixing parameters</span>
+<span class="sd">        the number of returned measurement points is somewhat smaller than this</span>
+<span class="sd">        value.</span>
+<span class="sd">    bead_shape</span>
+<span class="sd">        The shape to use for determining the contributions of cells to &quot;beads&quot;.</span>
+<span class="sd">        Can also be a list of shapes to save setup time wrt. isolated calls.</span>
+<span class="sd">        Possible values:</span>
+<span class="sd">        </span>
+<span class="sd">        - &#39;gauss&#39;: weights decrease with distance like a gaussian.</span>
+<span class="sd">        - &#39;disc&#39;: weights are constant until some distance and then drop to</span>
+<span class="sd">          `0`.</span>
+<span class="sd">        - number: weights decrease with distance according to a tanh-profile</span>
+<span class="sd">          with the sharpness of the decrease given by this number. It can be</span>
+<span class="sd">          used to interpolates between `0` (disc-like) and `1` (gauss-like).</span>
+<span class="sd">    bead_size</span>
+<span class="sd">        Scaling factor determining the effetive size of the beads/profile. A</span>
+<span class="sd">        value of `1` corresponds to tightly packed cells and beads of the size</span>
+<span class="sd">        of a cell.</span>
+<span class="sd">    norm_cells</span>
+<span class="sd">        Whether to normalize the total counts per cell in the single cell data</span>
+<span class="sd">        prior to mixing.</span>
+<span class="sd">    platform_log10_mean</span>
+<span class="sd">        log10 of the mean of the Laplace distribution for Log-Laplace</span>
+<span class="sd">        distributed per gene platform effect. The per-gene factors are</span>
+<span class="sd">        available in `.var[&#39;platform_effect&#39;]`. If `None`, no platform factors</span>
+<span class="sd">        are applied.</span>
+<span class="sd">    platform_log10_std</span>
+<span class="sd">        log10 of the standard deviation of the Laplace distribution for</span>
+<span class="sd">        Log-Laplace distributed per gene platform effect</span>
+<span class="sd">    seed</span>
+<span class="sd">        The random seed to use</span>
+<span class="sd">    round</span>
+<span class="sd">        Whether to round the resulting expression matrix to integer counts</span>
+<span class="sd">        after rescaling</span>
+<span class="sd">    min_counts</span>
+<span class="sd">        The returned adata is filtered to have at least this number of counts</span>
+<span class="sd">        per observation. If `None`, return all observations.</span>
+<span class="sd">    capture_rate</span>
+<span class="sd">        The fraction of counts to keep from a cell with maximum coverage from</span>
+<span class="sd">        the bead. If `&#39;normalized&#39;`, normalize weights per bead to sum to 1. If</span>
+<span class="sd">        `None`, normalize the bead psf to 1.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Returns the mixed data as :class:`~anndata.AnnData`. If `beadshape` is a\</span>
+<span class="sd">    list, returns a dictionary containing a :class:`~anndata.AnnData` per\</span>
+<span class="sd">    `beadshape`.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># generate random positions for cells and sampling points (simulated beads) in the range of 0..1</span>
+    <span class="n">rg</span> <span class="o">=</span> <span class="n">Generator</span><span class="p">(</span><span class="n">PCG64</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">))</span>
+    <span class="n">cell_pos</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">add_random_coordinates</span><span class="p">(</span><span class="n">cell_pos</span><span class="p">,</span> <span class="n">rg</span><span class="p">)</span>
+    <span class="n">sampling</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_samples</span><span class="p">)))</span>
+    <span class="n">add_random_coordinates</span><span class="p">(</span><span class="n">sampling</span><span class="p">,</span> <span class="n">rg</span><span class="p">)</span>
+    
+    <span class="c1"># determine length scale (effective bead size) which incorporates the actual bead size and the cell size (determined by assuming that the cells fill the space completely) </span>
+    <span class="n">n_cells</span> <span class="o">=</span> <span class="n">cell_pos</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">density</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">n_cells</span>
+    <span class="n">length_scale</span> <span class="o">=</span> <span class="n">bead_size</span> <span class="o">*</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">density</span><span class="p">)</span>
+    
+    <span class="c1"># get distances between simulated beads and cells, matrix of shape n_samples x n_cells</span>
+    <span class="n">distances</span> <span class="o">=</span> <span class="n">get_distances</span><span class="p">(</span><span class="n">sampling</span><span class="p">,</span> <span class="n">cell_pos</span><span class="p">)</span>
+    
+    <span class="c1"># get single cell annotation matrix of shape n_cells x n_types</span>
+    <span class="n">dummies</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">type_key</span><span class="p">])</span>
+    
+    <span class="c1"># optionally normalize cell counts</span>
+    <span class="k">if</span> <span class="n">norm_cells</span><span class="p">:</span>
+        <span class="n">adata</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">normalize_total</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">platform_log10_mean</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rescaling_factors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rescaling_factors</span> <span class="o">=</span> <span class="n">_get_random_platform_factors</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">platform_log10_mean</span><span class="o">=</span><span class="n">platform_log10_mean</span><span class="p">,</span> <span class="n">platform_log10_std</span><span class="o">=</span><span class="n">platform_log10_std</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    
+    <span class="c1"># support multiple calculation for multiple bead_shapes at once as distance calculation above takes a while</span>
+    <span class="n">return_dict</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bead_shape</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">return_dict</span><span class="p">:</span>
+        <span class="n">bead_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">bead_shape</span><span class="p">]</span>
+    <span class="n">in_silico_data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">bs</span> <span class="ow">in</span> <span class="n">bead_shape</span><span class="p">:</span>
+        <span class="c1"># get the weight matrix of shape n_samples x n_cells</span>
+        <span class="k">if</span> <span class="n">capture_rate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="n">get_weights</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">length_scale</span><span class="p">,</span> <span class="n">psf</span><span class="o">=</span><span class="n">bs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="n">get_weights_yield</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">length_scale</span><span class="p">,</span> <span class="n">psf</span><span class="o">=</span><span class="n">bs</span><span class="p">,</span> <span class="n">capture_rate</span><span class="o">=</span><span class="n">capture_rate</span><span class="p">)</span>
+        
+        <span class="c1"># get the true spatial expression and save it in the sampling data</span>
+        <span class="n">sample_X</span> <span class="o">=</span> <span class="p">(</span><span class="n">weights</span> <span class="o">@</span> <span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="p">)</span><span class="c1">#.astype(int)</span>
+        <span class="k">if</span> <span class="n">platform_log10_mean</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">col_scale</span><span class="p">(</span><span class="n">sample_X</span><span class="p">,</span> <span class="n">rescaling_factors</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">round</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">sample_X</span><span class="p">):</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">sample_X</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">sample_X</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">sample_X</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">sample_X</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">sample_X</span><span class="p">):</span>
+            <span class="n">sample_X</span><span class="o">.</span><span class="n">eliminate_zeros</span><span class="p">()</span>
+        <span class="n">sample_data</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">AnnData</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">sample_X</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">sampling</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">sample_X</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">platform_log10_mean</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sample_data</span><span class="o">.</span><span class="n">var</span><span class="p">[</span><span class="s1">&#39;platform_effect&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rescaling_factors</span>
+        
+        <span class="c1"># get the true spatial label weights and save them in the sampling data</span>
+        <span class="n">weighted_labels</span> <span class="o">=</span> <span class="n">weights</span> <span class="o">@</span> <span class="n">dummies</span>
+        <span class="n">sample_data</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">type_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">weighted_labels</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">sample_data</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">dummies</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+
+        <span class="c1"># get the true spatial label read weights and save them in the sampling data</span>
+        <span class="n">weighted_labels</span> <span class="o">=</span> <span class="n">weights</span> <span class="o">@</span> <span class="p">(</span><span class="n">dummies</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">X</span> <span class="o">@</span> <span class="n">rescaling_factors</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()[:,</span><span class="kc">None</span><span class="p">])</span>
+        <span class="n">sample_data</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;reads_&#39;</span><span class="o">+</span><span class="n">type_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">weighted_labels</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">sample_data</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">dummies</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">platform_log10_mean</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># get the true spatial label read weights without platform factors and save them in the sampling data</span>
+            <span class="n">weighted_labels</span> <span class="o">=</span> <span class="n">weights</span> <span class="o">@</span> <span class="p">(</span><span class="n">dummies</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">flatten</span><span class="p">()[:,</span><span class="kc">None</span><span class="p">])</span>
+            <span class="n">sample_data</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;bare_reads_&#39;</span><span class="o">+</span><span class="n">type_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">weighted_labels</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">sample_data</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">dummies</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">topic_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">topics</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">topic_key</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            
+            <span class="c1"># normalize topics to 1 per cell</span>
+            <span class="n">topics</span> <span class="o">/=</span> <span class="n">topics</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span><span class="kc">None</span><span class="p">]</span>
+            <span class="n">weighted_topics</span> <span class="o">=</span> <span class="n">weights</span> <span class="o">@</span> <span class="n">topics</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">sample_data</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">topic_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">weighted_topics</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">sample_data</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">topics</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+            
+            <span class="c1"># normalize topics to number of reads per cell</span>
+            <span class="n">topics</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">X</span> <span class="o">@</span> <span class="n">rescaling_factors</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()[:,</span><span class="kc">None</span><span class="p">]</span>
+            <span class="n">weighted_topics</span> <span class="o">=</span> <span class="n">weights</span> <span class="o">@</span> <span class="n">topics</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">sample_data</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;bare_reads_&#39;</span><span class="o">+</span><span class="n">topic_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">weighted_topics</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">sample_data</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">topics</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">platform_log10_mean</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># normalize topics to number of reads per cell without platform factors</span>
+                <span class="n">topics</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">flatten</span><span class="p">()[:,</span><span class="kc">None</span><span class="p">]</span>
+                <span class="n">weighted_topics</span> <span class="o">=</span> <span class="n">weights</span> <span class="o">@</span> <span class="n">topics</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">sample_data</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;bare_reads_&#39;</span><span class="o">+</span><span class="n">topic_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">weighted_topics</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">sample_data</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">topics</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">min_counts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># remove beads with too few counts</span>
+            <span class="n">sample_data</span> <span class="o">=</span> <span class="n">sample_data</span><span class="p">[</span><span class="n">utils</span><span class="o">.</span><span class="n">get_sum</span><span class="p">(</span><span class="n">sample_data</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">min_counts</span><span class="p">]</span>
+        
+        <span class="n">in_silico_data</span><span class="p">[</span><span class="n">bs</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample_data</span>
+
+    <span class="k">if</span> <span class="n">return_dict</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">in_silico_data</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">in_silico_data</span><span class="p">[</span><span class="n">bead_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

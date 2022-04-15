@@ -1,0 +1,6 @@
+tacco.utils.generate\_mixture\_profiles
+=======================================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: generate_mixture_profiles

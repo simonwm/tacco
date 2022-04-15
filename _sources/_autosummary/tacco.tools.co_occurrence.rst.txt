@@ -1,0 +1,6 @@
+tacco.tools.co\_occurrence
+==========================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: co_occurrence

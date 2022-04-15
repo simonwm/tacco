@@ -1,0 +1,6 @@
+tacco.plots.cellsize
+====================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: cellsize

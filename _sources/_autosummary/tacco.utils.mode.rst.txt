@@ -1,0 +1,6 @@
+tacco.utils.mode
+================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: mode

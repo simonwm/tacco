@@ -1,0 +1,6 @@
+tacco.utils.parallel\_nnls
+==========================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: parallel_nnls

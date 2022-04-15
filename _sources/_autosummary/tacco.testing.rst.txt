@@ -1,0 +1,29 @@
+tacco.testing
+=============
+
+.. automodule:: tacco.testing
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      assert_adata_equal
+      assert_dense_equal
+      assert_frame_equal
+      assert_index_equal
+      assert_series_equal
+      assert_sparse_equal
+      assert_tuple_equal
+      string_decode
+      string_encode
+   
+   
+   

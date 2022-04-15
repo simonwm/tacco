@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.tools._co_occurrence &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/tacco.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tacco.tools._co_occurrence</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tacco.tools._co_occurrence</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">scipy.sparse</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">njit</span><span class="p">,</span> <span class="n">prange</span><span class="p">,</span> <span class="n">get_num_threads</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">ast</span>
+<span class="kn">from</span> <span class="nn">statsmodels.stats.multitest</span> <span class="kn">import</span> <span class="n">multipletests</span>
+<span class="kn">from</span> <span class="nn">._points</span> <span class="kn">import</span> <span class="n">distance_matrix</span>
+<span class="kn">from</span> <span class="nn">._enrichments</span> <span class="kn">import</span> <span class="n">enrichments</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">get</span>
+
+<span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_make_intervals</span><span class="p">(</span><span class="n">delta_distance</span><span class="p">,</span> <span class="n">max_distance</span><span class="p">):</span>
+    <span class="n">intervals_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">distance</span> <span class="o">=</span> <span class="n">max_distance</span>
+    <span class="k">while</span> <span class="n">distance</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">intervals_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">distance</span><span class="p">)</span>
+        <span class="n">distance</span> <span class="o">-=</span> <span class="n">delta_distance</span>
+    <span class="n">intervals_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">max_distance</span> <span class="o">*</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">intervals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">intervals_list</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">intervals</span>
+
+<span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_reshape_counts</span><span class="p">(</span><span class="n">counts</span><span class="p">):</span>
+    <span class="c1"># reorder from memory access efficient order to squidpy compatible order...</span>
+    <span class="n">n_codes</span><span class="p">,</span><span class="n">n_intervals</span><span class="p">,</span><span class="n">n_reference_codes</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">reshaped</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n_codes</span><span class="p">,</span><span class="n">n_reference_codes</span><span class="p">,</span><span class="n">n_intervals</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="n">n_codes</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_intervals</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_reference_codes</span><span class="p">):</span>
+                <span class="n">reshaped</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">k</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">reshaped</span>
+    
+<span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_count_co_occurences_sparse</span><span class="p">(</span><span class="n">dist_indptr</span><span class="p">,</span> <span class="n">dist_indices</span><span class="p">,</span> <span class="n">dist_data</span><span class="p">,</span> <span class="n">codes</span><span class="p">,</span> <span class="n">n_codes</span><span class="p">,</span> <span class="n">reference_codes</span><span class="p">,</span> <span class="n">n_reference_codes</span><span class="p">,</span> <span class="n">delta_distance</span><span class="p">,</span> <span class="n">max_distance</span><span class="p">,</span> <span class="n">min_distance</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">reference_weights</span><span class="p">,</span> <span class="n">n_threads</span><span class="p">):</span>
+    
+    <span class="n">intervals</span> <span class="o">=</span> <span class="n">_make_intervals</span><span class="p">(</span><span class="n">delta_distance</span><span class="p">,</span> <span class="n">max_distance</span><span class="p">)</span>
+    <span class="n">n_intervals</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">intervals</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_codes</span><span class="p">,</span><span class="n">n_intervals</span><span class="p">,</span><span class="n">n_reference_codes</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dist_indptr</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">counts_per_thread</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_threads</span><span class="p">,</span><span class="n">n_codes</span><span class="p">,</span><span class="n">n_intervals</span><span class="p">,</span><span class="n">n_reference_codes</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="c1"># parallel per-thread accumulation</span>
+    <span class="n">n_per_thread</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="n">n_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">n_threads</span>
+    <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="n">n_threads</span><span class="p">):</span>
+        <span class="n">istart</span> <span class="o">=</span> <span class="n">thread</span> <span class="o">*</span> <span class="n">n_per_thread</span>
+        <span class="n">iend</span> <span class="o">=</span> <span class="p">(</span><span class="n">thread</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">n_per_thread</span>
+        <span class="n">iend</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">iend</span><span class="p">,</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">istart</span><span class="p">,</span> <span class="n">iend</span><span class="p">):</span>
+            <span class="n">weights_i</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">ptr0</span> <span class="o">=</span> <span class="n">dist_indptr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">ptr1</span> <span class="o">=</span> <span class="n">dist_indptr</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">ptr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ptr0</span><span class="p">,</span><span class="n">ptr1</span><span class="p">):</span>
+                <span class="n">j</span> <span class="o">=</span> <span class="n">dist_indices</span><span class="p">[</span><span class="n">ptr</span><span class="p">]</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="n">dist_data</span><span class="p">[</span><span class="n">ptr</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">dist</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">dist</span> <span class="o">&gt;=</span> <span class="n">min_distance</span><span class="p">:</span>
+                    <span class="n">k</span> <span class="o">=</span> <span class="n">n_intervals</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">max_distance</span> <span class="o">-</span> <span class="n">dist</span><span class="p">)</span> <span class="o">/</span> <span class="n">delta_distance</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="n">n_intervals</span><span class="p">:</span>
+                        <span class="n">counts_per_thread</span><span class="p">[</span><span class="n">thread</span><span class="p">,</span><span class="n">codes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">k</span><span class="p">,</span> <span class="n">reference_codes</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">weights_i</span> <span class="o">*</span> <span class="n">reference_weights</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+    <span class="c1"># serial aggregation across threads</span>
+    <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">n_threads</span><span class="p">):</span>
+        <span class="n">counts_per_thread</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">counts_per_thread</span><span class="p">[</span><span class="n">thread</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">_reshape_counts</span><span class="p">(</span><span class="n">counts_per_thread</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">intervals</span>
+
+<span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_count_co_occurences_dense</span><span class="p">(</span><span class="n">dist_dense</span><span class="p">,</span> <span class="n">codes</span><span class="p">,</span> <span class="n">n_codes</span><span class="p">,</span> <span class="n">reference_codes</span><span class="p">,</span> <span class="n">n_reference_codes</span><span class="p">,</span> <span class="n">delta_distance</span><span class="p">,</span> <span class="n">max_distance</span><span class="p">,</span> <span class="n">min_distance</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">reference_weights</span><span class="p">,</span> <span class="n">n_threads</span><span class="p">):</span>
+    
+    <span class="n">intervals</span> <span class="o">=</span> <span class="n">_make_intervals</span><span class="p">(</span><span class="n">delta_distance</span><span class="p">,</span> <span class="n">max_distance</span><span class="p">)</span>
+    <span class="n">n_intervals</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">intervals</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+    
+    <span class="n">n</span> <span class="o">=</span> <span class="n">dist_dense</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">counts_per_thread</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_threads</span><span class="p">,</span><span class="n">n_codes</span><span class="p">,</span><span class="n">n_intervals</span><span class="p">,</span><span class="n">n_reference_codes</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="c1"># parallel per-thread accumulation</span>
+    <span class="n">n_per_thread</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="n">n_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">n_threads</span>
+    <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="n">n_threads</span><span class="p">):</span>
+        <span class="n">istart</span> <span class="o">=</span> <span class="n">thread</span> <span class="o">*</span> <span class="n">n_per_thread</span>
+        <span class="n">iend</span> <span class="o">=</span> <span class="p">(</span><span class="n">thread</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">n_per_thread</span>
+        <span class="n">iend</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">iend</span><span class="p">,</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">istart</span><span class="p">,</span> <span class="n">iend</span><span class="p">):</span>
+            <span class="n">weights_i</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="n">dist_dense</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">dist</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">dist</span> <span class="o">&gt;=</span> <span class="n">min_distance</span><span class="p">:</span>
+                    <span class="n">k</span> <span class="o">=</span> <span class="n">n_intervals</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">max_distance</span> <span class="o">-</span> <span class="n">dist</span><span class="p">)</span> <span class="o">/</span> <span class="n">delta_distance</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="n">n_intervals</span><span class="p">:</span>
+                        <span class="n">counts_per_thread</span><span class="p">[</span><span class="n">thread</span><span class="p">,</span><span class="n">codes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">k</span><span class="p">,</span> <span class="n">reference_codes</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">weights_i</span> <span class="o">*</span> <span class="n">reference_weights</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+    <span class="c1"># serial aggregation across threads</span>
+    <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">n_threads</span><span class="p">):</span>
+        <span class="n">counts_per_thread</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">counts_per_thread</span><span class="p">[</span><span class="n">thread</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">_reshape_counts</span><span class="p">(</span><span class="n">counts_per_thread</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">intervals</span>
+    
+<span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_count_soft_co_occurences_sparse</span><span class="p">(</span><span class="n">dist_indptr</span><span class="p">,</span> <span class="n">dist_indices</span><span class="p">,</span> <span class="n">dist_data</span><span class="p">,</span> <span class="n">contributions</span><span class="p">,</span> <span class="n">reference_contributions</span><span class="p">,</span> <span class="n">delta_distance</span><span class="p">,</span> <span class="n">max_distance</span><span class="p">,</span> <span class="n">min_distance</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">reference_weights</span><span class="p">,</span> <span class="n">n_threads</span><span class="p">):</span>
+    
+    <span class="n">n_codes</span> <span class="o">=</span> <span class="n">contributions</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">n_reference_codes</span> <span class="o">=</span> <span class="n">reference_contributions</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="n">intervals</span> <span class="o">=</span> <span class="n">_make_intervals</span><span class="p">(</span><span class="n">delta_distance</span><span class="p">,</span> <span class="n">max_distance</span><span class="p">)</span>
+    <span class="n">n_intervals</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">intervals</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+    
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dist_indptr</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">counts_per_thread</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_threads</span><span class="p">,</span><span class="n">n_codes</span><span class="p">,</span><span class="n">n_intervals</span><span class="p">,</span><span class="n">n_reference_codes</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="c1"># parallel per-thread accumulation</span>
+    <span class="n">n_per_thread</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="n">n_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">n_threads</span>
+    <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="n">n_threads</span><span class="p">):</span>
+        <span class="n">istart</span> <span class="o">=</span> <span class="n">thread</span> <span class="o">*</span> <span class="n">n_per_thread</span>
+        <span class="n">iend</span> <span class="o">=</span> <span class="p">(</span><span class="n">thread</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">n_per_thread</span>
+        <span class="n">iend</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">iend</span><span class="p">,</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">istart</span><span class="p">,</span> <span class="n">iend</span><span class="p">):</span>
+            <span class="n">weights_i</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">contributions_i</span> <span class="o">=</span> <span class="n">contributions</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">*</span> <span class="n">weights_i</span>
+            <span class="n">temp_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_intervals</span><span class="p">,</span><span class="n">n_reference_codes</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="n">ptr0</span> <span class="o">=</span> <span class="n">dist_indptr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">ptr1</span> <span class="o">=</span> <span class="n">dist_indptr</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">ptr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ptr0</span><span class="p">,</span><span class="n">ptr1</span><span class="p">):</span>
+                <span class="n">j</span> <span class="o">=</span> <span class="n">dist_indices</span><span class="p">[</span><span class="n">ptr</span><span class="p">]</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="n">dist_data</span><span class="p">[</span><span class="n">ptr</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">dist</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">dist</span> <span class="o">&gt;=</span> <span class="n">min_distance</span><span class="p">:</span>
+                    <span class="n">k</span> <span class="o">=</span> <span class="n">n_intervals</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">max_distance</span> <span class="o">-</span> <span class="n">dist</span><span class="p">)</span> <span class="o">/</span> <span class="n">delta_distance</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="n">n_intervals</span><span class="p">:</span>
+                        <span class="n">reference_contributions_j</span> <span class="o">=</span> <span class="n">reference_weights</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">reference_contributions</span><span class="p">[</span><span class="n">j</span><span class="p">,:]</span>
+                        <span class="k">for</span> <span class="n">rc</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_reference_codes</span><span class="p">):</span>
+                            <span class="n">temp_i</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">rc</span><span class="p">]</span> <span class="o">+=</span> <span class="n">reference_contributions_j</span><span class="p">[</span><span class="n">rc</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_intervals</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">ac</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_codes</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">rc</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_reference_codes</span><span class="p">):</span>
+                        <span class="n">counts_per_thread</span><span class="p">[</span><span class="n">thread</span><span class="p">,</span><span class="n">ac</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">rc</span><span class="p">]</span> <span class="o">+=</span> <span class="n">contributions_i</span><span class="p">[</span><span class="n">ac</span><span class="p">]</span> <span class="o">*</span> <span class="n">temp_i</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">rc</span><span class="p">]</span>
+    <span class="c1"># serial aggregation across threads</span>
+    <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">n_threads</span><span class="p">):</span>
+        <span class="n">counts_per_thread</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">counts_per_thread</span><span class="p">[</span><span class="n">thread</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">_reshape_counts</span><span class="p">(</span><span class="n">counts_per_thread</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">intervals</span>
+
+<span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_count_soft_co_occurences_dense</span><span class="p">(</span><span class="n">dist_dense</span><span class="p">,</span> <span class="n">contributions</span><span class="p">,</span> <span class="n">reference_contributions</span><span class="p">,</span> <span class="n">delta_distance</span><span class="p">,</span> <span class="n">max_distance</span><span class="p">,</span> <span class="n">min_distance</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">reference_weights</span><span class="p">,</span> <span class="n">n_threads</span><span class="p">):</span>
+    
+    <span class="n">n_codes</span> <span class="o">=</span> <span class="n">contributions</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">n_reference_codes</span> <span class="o">=</span> <span class="n">reference_contributions</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="n">intervals</span> <span class="o">=</span> <span class="n">_make_intervals</span><span class="p">(</span><span class="n">delta_distance</span><span class="p">,</span> <span class="n">max_distance</span><span class="p">)</span>
+    <span class="n">n_intervals</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">intervals</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+    
+    <span class="n">n</span> <span class="o">=</span> <span class="n">dist_dense</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">counts_per_thread</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_threads</span><span class="p">,</span><span class="n">n_codes</span><span class="p">,</span><span class="n">n_intervals</span><span class="p">,</span><span class="n">n_reference_codes</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="c1"># parallel per-thread accumulation</span>
+    <span class="n">n_per_thread</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="n">n_threads</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">n_threads</span>
+    <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="n">n_threads</span><span class="p">):</span>
+        <span class="n">istart</span> <span class="o">=</span> <span class="n">thread</span> <span class="o">*</span> <span class="n">n_per_thread</span>
+        <span class="n">iend</span> <span class="o">=</span> <span class="p">(</span><span class="n">thread</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">n_per_thread</span>
+        <span class="n">iend</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">iend</span><span class="p">,</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">istart</span><span class="p">,</span> <span class="n">iend</span><span class="p">):</span>
+            <span class="n">weights_i</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">contributions_i</span> <span class="o">=</span> <span class="n">contributions</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">*</span> <span class="n">weights_i</span>
+            <span class="n">temp_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_intervals</span><span class="p">,</span><span class="n">n_reference_codes</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="n">dist_dense</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">dist</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">dist</span> <span class="o">&gt;=</span> <span class="n">min_distance</span><span class="p">:</span>
+                    <span class="n">k</span> <span class="o">=</span> <span class="n">n_intervals</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">max_distance</span> <span class="o">-</span> <span class="n">dist</span><span class="p">)</span> <span class="o">/</span> <span class="n">delta_distance</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="n">n_intervals</span><span class="p">:</span>
+                        <span class="n">reference_contributions_j</span> <span class="o">=</span> <span class="n">reference_weights</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">reference_contributions</span><span class="p">[</span><span class="n">j</span><span class="p">,:]</span>
+                        <span class="k">for</span> <span class="n">rc</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_reference_codes</span><span class="p">):</span>
+                            <span class="n">temp_i</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">rc</span><span class="p">]</span> <span class="o">+=</span> <span class="n">reference_contributions_j</span><span class="p">[</span><span class="n">rc</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_intervals</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">ac</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_codes</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">rc</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_reference_codes</span><span class="p">):</span>
+                        <span class="n">counts_per_thread</span><span class="p">[</span><span class="n">thread</span><span class="p">,</span><span class="n">ac</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">rc</span><span class="p">]</span> <span class="o">+=</span> <span class="n">contributions_i</span><span class="p">[</span><span class="n">ac</span><span class="p">]</span> <span class="o">*</span> <span class="n">temp_i</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">rc</span><span class="p">]</span>
+    <span class="c1"># serial aggregation across threads</span>
+    <span class="k">for</span> <span class="n">thread</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">n_threads</span><span class="p">):</span>
+        <span class="n">counts_per_thread</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">counts_per_thread</span><span class="p">[</span><span class="n">thread</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">_reshape_counts</span><span class="p">(</span><span class="n">counts_per_thread</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">intervals</span>
+
+<div class="viewcode-block" id="co_occurrence">
+<a class="viewcode-back" href="../../../_autosummary/tacco.tools.co_occurrence.html#tacco.tools.co_occurrence">[docs]</a>
+<span class="k">def</span> <span class="nf">co_occurrence</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">,</span>
+    <span class="n">annotation_key</span><span class="p">,</span>
+    <span class="n">center_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sample_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">distance_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">position_key</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">),</span>
+    <span class="n">result_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_distance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">min_distance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">delta_distance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">reads</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">counts_location</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_permutation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kw_args</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Calculates a spatial co-occurence score given by the conditional</span>
+<span class="sd">    probability to find an annotation `a` at some distance `d` from an</span>
+<span class="sd">    observation with annotation `b`, normalized by the probability to find an</span>
+<span class="sd">    annotation `a` at distance `d` from an observation disregarding the value</span>
+<span class="sd">    of its annotation: `p(a|bd)/p(a|d)`.</span>
+<span class="sd">    This is a more general, more accurate, and faster alternative to the</span>
+<span class="sd">    function of the same name in squidpy :func:`~sq.gr.co_occurrence`. For</span>
+<span class="sd">    `center_key==None` the result is compatible with the corresponding squidpy</span>
+<span class="sd">    code. The result is not identical to squidpy, as the parametrization and</span>
+<span class="sd">    heuristics are different. </span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adata</span>
+<span class="sd">        A :class:`~anndata.AnnData`</span>
+<span class="sd">    annotation_key</span>
+<span class="sd">        The `.obs` or `.obsm` key for the annotation `a` in `p(a|bd)/p(a|d)`.</span>
+<span class="sd">    center_key</span>
+<span class="sd">        The `.obs` or `.obsm` key for the annotation `b` in `p(a|bd)/p(a|d)`.</span>
+<span class="sd">        If `None`, takes the `annotation_key`.</span>
+<span class="sd">    sample_key</span>
+<span class="sd">        A categorical sample annotation. The result from different samples is</span>
+<span class="sd">        averaged for the final result and their standard deviation gives an</span>
+<span class="sd">        estimation of the error. If `None`, all observations are assumed to be</span>
+<span class="sd">        on the same sample.</span>
+<span class="sd">    distance_key</span>
+<span class="sd">        The `.obsp` key containing a precomputed distance matrix to use. If</span>
+<span class="sd">        `None`, the distances are computed on the fly with the positions found</span>
+<span class="sd">        in `position_key`. Otherwise `position_key` is ignored.</span>
+<span class="sd">    position_key</span>
+<span class="sd">        The `.obsm` key or array-like of `.obs` keys with the position space</span>
+<span class="sd">        coordinates</span>
+<span class="sd">    result_key</span>
+<span class="sd">        The `.uns` key to contain the result. If `None`, the result is returned</span>
+<span class="sd">        as a dictionary containing the keys:</span>
+<span class="sd">        </span>
+<span class="sd">        - &quot;occ&quot;: mean over samples of the `p(a|bd)/p(a|d)` scores as a</span>
+<span class="sd">          :class:`~numpy.ndarray` with dimensions according to `a`, `b`, and</span>
+<span class="sd">          `d`,</span>
+<span class="sd">        - &quot;log_occ&quot;: like &quot;occ&quot;, but with the sample mean taken over the</span>
+<span class="sd">          logarithms of the scores,</span>
+<span class="sd">        - &quot;z&quot;: z_scores, see `n_permutation`,</span>
+<span class="sd">        - &quot;composition&quot;: like &quot;occ&quot;, but with the sample mean taken over</span>
+<span class="sd">          `p(a|bd)`,</span>
+<span class="sd">        - &quot;log_composition&quot;: like &quot;occ&quot;, but with the sample mean taken over</span>
+<span class="sd">          `log(p(a|bd))`,</span>
+<span class="sd">        - &quot;distance_distribution&quot;: like &quot;occ&quot;, but with the sample mean taken</span>
+<span class="sd">          over `p(d|ab)`,</span>
+<span class="sd">        - &quot;log_distance_distribution&quot;: like &quot;occ&quot;, but with the sample mean</span>
+<span class="sd">          taken over `log(p(d|ab))`,</span>
+<span class="sd">        - &quot;relative_distance_distribution&quot;: like &quot;occ&quot;, but with the sample</span>
+<span class="sd">          mean taken over `p(d|ab)/p(d|*b)`,</span>
+<span class="sd">        - &quot;log_relative_distance_distribution&quot;: like &quot;occ&quot;, but with the sample</span>
+<span class="sd">          mean taken over `log(p(d|ab)/p(d|*b))`,</span>
+<span class="sd">        - &quot;sample_counts&quot;: the neighbourship counts per sample as a</span>
+<span class="sd">          :class:`~numpy.ndarray` with dimensions according to samples, `a`,</span>
+<span class="sd">          `b`, and `d`,</span>
+<span class="sd">        - &quot;permutation_counts&quot;: the neighbourship counts per permutation sample</span>
+<span class="sd">          as a :class:`~numpy.ndarray` with dimensions according to permutation</span>
+<span class="sd">          samples, `a`, `b`, and `d`, see also `n_permutation`,</span>
+<span class="sd">        - &quot;interval&quot;: the boundaries of the distance bins,</span>
+<span class="sd">        - &quot;annotation&quot;: containing the order of the `a` annotations,</span>
+<span class="sd">        - &quot;center&quot;: containing the order of the `b` annotations,</span>
+
+<span class="sd">    max_distance</span>
+<span class="sd">        The maximum distance to use. If `None` or `np.inf`, uses the maximum</span>
+<span class="sd">        distance in the data (if there are multiple samples, then only the</span>
+<span class="sd">        first sample is used). If the distance matrix is not precomputed (see</span>
+<span class="sd">        `distance_key`), `None` and `np.inf` result in dense distance</span>
+<span class="sd">        computation (which can be infeasible for larger datasets).</span>
+<span class="sd">    sparse</span>
+<span class="sd">        Whether to calculate a sparse or dense distance matrix, if it is not</span>
+<span class="sd">        precomputed. If `None`, this is determined by the value of</span>
+<span class="sd">        `max_distance`.</span>
+<span class="sd">    min_distance</span>
+<span class="sd">        The minimum distance to use. If `None`, uses a heuristic to find a</span>
+<span class="sd">        sensible low distance cutoff which excludes distances with deviations</span>
+<span class="sd">        from uniform distribution (e.g. cell-size effects).</span>
+<span class="sd">    delta_distance</span>
+<span class="sd">        The width in distance for distance discretization. If `None`, takes</span>
+<span class="sd">        `max_distance/100`.</span>
+<span class="sd">    reads</span>
+<span class="sd">        Whether to weight the co-occurence counts with the counts of the two</span>
+<span class="sd">        participating observations.</span>
+<span class="sd">    counts_location</span>
+<span class="sd">        A string or tuple specifying where the count matrix is stored, e.g.</span>
+<span class="sd">        `&#39;X&#39;`, `(&#39;raw&#39;,&#39;X&#39;)`, `(&#39;raw&#39;,&#39;obsm&#39;,&#39;my_counts_key&#39;)`,</span>
+<span class="sd">        `(&#39;layer&#39;,&#39;my_counts_key&#39;)`, ... For details see</span>
+<span class="sd">        :func:`~tacco.get.counts`. This is only relevant if `reads==True`.</span>
+<span class="sd">    n_permutation</span>
+<span class="sd">        The number of permutation samples to generate with randomly permuted</span>
+<span class="sd">        annotations at fixed centers. This is used only for the calculation of</span>
+<span class="sd">        the z-score. If `0`, the z-score is not calculated.</span>
+<span class="sd">    seed</span>
+<span class="sd">        A random seed for the z-score computation. See `n_permutation`.</span>
+<span class="sd">    verbose</span>
+<span class="sd">        Level of verbosity, with `0` (no output), `1` (some output), ...</span>
+<span class="sd">    **kw_args</span>
+<span class="sd">        Additional keyword arguments are forwarded to on-the-fly distance</span>
+<span class="sd">        calculation with :func:`~tacco.utils.distance_matrix` if necessary.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Depending on `result_key` returns either the updated input `adata` or the\</span>
+<span class="sd">    result directly in the format described under `result_key`.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># get the two annotations</span>
+    
+    <span class="n">identical_keys</span> <span class="o">=</span> <span class="n">center_key</span> <span class="ow">is</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">identical_keys</span><span class="p">:</span>
+        <span class="n">center_key</span> <span class="o">=</span> <span class="n">annotation_key</span>
+    
+    <span class="k">def</span> <span class="nf">get_labels</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">key_name</span><span class="p">,</span> <span class="n">key</span><span class="p">,):</span>
+        <span class="n">isna</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">),</span><span class="n">fill_value</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">isna</span> <span class="o">=</span> <span class="n">isna</span> <span class="o">|</span> <span class="n">labels</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="s1">&#39;cat&#39;</span><span class="p">):</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="o">/</span> <span class="n">labels</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()[:,</span><span class="kc">None</span><span class="p">]</span> <span class="c1"># normalize the annotation - just to be on the safe side</span>
+            <span class="n">isna</span> <span class="o">=</span> <span class="n">isna</span> <span class="o">|</span> <span class="n">labels</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;`</span><span class="si">{</span><span class="n">key_name</span><span class="si">}</span><span class="s1">` </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1"> was not found in `adata.obs` or `adata.obsm`!&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">labels</span><span class="p">,</span> <span class="n">isna</span>
+    
+    <span class="n">labels</span><span class="p">,</span> <span class="n">isna</span> <span class="o">=</span> <span class="n">get_labels</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="s1">&#39;annotation_key&#39;</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">)</span>
+    <span class="n">reference_labels</span><span class="p">,</span> <span class="n">reference_isna</span> <span class="o">=</span> <span class="n">get_labels</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="s1">&#39;center_key&#39;</span><span class="p">,</span> <span class="n">center_key</span><span class="p">)</span>
+    <span class="n">isna</span> <span class="o">=</span> <span class="n">isna</span> <span class="o">|</span> <span class="n">reference_isna</span>
+    
+    <span class="c1"># &quot;cast&quot; the annotations to common dimensionality</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">reference_labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">reference_labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">reference_labels</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">reference_labels</span><span class="p">)</span>
+    
+    <span class="c1"># get counts for weighting the annotations</span>
+
+    <span class="n">original_adata</span> <span class="o">=</span> <span class="n">adata</span> <span class="c1"># keep reference to original adata to write result to later</span>
+    <span class="n">adata</span> <span class="o">=</span> <span class="n">get</span><span class="o">.</span><span class="n">counts</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">counts_location</span><span class="o">=</span><span class="n">counts_location</span><span class="p">,</span> <span class="n">annotation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">isna</span><span class="o">.</span><span class="n">any</span><span class="p">():</span> <span class="c1"># remove nans</span>
+        <span class="n">adata</span> <span class="o">=</span> <span class="n">adata</span><span class="p">[</span><span class="o">~</span><span class="n">isna</span><span class="p">]</span>
+    
+    <span class="c1"># split the data into samples to treat separately</span>
+        
+    <span class="k">if</span> <span class="n">sample_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sample_adatas</span> <span class="o">=</span> <span class="p">{</span> <span class="n">sample</span><span class="p">:</span> <span class="n">adata</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">]</span> <span class="k">for</span> <span class="n">sample</span><span class="p">,</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">sample_key</span><span class="p">)</span> <span class="p">}</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sample_adatas</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">sample_adatas</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sample_adatas</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">sample_labels</span> <span class="o">=</span> <span class="p">[</span> <span class="n">labels</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">]</span> <span class="k">for</span> <span class="n">_adata</span> <span class="ow">in</span> <span class="n">sample_adatas</span> <span class="p">]</span>
+        <span class="n">sample_reference_labels</span> <span class="o">=</span> <span class="p">[</span> <span class="n">reference_labels</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">_adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">]</span> <span class="k">for</span> <span class="n">_adata</span> <span class="ow">in</span> <span class="n">sample_adatas</span> <span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">]</span>
+        <span class="n">sample_adatas</span> <span class="o">=</span> <span class="p">[</span> <span class="n">adata</span> <span class="p">]</span>
+        <span class="n">sample_labels</span> <span class="o">=</span> <span class="p">[</span> <span class="n">labels</span> <span class="p">]</span>
+        <span class="n">sample_reference_labels</span> <span class="o">=</span> <span class="p">[</span> <span class="n">reference_labels</span> <span class="p">]</span>
+    
+    <span class="c1"># setup distance computation</span>
+    
+    <span class="k">if</span> <span class="n">distance_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;co_occurrence: The argument `distance_key` is `None`, meaning that the distance which is now calculated on the fly will not be saved. Providing a precalculated distance saves time in multiple calls to this function.&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">distance_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsp</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The argument `distance_key` is &quot;</span><span class="si">{</span><span class="n">distance_key</span><span class="si">}</span><span class="s1">&quot;, but there is no `adata.obsp[&quot;</span><span class="si">{</span><span class="n">distance_key</span><span class="si">}</span><span class="s1">&quot;]`!&#39;</span><span class="p">)</span>
+    
+    <span class="n">_max_distance</span> <span class="o">=</span> <span class="n">max_distance</span> <span class="c1"># buffer original max_distance value to trigger the correct path (dense/sparse) for sample number 2+</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sparse</span><span class="p">:</span> <span class="c1"># force dense calculation if explicitly asked for</span>
+        <span class="n">_max_distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="k">def</span> <span class="nf">_get_dist</span><span class="p">(</span><span class="n">si</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">distance_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">adata</span> <span class="ow">is</span> <span class="n">sample_adatas</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsp</span><span class="p">[</span><span class="n">distance_key</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sample_index</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">sample_adatas</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsp</span><span class="p">[</span><span class="n">distance_key</span><span class="p">][</span><span class="n">sample_index</span><span class="p">][:,</span><span class="n">sample_index</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;calculating distance for sample </span><span class="si">{</span><span class="n">si</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="n">distance_matrix</span><span class="p">(</span><span class="n">sample_adatas</span><span class="p">[</span><span class="n">si</span><span class="p">],</span> <span class="n">max_distance</span><span class="o">=</span><span class="n">_max_distance</span><span class="p">,</span> <span class="n">position_key</span><span class="o">=</span><span class="n">position_key</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dist</span>
+    <span class="n">dist</span> <span class="o">=</span> <span class="n">_get_dist</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">max_distance</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">max_distance</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">dist</span><span class="p">):</span>
+            <span class="n">max_distance</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">max_distance</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">max_distance</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">max_distance</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">delta_distance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">delta_distance</span> <span class="o">=</span> <span class="n">max_distance</span> <span class="o">/</span> <span class="mi">100</span>
+    <span class="n">n_intervals</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_distance</span> <span class="o">/</span> <span class="n">delta_distance</span><span class="p">)</span>
+    
+    <span class="c1"># evaluate bare counts of annotation combinations separately for all samples</span>
+    
+    <span class="n">intervals</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">sample_counts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">permutation_counts</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">si</span><span class="p">,</span><span class="n">sn</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span> <span class="c1"># do not parallelize over samples as the memory for a single sample distance matrix can be already quite large</span>
+
+        <span class="k">if</span> <span class="n">reads</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_sum</span><span class="p">(</span><span class="n">sample_adatas</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sample_adatas</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">reference_weights</span> <span class="o">=</span> <span class="n">weights</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        
+        <span class="n">common_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">delta_distance</span><span class="p">,</span> <span class="n">max_distance</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span> <span class="k">if</span> <span class="n">min_distance</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">min_distance</span><span class="p">),</span> <span class="n">weights</span><span class="p">,</span> <span class="n">reference_weights</span><span class="p">,</span> <span class="n">get_num_threads</span><span class="p">()]</span>
+        
+        <span class="k">if</span> <span class="n">si</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># already have the first sample distance from above</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="n">_get_dist</span><span class="p">(</span><span class="n">si</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">dist</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;co_occurrence: distance is not in csr format and has to be transformed to csr on the fly&#39;</span><span class="p">)</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+            <span class="n">dist_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">indptr</span><span class="p">,</span> <span class="n">dist</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">dist</span><span class="o">.</span><span class="n">data</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dist_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">dist</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="c1"># categorical annotation</span>
+
+            <span class="n">codes</span> <span class="o">=</span> <span class="n">sample_labels</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">n_codes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sample_labels</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">)</span>
+            <span class="n">reference_codes</span> <span class="o">=</span> <span class="n">sample_reference_labels</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">n_reference_codes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sample_reference_labels</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">)</span>
+            
+            <span class="n">anno_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">codes</span><span class="p">,</span> <span class="n">n_codes</span><span class="p">,</span> <span class="n">reference_codes</span><span class="p">,</span> <span class="n">n_reference_codes</span><span class="p">]</span>
+            
+            <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">dist</span><span class="p">):</span>
+                <span class="n">_count_co_occurences</span> <span class="o">=</span> <span class="n">_count_co_occurences_sparse</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_count_co_occurences</span> <span class="o">=</span> <span class="n">_count_co_occurences_dense</span>
+        
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># soft annotation</span>
+        
+            <span class="n">contributions</span> <span class="o">=</span> <span class="n">sample_labels</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            <span class="n">reference_contributions</span> <span class="o">=</span> <span class="n">sample_reference_labels</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            
+            <span class="n">anno_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">contributions</span><span class="p">,</span> <span class="n">reference_contributions</span><span class="p">]</span>
+            
+            <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">dist</span><span class="p">):</span>
+                <span class="n">_count_co_occurences</span> <span class="o">=</span> <span class="n">_count_soft_co_occurences_sparse</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_count_co_occurences</span> <span class="o">=</span> <span class="n">_count_soft_co_occurences_dense</span>
+        
+        <span class="n">counts</span><span class="p">,</span> <span class="n">_intervals</span> <span class="o">=</span> <span class="n">_count_co_occurences</span><span class="p">(</span><span class="o">*</span><span class="n">dist_args</span><span class="p">,</span> <span class="o">*</span><span class="n">anno_args</span><span class="p">,</span> <span class="o">*</span><span class="n">common_args</span><span class="p">)</span>
+        
+        <span class="n">sample_counts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+        
+        <span class="c1"># add permuted samples</span>
+        <span class="k">if</span> <span class="n">n_permutation</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">permutation_counts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">permutation_counts</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span> <span class="o">+</span> <span class="n">si</span><span class="p">)</span>
+            <span class="n">i_perm</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_permutation</span><span class="p">):</span>
+                <span class="c1"># weights/codes/contributions are not used any more, so we can modify them in place</span>
+                <span class="n">permutation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">weights</span><span class="p">))</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">permutation</span><span class="p">)</span>
+                <span class="c1"># update in place to update anno_args along</span>
+                <span class="n">weights</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">weights</span><span class="p">[</span><span class="n">permutation</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="c1"># categorical annotation</span>
+                    <span class="n">codes</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">codes</span><span class="p">[</span><span class="n">permutation</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span> <span class="c1"># soft annotation</span>
+                    <span class="n">contributions</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">contributions</span><span class="p">[</span><span class="n">permutation</span><span class="p">]</span>
+                
+                <span class="n">counts</span><span class="p">,</span> <span class="n">_intervals</span> <span class="o">=</span> <span class="n">_count_co_occurences</span><span class="p">(</span><span class="o">*</span><span class="n">dist_args</span><span class="p">,</span> <span class="o">*</span><span class="n">anno_args</span><span class="p">,</span> <span class="o">*</span><span class="n">common_args</span><span class="p">)</span>
+                
+                <span class="n">permutation_counts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+                <span class="n">i_perm</span> <span class="o">=</span> <span class="n">i_perm</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">i_perm</span> <span class="o">==</span> <span class="n">n_permutation</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="c1"># if we have a symmetric case, use it to decrease computational load - even though this results in half permutation statistics in the diagonal...</span>
+                <span class="k">if</span> <span class="n">identical_keys</span><span class="p">:</span>
+                    <span class="n">permutation_counts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+                    <span class="n">i_perm</span> <span class="o">=</span> <span class="n">i_perm</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">i_perm</span> <span class="o">==</span> <span class="n">n_permutation</span><span class="p">:</span>
+                    <span class="k">break</span>
+        
+        <span class="k">if</span> <span class="n">intervals</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">intervals</span> <span class="o">=</span> <span class="n">_intervals</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span><span class="p">((</span><span class="n">intervals</span> <span class="o">==</span> <span class="n">_intervals</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+    
+    <span class="c1"># cut the minimum distance at some possibly finite value to exclude bins without (enough) observations</span>
+    
+    <span class="k">if</span> <span class="n">min_distance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">total_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">sample_counts</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">total_pairs_per_interval</span> <span class="o">=</span> <span class="n">total_counts</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">integrated_total_pairs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">total_pairs_per_interval</span><span class="p">)</span>
+        <span class="n">densities</span> <span class="o">=</span> <span class="n">integrated_total_pairs</span> <span class="o">/</span> <span class="p">(</span><span class="n">intervals</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">n_intervals</span> <span class="o">//</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">density_ratios</span> <span class="o">=</span> <span class="n">densities</span><span class="p">[:</span><span class="o">-</span><span class="n">offset</span><span class="p">]</span> <span class="o">/</span> <span class="n">densities</span><span class="p">[</span><span class="n">offset</span><span class="p">:]</span>
+        <span class="n">threshold</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">density_ratios</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">*</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">start_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">density_ratios</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">start_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">intervals</span> <span class="o">&gt;=</span> <span class="n">min_distance</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        
+    <span class="n">intervals</span> <span class="o">=</span> <span class="n">intervals</span><span class="p">[</span><span class="n">start_index</span><span class="p">:]</span>
+    
+    <span class="c1"># add pseudo count to avoid division by 0 and log of 0 issues</span>
+    
+    <span class="n">pseudo_count</span> <span class="o">=</span> <span class="mi">1</span>
+    
+    <span class="n">sample_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sample_counts</span><span class="p">)</span>
+    <span class="n">sample_counts</span> <span class="o">=</span> <span class="n">sample_counts</span><span class="p">[</span><span class="o">...</span><span class="p">,</span><span class="n">start_index</span><span class="p">:]</span>
+    <span class="n">sample_counts</span> <span class="o">+=</span> <span class="n">pseudo_count</span>
+    
+    <span class="k">if</span> <span class="n">permutation_counts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">permutation_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">permutation_counts</span><span class="p">)</span>
+        <span class="n">permutation_counts</span> <span class="o">=</span> <span class="n">permutation_counts</span><span class="p">[</span><span class="o">...</span><span class="p">,</span><span class="n">start_index</span><span class="p">:]</span>
+        <span class="n">permutation_counts</span> <span class="o">+=</span> <span class="n">pseudo_count</span>
+    
+    <span class="c1"># calculate the observables which are derived from the bare annotation combinations counts</span>
+    
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span> <span class="c1"># infinities resulting from division by zeros are wanted here, so ignore associated warnings</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+
+        <span class="c1"># co-occurrence score is conditional probability p(i|j) scaled by p(i)</span>
+        <span class="n">p_i_j</span> <span class="o">=</span> <span class="n">sample_counts</span> <span class="o">/</span> <span class="n">sample_counts</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span><span class="kc">None</span><span class="p">,:,:]</span>
+        <span class="n">p_i</span> <span class="o">=</span> <span class="n">sample_counts</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)[:,:,</span><span class="kc">None</span><span class="p">,:]</span> <span class="o">/</span> <span class="n">sample_counts</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))[:,</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">,:]</span>
+
+        <span class="n">sample_scores</span> <span class="o">=</span> <span class="n">p_i_j</span> <span class="o">/</span> <span class="n">p_i</span>
+        <span class="c1"># equivalent alternative:</span>
+        <span class="c1"># sample_scores = sample_counts * sample_counts.sum(axis=(1,2))[:,None,None,:] / (sample_counts.sum(axis=1)[:,None,:,:] * sample_counts.sum(axis=2)[:,:,None,:])</span>
+
+        <span class="c1"># alternative score, similar to &quot;z-scores&quot;: (value - random expectation) / standard deviation</span>
+        <span class="k">if</span> <span class="n">permutation_counts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sample_log_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">sample_counts</span><span class="p">)</span>
+            <span class="n">permutation_log_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">permutation_counts</span><span class="p">)</span>
+            <span class="n">random_expected_log_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">permutation_log_counts</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">std_log_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">permutation_log_counts</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">sample_z_scores</span> <span class="o">=</span> <span class="p">(</span><span class="n">sample_log_counts</span> <span class="o">-</span> <span class="n">random_expected_log_counts</span><span class="p">)</span> <span class="o">/</span> <span class="n">std_log_counts</span>
+        
+        <span class="c1"># plain neighbourhood composition</span>
+        <span class="n">sample_composition</span> <span class="o">=</span> <span class="n">p_i_j</span>
+        
+        <span class="c1"># distance distribution</span>
+        <span class="n">sample_distance_distribution</span> <span class="o">=</span> <span class="n">sample_counts</span> <span class="o">/</span> <span class="n">sample_counts</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">3</span><span class="p">)[:,:,:,</span><span class="kc">None</span><span class="p">]</span>
+        
+        <span class="c1"># relative distance distribution</span>
+        <span class="n">sample_relative_distance_distribution</span> <span class="o">=</span> <span class="n">sample_counts</span> <span class="o">*</span> <span class="n">sample_counts</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">))[:,</span><span class="kc">None</span><span class="p">,:,</span><span class="kc">None</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">sample_counts</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">3</span><span class="p">)[:,:,:,</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">sample_counts</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span><span class="kc">None</span><span class="p">,:,:])</span>
+    
+    <span class="n">sample_counts</span> <span class="o">-=</span> <span class="n">pseudo_count</span> <span class="c1"># remove pseudo count</span>
+    <span class="k">if</span> <span class="n">permutation_counts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">permutation_counts</span> <span class="o">-=</span> <span class="n">pseudo_count</span> <span class="c1"># remove pseudo count</span>
+    
+    <span class="n">mean_scores</span> <span class="o">=</span> <span class="n">sample_scores</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">sample_scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">sample_scores</span><span class="p">)</span>
+    <span class="n">mean_log_scores</span> <span class="o">=</span> <span class="n">sample_scores</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">mean_z_scores</span> <span class="o">=</span> <span class="n">sample_z_scores</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">permutation_counts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">mean_composition</span> <span class="o">=</span> <span class="n">sample_composition</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">sample_composition</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">sample_composition</span><span class="p">)</span>
+    <span class="n">mean_log_composition</span> <span class="o">=</span> <span class="n">sample_composition</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">mean_distance_distribution</span> <span class="o">=</span> <span class="n">sample_distance_distribution</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">sample_distance_distribution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">sample_distance_distribution</span><span class="p">)</span>
+    <span class="n">mean_log_distance_distribution</span> <span class="o">=</span> <span class="n">sample_distance_distribution</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">mean_relative_distance_distribution</span> <span class="o">=</span> <span class="n">sample_relative_distance_distribution</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">sample_relative_distance_distribution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">sample_relative_distance_distribution</span><span class="p">)</span>
+    <span class="n">mean_log_relative_distance_distribution</span> <span class="o">=</span> <span class="n">sample_relative_distance_distribution</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="c1"># organize output</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="c1"># categorical annotation</span>
+        <span class="n">annotation</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">reference_labels</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span>
+    <span class="k">else</span><span class="p">:</span> <span class="c1"># soft annotation</span>
+        <span class="n">annotation</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">columns</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">annotation</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">CategoricalIndex</span><span class="p">):</span>
+            <span class="n">annotation</span> <span class="o">=</span> <span class="n">annotation</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">annotation</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">reference_labels</span><span class="o">.</span><span class="n">columns</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">CategoricalIndex</span><span class="p">):</span>
+            <span class="n">center</span> <span class="o">=</span> <span class="n">center</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        
+    <span class="n">annotation</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">annotation_key</span>
+    <span class="n">center</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">center_key</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;occ&quot;</span><span class="p">:</span> <span class="n">mean_scores</span><span class="p">,</span>
+        <span class="s2">&quot;log_occ&quot;</span><span class="p">:</span> <span class="n">mean_log_scores</span><span class="p">,</span>
+        <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">mean_z_scores</span><span class="p">,</span>
+        <span class="s2">&quot;composition&quot;</span><span class="p">:</span> <span class="n">mean_composition</span><span class="p">,</span>
+        <span class="s2">&quot;log_composition&quot;</span><span class="p">:</span> <span class="n">mean_log_composition</span><span class="p">,</span>
+        <span class="s2">&quot;distance_distribution&quot;</span><span class="p">:</span> <span class="n">mean_distance_distribution</span><span class="p">,</span>
+        <span class="s2">&quot;log_distance_distribution&quot;</span><span class="p">:</span> <span class="n">mean_log_distance_distribution</span><span class="p">,</span>
+        <span class="s2">&quot;relative_distance_distribution&quot;</span><span class="p">:</span> <span class="n">mean_relative_distance_distribution</span><span class="p">,</span>
+        <span class="s2">&quot;log_relative_distance_distribution&quot;</span><span class="p">:</span> <span class="n">mean_log_relative_distance_distribution</span><span class="p">,</span>
+        <span class="s2">&quot;sample_counts&quot;</span><span class="p">:</span> <span class="n">sample_counts</span><span class="p">,</span>
+        <span class="s2">&quot;permutation_counts&quot;</span><span class="p">:</span> <span class="n">permutation_counts</span><span class="p">,</span>
+        <span class="s2">&quot;interval&quot;</span><span class="p">:</span> <span class="n">intervals</span><span class="p">,</span>
+        <span class="s2">&quot;annotation&quot;</span><span class="p">:</span> <span class="n">annotation</span><span class="p">,</span>
+        <span class="s2">&quot;center&quot;</span><span class="p">:</span> <span class="n">center</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">result_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">original_adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="n">result_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">original_adata</span>
+    
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="co_occurrence_matrix">
+<a class="viewcode-back" href="../../../_autosummary/tacco.tools.co_occurrence_matrix.html#tacco.tools.co_occurrence_matrix">[docs]</a>
+<span class="k">def</span> <span class="nf">co_occurrence_matrix</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">,</span>
+    <span class="n">annotation_key</span><span class="p">,</span>
+    <span class="n">center_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sample_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">position_key</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">),</span>
+    <span class="n">result_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_distance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kw_args</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Calculates a spatial co-occurence score given by the conditional</span>
+<span class="sd">    probability to find an annotation `a` at some distance `d` from an</span>
+<span class="sd">    observation with annotation `b`, normalized by the probability to find an</span>
+<span class="sd">    annotation `a` at distance `d` from an observation disregarding the value</span>
+<span class="sd">    of its annotation: `p(a|bd)/p(a|d)`.</span>
+<span class="sd">    This is a convenience wrapper around :func:`~tacco.tools.co_occurrence` which</span>
+<span class="sd">    just calculates the co-occurence score for the first distance bin.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adata</span>
+<span class="sd">        A :class:`~anndata.AnnData`</span>
+<span class="sd">    annotation_key</span>
+<span class="sd">        The `.obs` or `.obsm` key for the annotation `a` in `p(a|bd)/p(a|d)`.</span>
+<span class="sd">    center_key</span>
+<span class="sd">        The `.obs` or `.obsm` key for the annotation `b` in `p(a|bd)/p(a|d)`.</span>
+<span class="sd">        If `None`, takes the `annotation_key`.</span>
+<span class="sd">    sample_key</span>
+<span class="sd">        A categorical sample annotation. The result from different samples is</span>
+<span class="sd">        averaged for the final result and their standard deviation gives an</span>
+<span class="sd">        estimation of the error. If `None`, all observations are assumed to be</span>
+<span class="sd">        on the same sample.</span>
+<span class="sd">    position_key</span>
+<span class="sd">        The `.obsm` key or array-like of `.obs` keys with the position space</span>
+<span class="sd">        coordinates</span>
+<span class="sd">    result_key</span>
+<span class="sd">        The `.uns` key to contain the result. If `None`, the result is returned</span>
+<span class="sd">        as a dictionary `{ &quot;occ&quot;: scores, &quot;interval&quot;: intervals, &quot;annotation&quot;:</span>
+<span class="sd">        annotations, &quot;center&quot;: center }`, with `scores` containing the</span>
+<span class="sd">        `p(a|bd)/p(a|d)` values as a :class:`~numpy.ndarray` with dimensions</span>
+<span class="sd">        according to `a`, `b`, and `d`, `intervals` containing the boundaries</span>
+<span class="sd">        of the distance bins,  `annotations` containing the order of the `a`</span>
+<span class="sd">        annotations in `scores`, and `center` the order of the `b` annotations.</span>
+<span class="sd">    max_distance</span>
+<span class="sd">        The maximum distance to use. If `None` or `np.inf`, uses the maximum</span>
+<span class="sd">        distance in the data (if there are multiple samples, then only the</span>
+<span class="sd">        first sample is used). If the distance matrix is not precomputed (see</span>
+<span class="sd">        `distance_key`), `None` and `np.inf` result in dense distance</span>
+<span class="sd">        computation (which can be infeasible for larger datasets).</span>
+<span class="sd">    **kw_args</span>
+<span class="sd">        Additional keyword arguments are forwarded to</span>
+<span class="sd">        :func:`~tacco.tools.co_occurrence`.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Depending on `result_key` returns either the updated input `adata` or the\</span>
+<span class="sd">    result directly in the format described under `result_key`.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">co_occurrence</span><span class="p">(</span>
+        <span class="n">adata</span><span class="o">=</span><span class="n">adata</span><span class="p">,</span>
+        <span class="n">annotation_key</span><span class="o">=</span><span class="n">annotation_key</span><span class="p">,</span>
+        <span class="n">center_key</span><span class="o">=</span><span class="n">center_key</span><span class="p">,</span>
+        <span class="n">sample_key</span><span class="o">=</span><span class="n">sample_key</span><span class="p">,</span>
+        <span class="n">position_key</span><span class="o">=</span><span class="n">position_key</span><span class="p">,</span>
+        <span class="n">result_key</span><span class="o">=</span><span class="n">result_key</span><span class="p">,</span>
+        <span class="n">max_distance</span><span class="o">=</span><span class="n">max_distance</span><span class="p">,</span>
+        <span class="n">min_distance</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">delta_distance</span><span class="o">=</span><span class="n">max_distance</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kw_args</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+<span class="nd">@njit</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_dist_hist_dense</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">max_distance</span><span class="p">,</span> <span class="n">delta_distance</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">ref_weights</span><span class="p">):</span>
+    <span class="n">Ni</span><span class="p">,</span><span class="n">Nj</span> <span class="o">=</span> <span class="n">distances</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">_Nj</span><span class="p">,</span><span class="n">Nw</span> <span class="o">=</span> <span class="n">weights</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">Nj</span><span class="o">==</span><span class="n">_Nj</span><span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">Nj</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="n">ref_weights</span><span class="p">))</span>
+    <span class="n">Nd</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">max_distance</span> <span class="o">/</span> <span class="n">delta_distance</span><span class="p">))</span>
+    <span class="n">hist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">Ni</span><span class="p">,</span><span class="n">Nd</span><span class="p">,</span><span class="n">Nw</span><span class="p">))</span>
+    <span class="n">ref_hist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">Ni</span><span class="p">,</span><span class="n">Nd</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="n">Ni</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nj</span><span class="p">):</span>
+            <span class="n">dij</span> <span class="o">=</span> <span class="n">distances</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">_dij</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dij</span> <span class="o">/</span> <span class="n">delta_distance</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">dij</span> <span class="o">&lt;=</span> <span class="n">max_distance</span><span class="p">:</span>
+                <span class="n">hist</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">_dij</span><span class="p">]</span> <span class="o">+=</span> <span class="n">weights</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                <span class="n">ref_hist</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">_dij</span><span class="p">]</span> <span class="o">+=</span> <span class="n">ref_weights</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">hist</span><span class="p">,</span><span class="n">ref_hist</span>
+
+<span class="nd">@njit</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_dist_hist_sparse</span><span class="p">(</span><span class="n">dist_indptr</span><span class="p">,</span> <span class="n">dist_indices</span><span class="p">,</span> <span class="n">dist_data</span><span class="p">,</span> <span class="n">max_distance</span><span class="p">,</span> <span class="n">delta_distance</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">ref_weights</span><span class="p">):</span>
+    <span class="n">Ni</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dist_indptr</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+    <span class="n">Nj</span><span class="p">,</span><span class="n">Nw</span> <span class="o">=</span> <span class="n">weights</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">Nj</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="n">ref_weights</span><span class="p">))</span>
+    <span class="n">Nd</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">max_distance</span> <span class="o">/</span> <span class="n">delta_distance</span><span class="p">))</span>
+    <span class="n">hist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">Ni</span><span class="p">,</span><span class="n">Nd</span><span class="p">,</span><span class="n">Nw</span><span class="p">))</span>
+    <span class="n">ref_hist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">Ni</span><span class="p">,</span><span class="n">Nd</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="n">Ni</span><span class="p">):</span>
+        <span class="n">ptr0</span> <span class="o">=</span> <span class="n">dist_indptr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">ptr1</span> <span class="o">=</span> <span class="n">dist_indptr</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">ptr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ptr0</span><span class="p">,</span><span class="n">ptr1</span><span class="p">):</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">dist_indices</span><span class="p">[</span><span class="n">ptr</span><span class="p">]</span>
+            <span class="n">dij</span> <span class="o">=</span> <span class="n">dist_data</span><span class="p">[</span><span class="n">ptr</span><span class="p">]</span>
+            <span class="n">_dij</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dij</span> <span class="o">/</span> <span class="n">delta_distance</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">dij</span> <span class="o">&lt;=</span> <span class="n">max_distance</span><span class="p">:</span>
+                <span class="n">hist</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">_dij</span><span class="p">]</span> <span class="o">+=</span> <span class="n">weights</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                <span class="n">ref_hist</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">_dij</span><span class="p">]</span> <span class="o">+=</span> <span class="n">ref_weights</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">hist</span><span class="p">,</span><span class="n">ref_hist</span>
+
+<div class="viewcode-block" id="annotation_coordinate">
+<a class="viewcode-back" href="../../../_autosummary/tacco.tools.annotation_coordinate.html#tacco.tools.annotation_coordinate">[docs]</a>
+<span class="k">def</span> <span class="nf">annotation_coordinate</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">,</span>
+    <span class="n">annotation_key</span><span class="p">,</span>
+    <span class="n">sample_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">distance_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">position_key</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="s1">&#39;y&#39;</span><span class="p">),</span>
+    <span class="n">result_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">critical_neighbourhood_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">reference_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_distance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">delta_distance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kw_args</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Calculates a distance-like quantity from an annotation in space.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adata</span>
+<span class="sd">        A :class:`~anndata.AnnData`.</span>
+<span class="sd">    annotation_key</span>
+<span class="sd">        The `.obs` or `.obsm` key to calculate distances from. For categorical</span>
+<span class="sd">        `.obs` keys and for `.obsm` keys, the distances from all components are</span>
+<span class="sd">        calculated. The numerical value of the annotation is used as a weight</span>
+<span class="sd">        for distance calculation, see `critical_neighbourhood_size`.</span>
+<span class="sd">    sample_key</span>
+<span class="sd">        A categorical sample annotation. The calculation is performed</span>
+<span class="sd">        separately per sample. If `None`, all observations are assumed to be</span>
+<span class="sd">        on the same sample.</span>
+<span class="sd">    distance_key</span>
+<span class="sd">        The `.obsp` key containing a precomputed distance matrix to use. If</span>
+<span class="sd">        `None`, the distances are computed on the fly with the positions found</span>
+<span class="sd">        in `position_key`. Otherwise `position_key` is ignored.</span>
+<span class="sd">    position_key</span>
+<span class="sd">        The `.obsm` key or array-like of `.obs` keys with the position space</span>
+<span class="sd">        coordinates</span>
+<span class="sd">    result_key</span>
+<span class="sd">        The `.obsm` key to contain the result. If `None`, the result is</span>
+<span class="sd">        returned as a :class:`~pandas.DataFrame`.</span>
+<span class="sd">    critical_neighbourhood_size</span>
+<span class="sd">        The aggregated weight of a observations within a certain distance in</span>
+<span class="sd">        order to call this distance THE distance (see `reference_key`). The</span>
+<span class="sd">        weight used here is determined by numerical annotation values.</span>
+<span class="sd">    reference_key</span>
+<span class="sd">        The `.obs` key to use as reference weights (i.e. the maximum weight</span>
+<span class="sd">        possible per observation) for neighbourhood size distance correction.</span>
+<span class="sd">        If `None`, use `1` per observation, which makes sense if the annotation</span>
+<span class="sd">        is categorical or fractional annotations which should sum to `1`. If</span>
+<span class="sd">        `False`, dont perform the correction.</span>
+<span class="sd">    max_distance</span>
+<span class="sd">        The maximum distance to use. If `None` or `np.inf`, uses the maximum</span>
+<span class="sd">        distance in the data (if there are multiple samples, then only the</span>
+<span class="sd">        first sample is used). If the distance matrix is not precomputed (see</span>
+<span class="sd">        `distance_key`), `None` and `np.inf` result in dense distance</span>
+<span class="sd">        computation (which can be infeasible for larger datasets).</span>
+<span class="sd">    sparse</span>
+<span class="sd">        Whether to calculate a sparse or dense distance matrix, if it is not</span>
+<span class="sd">        precomputed. If `None`, this is determined by the value of</span>
+<span class="sd">        `max_distance`.</span>
+<span class="sd">    delta_distance</span>
+<span class="sd">        The width in distance for distance discretization. If `None`, takes</span>
+<span class="sd">        `max_distance/100`.</span>
+<span class="sd">    verbose</span>
+<span class="sd">        Level of verbosity, with `0` (no output), `1` (some output), ...</span>
+<span class="sd">    **kw_args</span>
+<span class="sd">        Additional keyword arguments are forwarded to on-the-fly distance</span>
+<span class="sd">        calculation with :func:`~tacco.utils.distance_matrix` if necessary.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Depending on `result_key` returns either the updated input `adata` or the\</span>
+<span class="sd">    result directly as :class:`~pandas.DataFrame`.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">sample_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sample_adatas</span> <span class="o">=</span> <span class="p">[</span><span class="n">adata</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sample_adatas</span> <span class="o">=</span> <span class="p">[</span><span class="n">adata</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">]</span> <span class="k">for</span> <span class="n">sample</span><span class="p">,</span><span class="n">df</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">sample_key</span><span class="p">)]</span>
+    
+    <span class="k">if</span> <span class="n">distance_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;annotation_distance: The argument `distance_key` is `None`, meaning that the distance which is now calculated on the fly will not be saved. Providing a precalculated distance saves time in multiple calls to this function.&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">distance_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsp</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The argument `distance_key` is &quot;</span><span class="si">{</span><span class="n">distance_key</span><span class="si">}</span><span class="s1">&quot;, but there is no `adata.obsp[&quot;</span><span class="si">{</span><span class="n">distance_key</span><span class="si">}</span><span class="s1">&quot;]`!&#39;</span><span class="p">)</span>
+    
+    <span class="n">_max_distance</span> <span class="o">=</span> <span class="n">max_distance</span> <span class="c1"># buffer original max_distance value to trigger the correct path (dense/sparse) for sample number 2+</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sparse</span><span class="p">:</span> <span class="c1"># force dense calculation if explicitly asked for</span>
+        <span class="n">_max_distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="k">def</span> <span class="nf">_get_dist</span><span class="p">(</span><span class="n">si</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">distance_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">adata</span> <span class="ow">is</span> <span class="n">sample_adatas</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsp</span><span class="p">[</span><span class="n">distance_key</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sample_index</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">sample_adatas</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsp</span><span class="p">[</span><span class="n">distance_key</span><span class="p">][</span><span class="n">sample_index</span><span class="p">][:,</span><span class="n">sample_index</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;calculating distance for sample </span><span class="si">{</span><span class="n">si</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">sample_adatas</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="n">distance_matrix</span><span class="p">(</span><span class="n">sample_adatas</span><span class="p">[</span><span class="n">si</span><span class="p">],</span> <span class="n">max_distance</span><span class="o">=</span><span class="n">_max_distance</span><span class="p">,</span> <span class="n">position_key</span><span class="o">=</span><span class="n">position_key</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dist</span>
+    <span class="n">dist</span> <span class="o">=</span> <span class="n">_get_dist</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">max_distance</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">max_distance</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">dist</span><span class="p">):</span>
+            <span class="n">max_distance</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">max_distance</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">max_distance</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">max_distance</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">delta_distance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">delta_distance</span> <span class="o">=</span> <span class="n">max_distance</span> <span class="o">/</span> <span class="mi">100</span>
+    <span class="n">n_intervals</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_distance</span> <span class="o">/</span> <span class="n">delta_distance</span><span class="p">)</span>
+    <span class="n">max_distance</span> <span class="o">=</span> <span class="n">n_intervals</span> <span class="o">*</span> <span class="n">delta_distance</span>
+    
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">si</span><span class="p">,</span><span class="n">sn</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sample_adatas</span><span class="p">):</span> <span class="c1"># do not parallelize over samples as the memory for a single sample distance matrix can be already quite large</span>
+        
+        <span class="k">if</span> <span class="n">annotation_key</span> <span class="ow">in</span> <span class="n">sample_adatas</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">.</span><span class="n">obs</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="n">sample_adatas</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="s1">&#39;cat&#39;</span><span class="p">):</span>
+                <span class="n">weights</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">weights</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">annotation_key</span> <span class="ow">in</span> <span class="n">sample_adatas</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">.</span><span class="n">obsm</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="n">sample_adatas</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The `annotation_key` </span><span class="si">{</span><span class="n">annotation_key</span><span class="si">!r}</span><span class="s1"> is neither in `adata.obs` nor `adata.obsm`!&#39;</span><span class="p">)</span>
+        
+        <span class="n">columns</span> <span class="o">=</span> <span class="n">weights</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        
+        <span class="c1"># consider only not-nan data</span>
+        <span class="n">weights</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">reference_key</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">reference_key</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">reference_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sample_adatas</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">reference_key</span> <span class="ow">in</span> <span class="n">sample_adatas</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">.</span><span class="n">obs</span><span class="p">:</span>
+            <span class="n">reference_weights</span> <span class="o">=</span> <span class="n">sample_adatas</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">reference_key</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The `reference_key` </span><span class="si">{</span><span class="n">reference_key</span><span class="si">!r}</span><span class="s1"> is not in `adata.obs`!&#39;</span><span class="p">)</span>
+        
+        <span class="n">common_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">max_distance</span><span class="p">,</span> <span class="n">delta_distance</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">reference_weights</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">si</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># already have the first sample distance from above</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="n">_get_dist</span><span class="p">(</span><span class="n">si</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">dist</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;annotation_distance: distance is not in csr format and has to be transformed to csr on the fly&#39;</span><span class="p">)</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+            <span class="n">dist_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">indptr</span><span class="p">,</span> <span class="n">dist</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">dist</span><span class="o">.</span><span class="n">data</span><span class="p">]</span>
+            <span class="n">_dist_hist</span> <span class="o">=</span> <span class="n">_dist_hist_sparse</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dist_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">dist</span><span class="p">]</span>
+            <span class="n">_dist_hist</span> <span class="o">=</span> <span class="n">_dist_hist_dense</span>
+        
+        <span class="n">hist</span><span class="p">,</span><span class="n">ref_hist</span> <span class="o">=</span> <span class="n">_dist_hist</span><span class="p">(</span><span class="o">*</span><span class="n">dist_args</span><span class="p">,</span> <span class="o">*</span><span class="n">common_args</span><span class="p">)</span>
+        
+        <span class="n">ref_chist</span> <span class="o">=</span> <span class="n">ref_hist</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    
+        <span class="n">result_c</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">ci</span><span class="p">,</span><span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">columns</span><span class="p">):</span> <span class="c1"># go over annotation categories</span>
+            <span class="n">chist</span> <span class="o">=</span> <span class="n">hist</span><span class="p">[</span><span class="o">...</span><span class="p">,</span><span class="n">ci</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># sum histogram over distances</span>
+            <span class="n">gg</span> <span class="o">=</span> <span class="n">chist</span><span class="o">&gt;</span><span class="n">critical_neighbourhood_size</span> <span class="c1"># find the bins which have more counts than the threshhold</span>
+            <span class="n">good</span> <span class="o">=</span> <span class="n">gg</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># find the points with at least one distance bin over threshold</span>
+            <span class="n">mist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">gg</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># find the first bin over threshold per point - or 0 if none is over threshold</span>
+            <span class="k">if</span> <span class="n">reference_key</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">sist</span> <span class="o">=</span> <span class="n">mist</span>
+                <span class="n">sist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">good</span><span class="p">,</span> <span class="n">mist</span><span class="p">,</span> <span class="n">max_distance</span> <span class="o">/</span> <span class="n">delta_distance</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="c1"># clip max distance at the maximum</span>
+            <span class="k">else</span><span class="p">:</span> <span class="c1"># correct for threshold effect</span>
+                <span class="n">shift</span> <span class="o">=</span> <span class="n">ref_chist</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mist</span><span class="p">)),</span><span class="n">mist</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)]</span><span class="o">-</span><span class="n">critical_neighbourhood_size</span> <span class="c1"># max possible bin values at the distance over threshold, corrected by the threshold value</span>
+                <span class="n">gs</span> <span class="o">=</span> <span class="n">ref_chist</span><span class="o">&gt;=</span><span class="n">shift</span><span class="p">[:,</span><span class="kc">None</span><span class="p">]</span> <span class="c1"># find minimum distance to yield the corrected max possible bin value at distance over threshold</span>
+                <span class="n">sist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">gs</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">good</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">gs</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">max_distance</span> <span class="o">/</span> <span class="n">delta_distance</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="c1"># clip max distance at the maximum</span>
+            <span class="n">sist</span> <span class="o">=</span> <span class="p">(</span><span class="n">sist</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">delta_distance</span> <span class="c1"># account for finite bin width and convert from bin units to physical units</span>
+            <span class="n">result_c</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">sist</span>
+        
+        <span class="n">result</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">result_c</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">sample_adatas</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    
+    <span class="n">result</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">result_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">result_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">adata</span>
+    
+    <span class="k">return</span> <span class="n">result</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

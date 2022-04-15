@@ -1,0 +1,6 @@
+tacco.utils.preprocess\_single\_cell\_data
+==========================================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: preprocess_single_cell_data

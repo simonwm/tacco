@@ -1,0 +1,6 @@
+tacco.utils.spatial\_split
+==========================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: spatial_split

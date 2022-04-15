@@ -1,0 +1,6 @@
+tacco.tools.annotate\_single\_molecules
+=======================================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: annotate_single_molecules

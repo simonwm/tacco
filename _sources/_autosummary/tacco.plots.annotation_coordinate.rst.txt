@@ -1,0 +1,6 @@
+tacco.plots.annotation\_coordinate
+==================================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: annotation_coordinate

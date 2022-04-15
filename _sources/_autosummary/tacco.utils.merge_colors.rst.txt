@@ -1,0 +1,6 @@
+tacco.utils.merge\_colors
+=========================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: merge_colors

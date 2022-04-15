@@ -1,0 +1,6 @@
+tacco.preprocessing.filter\_annotation
+======================================
+
+.. currentmodule:: tacco.preprocessing
+
+.. autofunction:: filter_annotation

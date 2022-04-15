@@ -1,0 +1,6 @@
+tacco.tools.annotate\_SingleR
+=============================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: annotate_SingleR

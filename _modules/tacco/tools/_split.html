@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.tools._split &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/tacco.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tacco.tools._split</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tacco.tools._split</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
+<span class="kn">import</span> <span class="nn">scipy.sparse</span>
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">_split</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">get</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">preprocessing</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">testing</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_helper</span> <span class="k">as</span> <span class="n">helper</span>
+
+<span class="k">def</span> <span class="nf">map_obs_obsm</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">,</span>
+    <span class="n">source_adata</span><span class="p">,</span>
+    <span class="n">obs_index_key</span><span class="p">,</span>
+    <span class="n">map_obs_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">map_obsm_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Maps obs and obsm annotation from a source to a target adata.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adata</span>
+<span class="sd">        A target :class:`~anndata.AnnData` to map the annotation to.</span>
+<span class="sd">    source_adata</span>
+<span class="sd">        A source :class:`~anndata.AnnData` to map the annotation to.</span>
+<span class="sd">    annotation</span>
+<span class="sd">        A :class:`~pandas.DataFrame` containing the obs by category annotation.</span>
+<span class="sd">    obs_index_key</span>
+<span class="sd">        The key in `adata.obs` which contains corresponding index values of</span>
+<span class="sd">        `source_adata.obs.index` to define the mapping.</span>
+<span class="sd">    map_obs_keys</span>
+<span class="sd">        List of `.obs` keys to map to the new data. If `True` or `False`, maps</span>
+<span class="sd">        all or no `.obs` keys.</span>
+<span class="sd">    map_obsm_keys</span>
+<span class="sd">        List of `.obsm` keys to map to the new data. If `True` or `False`, maps</span>
+<span class="sd">        all or no `.obsm` keys.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Returns the updated input `adata`.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+        
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">map_obs_keys</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">map_obs_keys</span><span class="p">:</span>
+            <span class="n">map_obs_keys</span> <span class="o">=</span> <span class="n">source_adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">columns</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">map_obs_keys</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">map_obs_keys</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">map_obs_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">map_obs_keys</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">map_obsm_keys</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">map_obsm_keys</span><span class="p">:</span>
+            <span class="n">map_obsm_keys</span> <span class="o">=</span> <span class="n">source_adata</span><span class="o">.</span><span class="n">obsm</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">map_obsm_keys</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">map_obsm_keys</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">map_obsm_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">map_obsm_keys</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">map_obs_keys</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">reindexed_obs</span> <span class="o">=</span> <span class="n">source_adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">obs_index_key</span><span class="p">])</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">map_obs_keys</span><span class="p">:</span>
+        <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">reindexed_obs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">map_obsm_keys</span><span class="p">:</span>
+        <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">source_adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">obs_index_key</span><span class="p">])</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">adata</span>
+
+<span class="k">def</span> <span class="nf">reconstruct_expression</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">,</span>
+    <span class="n">annotation</span><span class="p">,</span>
+    <span class="n">profiles</span><span class="p">,</span>
+    <span class="n">mapping</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">min_counts</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">rounded</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">merge_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">obs_index_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Combines annotation and profiles to reconstruct a &quot;denoised&quot; expression</span>
+<span class="sd">    matrix.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adata</span>
+<span class="sd">        A source :class:`~anndata.AnnData` providing the counts to split</span>
+<span class="sd">        and annotation to include in the result.</span>
+<span class="sd">    annotation</span>
+<span class="sd">        A :class:`~pandas.DataFrame` containing the obs by category annotation.</span>
+<span class="sd">    profiles</span>
+<span class="sd">        A :class:`~pandas.DataFrame` containing the gene by category profiles.</span>
+<span class="sd">    mapping</span>
+<span class="sd">        A mapping of sub-categories to their original categories. If `None`,</span>
+<span class="sd">        directly return the result in the categories given in `annotation` and</span>
+<span class="sd">        `profiles`. If &#39;bulk&#39;, maps everything to a single unsplit expression</span>
+<span class="sd">        matrix.</span>
+<span class="sd">    min_counts</span>
+<span class="sd">        Minimum count per observation to include in the result. As the result</span>
+<span class="sd">        a dense matrix, this parameter is quite crucial to get a reasonably</span>
+<span class="sd">        sized result. If `None`, include all non-zero observations.</span>
+<span class="sd">    rounded</span>
+<span class="sd">        Whether to round the result to the nearest integer-valued matrix. This</span>
+<span class="sd">        leads to the result being reported using a sparse matrix.</span>
+<span class="sd">    merge_key</span>
+<span class="sd">        The `.obs` key to contain the annotation in the merged data. If `None`,</span>
+<span class="sd">        tries to guess a reasonable name.</span>
+<span class="sd">    obs_index_key</span>
+<span class="sd">        A string specifying the name of the obs column to write the old</span>
+<span class="sd">        `.obs.index` (i.e. the cell names) to. If `None`, tries to guess a</span>
+<span class="sd">        reasonable name.</span>
+<span class="sd">    verbose</span>
+<span class="sd">        Level of verbosity, with `0` (no output), `1` (some output), ...</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Returns an :class:`~anndata.AnnData` containing the per annotation category\</span>
+<span class="sd">    reconstructed expression data.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">categories</span> <span class="o">=</span> <span class="n">annotation</span><span class="o">.</span><span class="n">columns</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">categories</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">profiles</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="o">~</span><span class="n">categories</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">profiles</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The `annotation` and `profiles` use incompatible annotation categories: </span><span class="si">{</span><span class="n">categories</span><span class="si">}</span><span class="s1"> VS </span><span class="si">{</span><span class="n">profiles</span><span class="o">.</span><span class="n">columns</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">categories</span> <span class="o">!=</span> <span class="n">profiles</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="n">profiles</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">categories</span><span class="p">)</span>
+    
+    <span class="n">obs_index_key</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">guess_obs_index_key</span><span class="p">(</span><span class="n">obs_index_key</span><span class="p">,</span> <span class="n">adata</span><span class="p">)</span>
+    
+    <span class="n">merge_key</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">guess_merge_key</span><span class="p">(</span><span class="n">merge_key</span><span class="p">,</span> <span class="n">adata</span><span class="p">,</span> <span class="n">annotation</span><span class="p">,</span> <span class="n">profiles</span><span class="p">)</span>
+    
+    <span class="c1"># filter out observations with missing annotation</span>
+    <span class="n">annotation</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">no_annotation</span> <span class="o">=</span> <span class="n">annotation</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.0</span>
+    <span class="n">annotation</span> <span class="o">=</span> <span class="n">annotation</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">no_annotation</span><span class="p">]</span>
+    <span class="c1"># filter out genes without contribution to any profile</span>
+    <span class="n">profiles</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">no_profiles</span> <span class="o">=</span> <span class="n">profiles</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.0</span>
+    <span class="n">profiles</span> <span class="o">=</span> <span class="n">profiles</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">no_profiles</span><span class="p">]</span>
+    <span class="c1"># find intersection of annotation and data</span>
+    <span class="n">obs_intersection</span> <span class="o">=</span> <span class="n">annotation</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">var_intersection</span> <span class="o">=</span> <span class="n">profiles</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">annotation</span> <span class="o">=</span> <span class="n">annotation</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">obs_intersection</span><span class="p">]</span>
+    <span class="n">profiles</span> <span class="o">=</span> <span class="n">profiles</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">var_intersection</span><span class="p">]</span>
+    <span class="n">adata</span> <span class="o">=</span> <span class="n">adata</span><span class="p">[</span><span class="n">obs_intersection</span><span class="p">,</span><span class="n">var_intersection</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="c1"># normalize annotation: every bead has type fractions that sum to the total number of counts per bead</span>
+    <span class="n">annotation</span> <span class="o">=</span> <span class="n">annotation</span> <span class="o">*</span> <span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">get_sum</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">annotation</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())[:,</span><span class="kc">None</span><span class="p">]</span>
+    <span class="c1"># normalize profiles: every type has gene fractions that sum to 1</span>
+    <span class="n">profiles</span> <span class="o">=</span> <span class="n">profiles</span> <span class="o">/</span> <span class="n">profiles</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+     
+    <span class="k">if</span> <span class="n">mapping</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mapping</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">categories</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">categories</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mapping</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">mapping</span> <span class="o">==</span> <span class="s1">&#39;bulk&#39;</span><span class="p">:</span>
+            <span class="n">merge_key</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">mapping</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="s1">&#39;bulk&#39;</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">categories</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">categories</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;`mapping` is the string &quot;</span><span class="si">{</span><span class="n">mapping</span><span class="si">}</span><span class="s1">&quot;, but the string &quot;bluk&quot; is the only string option. `mapping` can also be `None` or a mapping.&#39;</span><span class="p">)</span>
+
+    <span class="n">contributions</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="n">mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">new</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">contributions</span><span class="p">:</span>
+            <span class="n">contributions</span><span class="p">[</span><span class="n">new</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">old</span> <span class="ow">in</span> <span class="n">annotation</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">contributions</span><span class="p">[</span><span class="n">new</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">old</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;`mapping` references sub-category </span><span class="si">{</span><span class="n">old</span><span class="si">!r}</span><span class="s1"> which is not available in `annotation.columns`. Continuing without this sub-category...&#39;</span><span class="p">)</span>
+
+    <span class="n">obs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">olds</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">contributions</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;runnig the reconstruction of </span><span class="si">{</span><span class="n">new</span><span class="si">!r}</span><span class="s1"> by </span><span class="si">{</span><span class="n">olds</span><span class="si">!r}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">_X</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">gemmT</span><span class="p">(</span><span class="n">annotation</span><span class="p">[</span><span class="n">olds</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">profiles</span><span class="p">[</span><span class="n">olds</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">min_counts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">keep</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_sum</span><span class="p">(</span><span class="n">_X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">keep</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_sum</span><span class="p">(</span><span class="n">_X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">min_counts</span>
+        <span class="n">_X</span> <span class="o">=</span> <span class="n">_X</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">rounded</span><span class="p">:</span>
+            <span class="n">_X</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">_X</span><span class="p">))</span>
+
+        <span class="n">X</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_X</span><span class="p">)</span>
+        <span class="n">_obs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="n">obs_index_key</span><span class="p">:</span><span class="n">annotation</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">keep</span><span class="p">]})</span>
+        <span class="k">if</span> <span class="n">merge_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_obs</span><span class="p">[</span><span class="n">merge_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">new</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_obs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+    <span class="n">obs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+    <span class="n">obs</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">var</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">profiles</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">merge_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># conserve dtype</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mapping</span><span class="p">,</span> <span class="s1">&#39;cat&#39;</span><span class="p">):</span>
+            <span class="n">obs</span><span class="p">[</span><span class="n">merge_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="n">merge_key</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">mapping</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">obs</span><span class="p">[</span><span class="n">merge_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="n">merge_key</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">mapping</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">AnnData</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">var</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">varm</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+<div class="viewcode-block" id="split_observations">
+<a class="viewcode-back" href="../../../_autosummary/tacco.tools.split_observations.html#tacco.tools.split_observations">[docs]</a>
+<span class="k">def</span> <span class="nf">split_observations</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">,</span>
+    <span class="n">annotation_key</span><span class="p">,</span>
+    <span class="n">result_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">counts_location</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;exact&#39;</span><span class="p">,</span>
+    <span class="n">map_all_genes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">min_counts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+    <span class="n">delta</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
+    <span class="n">scaling_jobs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">scaling_batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">rounding_batch_size</span><span class="o">=</span><span class="mi">50000</span><span class="p">,</span>
+    <span class="n">obs_index_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">map_obs_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">map_obsm_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Splits expression data with a &quot;soft&quot; weights annotation in `.obsm` into</span>
+<span class="sd">    multiple &quot;virtual&quot; observations per input observation e.g. splits</span>
+<span class="sd">    expression data for cell type mixtures with annotated cell type fractions</span>
+<span class="sd">    into expression of single type observations with categorical annotation.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adata</span>
+<span class="sd">        An :class:`~anndata.AnnData` including expression data in `.X`,</span>
+<span class="sd">        profiles in `.varm` and annotation in `.obsm`.</span>
+<span class="sd">    annotation_key</span>
+<span class="sd">        The `.obsm` and `.varm` key where the annotation and profiles are</span>
+<span class="sd">        stored. If the `annotation_key` is also available in `.uns`, it</span>
+<span class="sd">        should contain a mapping of annotation categories from `.obsm` and</span>
+<span class="sd">        `.varm` to the target ones. Such a triplett of annotation can be</span>
+<span class="sd">        generated by :func:`~tacco.tools.annotate` with a `reconstruction_key`</span>
+<span class="sd">        argument.</span>
+<span class="sd">    result_key</span>
+<span class="sd">        The name of the `.obs` annotation column of the result to contain the</span>
+<span class="sd">        split annotation. If `None`, tries to find a sensible value</span>
+<span class="sd">        automatically: If `annotation_key` is not in `.uns`, then</span>
+<span class="sd">        `annotation_key` is used, else the name attribute of the mapping is</span>
+<span class="sd">        used if available.</span>
+<span class="sd">    counts_location</span>
+<span class="sd">        A string or tuple specifying where the count matrix is stored, e.g.</span>
+<span class="sd">        `&#39;X&#39;`, `(&#39;raw&#39;,&#39;X&#39;)`, `(&#39;raw&#39;,&#39;obsm&#39;,&#39;my_counts_key&#39;)`,</span>
+<span class="sd">        `(&#39;layer&#39;,&#39;my_counts_key&#39;)`, ... For details see</span>
+<span class="sd">        :func:`~tacco.get.counts`.</span>
+<span class="sd">    mode</span>
+<span class="sd">        String to switches between the type of split:</span>
+<span class="sd">        </span>
+<span class="sd">        - &#39;exact&#39;: All counts in the input are distributed to the splitted</span>
+<span class="sd">          observations conserving the total number of counts per gene and bead</span>
+<span class="sd">          and the annotation fractions; see `map_zero_profile_genes`.</span>
+<span class="sd">        - &#39;denoise&#39;: The counts per gene and bead are ignored and the split</span>
+<span class="sd">          results from a matrix product of mean expression profiles and the</span>
+<span class="sd">          annotation. Depending on the input this can be done on a sub-category</span>
+<span class="sd">          level providing variation within the categories, if `annotation_key`</span>
+<span class="sd">          is a `.uns` key.</span>
+<span class="sd">        - &#39;bulk&#39;: Like &#39;denoise&#39;, but summing over all (sub-)categories.</span>
+<span class="sd">        </span>
+<span class="sd">    map_all_genes</span>
+<span class="sd">        Only for `mode` &#39;exact&#39;: Whether to map counts of genes without profile</span>
+<span class="sd">        information assuming equal probabilities for all profiles.</span>
+<span class="sd">    min_counts</span>
+<span class="sd">        Minimum count per observation to include in the splitted data.</span>
+<span class="sd">        If `None`, include all non-zero observations.</span>
+<span class="sd">    seed</span>
+<span class="sd">        Random seed for integerizing the splitted count matrix. If `None`,</span>
+<span class="sd">        directly return the non-integer valued count matrix.</span>
+<span class="sd">        If `mode==&#39;denoise&#39;` a non-`None` value leads to plain rounding.</span>
+<span class="sd">    delta</span>
+<span class="sd">        The relative error target for the matrix scaling.</span>
+<span class="sd">        Ignored if `mode==&#39;denoise&#39;`.</span>
+<span class="sd">    scaling_jobs</span>
+<span class="sd">        Number of jobs or cores to use for the matrix scaling task.</span>
+<span class="sd">        Ignored if `mode==&#39;denoise&#39;`.</span>
+<span class="sd">    scaling_batch_size</span>
+<span class="sd">        Batch size for the matrix scaling task.</span>
+<span class="sd">        Ignored if `mode==&#39;denoise&#39;`.</span>
+<span class="sd">    rounding_batch_size</span>
+<span class="sd">        Batch size for the rounding task.</span>
+<span class="sd">        Ignored if `mode==&#39;denoise&#39;`.</span>
+<span class="sd">    obs_index_key</span>
+<span class="sd">        A string specifying the name of the obs column to write the old</span>
+<span class="sd">        `.obs.index` (i.e. the cell names) to. If `None`, tries to guess a</span>
+<span class="sd">        reasonable name.</span>
+<span class="sd">    map_obs_keys</span>
+<span class="sd">        List of `.obs` keys to map to the new data. If `True` or `False`, maps</span>
+<span class="sd">        all or no `.obs` keys.</span>
+<span class="sd">    map_obsm_keys</span>
+<span class="sd">        List of `.obsm` keys to map to the new data. If `True` or `False`, maps</span>
+<span class="sd">        all or no `.obsm` keys.</span>
+<span class="sd">    verbose</span>
+<span class="sd">        Level of verbosity, with `0` (no output), `1` (some output), ...</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Returns an :class:`~anndata.AnnData` containing the splitted expression\</span>
+<span class="sd">    data.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">adata</span> <span class="o">=</span> <span class="n">get</span><span class="o">.</span><span class="n">counts</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">counts_location</span><span class="o">=</span><span class="n">counts_location</span><span class="p">,</span> <span class="n">annotation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">preprocessing</span><span class="o">.</span><span class="n">check_counts_validity</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">annotation_key</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">annotation_key</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">varm</span><span class="p">):</span>
+        <span class="n">annotation</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span>
+        <span class="n">profiles</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">annotation_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The key &quot;</span><span class="si">{</span><span class="n">annotation_key</span><span class="si">}</span><span class="s1">&quot; is not available in `.obsm`!&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The key &quot;</span><span class="si">{</span><span class="n">annotation_key</span><span class="si">}</span><span class="s1">&quot; is not available in `.varm`!&#39;</span><span class="p">)</span>
+    
+    <span class="n">mapping</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span> <span class="k">if</span> <span class="n">annotation_key</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span> <span class="k">else</span> <span class="kc">None</span>
+    
+    <span class="n">obs_index_key</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">guess_obs_index_key</span><span class="p">(</span><span class="n">obs_index_key</span><span class="p">,</span> <span class="n">adata</span><span class="p">)</span>
+    
+    <span class="n">merge_key</span> <span class="o">=</span> <span class="n">result_key</span>
+    <span class="k">if</span> <span class="n">merge_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">mapping</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">merge_key</span> <span class="o">=</span> <span class="n">annotation_key</span>
+        <span class="k">elif</span> <span class="n">mapping</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">merge_key</span> <span class="o">=</span> <span class="n">mapping</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;An automatic value for `result_key` could not be determined! Specify it explicitly.&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;exact&#39;</span><span class="p">:</span>
+        
+        <span class="n">sdata</span> <span class="o">=</span> <span class="n">_split</span><span class="o">.</span><span class="n">split_beads</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">annotation</span><span class="p">,</span> <span class="n">profiles</span><span class="p">,</span> <span class="n">min_counts</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span> <span class="k">if</span> <span class="n">min_counts</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">min_counts</span><span class="p">),</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="n">delta</span><span class="p">,</span> <span class="n">scaling_jobs</span><span class="o">=</span><span class="n">scaling_jobs</span><span class="p">,</span> <span class="n">scaling_batch_size</span><span class="o">=</span><span class="n">scaling_batch_size</span><span class="p">,</span> <span class="n">rounding_batch_size</span><span class="o">=</span><span class="n">rounding_batch_size</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">map_all_genes</span><span class="o">=</span><span class="n">map_all_genes</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+
+        <span class="n">layers</span> <span class="o">=</span> <span class="n">profiles</span><span class="o">.</span><span class="n">columns</span>
+        <span class="k">if</span> <span class="n">mapping</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_split</span><span class="o">.</span><span class="n">combine_layers</span><span class="p">(</span><span class="n">sdata</span><span class="p">,</span> <span class="n">mapping</span><span class="p">,</span> <span class="n">remove_old_layers</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">layers</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">mapping</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+
+        <span class="n">mdata</span> <span class="o">=</span> <span class="n">_split</span><span class="o">.</span><span class="n">merge_layers</span><span class="p">(</span><span class="n">sdata</span><span class="p">,</span> <span class="n">layers</span><span class="p">,</span> <span class="n">merge_annotation_name</span><span class="o">=</span><span class="n">merge_key</span><span class="p">,</span> <span class="n">bead_annotation_name</span><span class="o">=</span><span class="n">obs_index_key</span><span class="p">,</span> <span class="n">min_reads</span><span class="o">=</span><span class="n">min_counts</span><span class="p">)</span>
+    
+    <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;denoise&#39;</span> <span class="ow">or</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;bulk&#39;</span><span class="p">:</span>
+        
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;bulk&#39;</span><span class="p">:</span>
+            <span class="n">mapping</span> <span class="o">=</span> <span class="s1">&#39;bulk&#39;</span>
+        
+        <span class="n">mdata</span> <span class="o">=</span> <span class="n">reconstruct_expression</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">annotation</span><span class="p">,</span> <span class="n">profiles</span><span class="p">,</span> <span class="n">mapping</span><span class="p">,</span> <span class="n">min_counts</span><span class="o">=</span><span class="n">min_counts</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="p">(</span><span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">),</span> <span class="n">merge_key</span><span class="o">=</span><span class="n">merge_key</span><span class="p">,</span> <span class="n">obs_index_key</span><span class="o">=</span><span class="n">obs_index_key</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        
+    <span class="k">else</span><span class="p">:</span>
+        
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;`mode` can only be one of [&quot;exact&quot;,&quot;denoise&quot;,&quot;bulk&quot;] but got &quot;</span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s1">&quot;!&#39;</span><span class="p">)</span>
+    
+    <span class="n">map_obs_obsm</span><span class="p">(</span><span class="n">mdata</span><span class="p">,</span> <span class="n">adata</span><span class="p">,</span> <span class="n">obs_index_key</span><span class="p">,</span> <span class="n">map_obs_keys</span><span class="o">=</span><span class="n">map_obs_keys</span><span class="p">,</span> <span class="n">map_obsm_keys</span><span class="o">=</span><span class="n">map_obsm_keys</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">mdata</span></div>
+
+
+<div class="viewcode-block" id="merge_observations">
+<a class="viewcode-back" href="../../../_autosummary/tacco.tools.merge_observations.html#tacco.tools.merge_observations">[docs]</a>
+<span class="k">def</span> <span class="nf">merge_observations</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">,</span>
+    <span class="n">obs_index_key</span><span class="p">,</span>
+    <span class="n">annotation_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">min_counts</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">mean_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Merges equivalent observations of an :class:`~anndata.AnnData` by summing</span>
+<span class="sd">    over the expression. Equivalence is determined by the values of `.obs`</span>
+<span class="sd">    columns.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adata</span>
+<span class="sd">        An :class:`~anndata.AnnData` including expression data in `.X` and</span>
+<span class="sd">        annotation in `.obs`.</span>
+<span class="sd">    obs_index_key</span>
+<span class="sd">        The primary `.obs` key to merge on. May be an original observation</span>
+<span class="sd">        index before :func:`~split_observations`.</span>
+<span class="sd">    annotation_key</span>
+<span class="sd">        An optional second `.obs` key to merge on.</span>
+<span class="sd">    min_counts</span>
+<span class="sd">        Minimum count per observation to include in the merged data.</span>
+<span class="sd">    mean_keys</span>
+<span class="sd">        The names of the columns containing numerical properties to construct</span>
+<span class="sd">        mean quantities for `.obs` columns with.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Returns an :class:`~anndata.AnnData` containing the merged expression data.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">adata</span> <span class="o">=</span> <span class="n">_split</span><span class="o">.</span><span class="n">merge_beads</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">merge_annotation_name</span><span class="o">=</span><span class="n">annotation_key</span><span class="p">,</span> <span class="n">bead_annotation_name</span><span class="o">=</span><span class="n">obs_index_key</span><span class="p">,</span> <span class="n">min_counts</span><span class="o">=</span><span class="n">min_counts</span><span class="p">,</span> <span class="n">mean_keys</span><span class="o">=</span><span class="n">mean_keys</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">adata</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

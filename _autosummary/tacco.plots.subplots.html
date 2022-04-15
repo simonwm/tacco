@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.plots.subplots &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tacco.preprocessing" href="tacco.preprocessing.html" />
+    <link rel="prev" title="tacco.plots.significances" href="tacco.plots.significances.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tacco.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tacco.benchmarking.html">tacco.benchmarking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.get.html">tacco.get</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="tacco.plots.html">tacco.plots</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="tacco.plots.annotated_heatmap.html">tacco.plots.annotated_heatmap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.plots.annotation_coordinate.html">tacco.plots.annotation_coordinate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.plots.cellsize.html">tacco.plots.cellsize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.plots.co_occurrence.html">tacco.plots.co_occurrence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.plots.co_occurrence_matrix.html">tacco.plots.co_occurrence_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.plots.comparison.html">tacco.plots.comparison</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.plots.compositions.html">tacco.plots.compositions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.plots.contribution.html">tacco.plots.contribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.plots.dotplot.html">tacco.plots.dotplot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.plots.frequency.html">tacco.plots.frequency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.plots.frequency_bar.html">tacco.plots.frequency_bar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.plots.get_default_colors.html">tacco.plots.get_default_colors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.plots.heatmap.html">tacco.plots.heatmap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.plots.mix_base_colors.html">tacco.plots.mix_base_colors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.plots.scatter.html">tacco.plots.scatter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.plots.sigmap.html">tacco.plots.sigmap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.plots.significances.html">tacco.plots.significances</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">tacco.plots.subplots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tacco.plots.subplots"><code class="docutils literal notranslate"><span class="pre">subplots()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.preprocessing.html">tacco.preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.testing.html">tacco.testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.tools.html">tacco.tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.utils.html">tacco.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.sum.html">tacco.sum</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="tacco.html">tacco</a></li>
+          <li class="breadcrumb-item"><a href="tacco.plots.html">tacco.plots</a></li>
+      <li class="breadcrumb-item active">tacco.plots.subplots</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tacco-plots-subplots">
+<h1>tacco.plots.subplots<a class="headerlink" href="#tacco-plots-subplots" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="tacco.plots.subplots">
+<span class="sig-name descname"><span class="pre">subplots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(5,</span> <span class="pre">5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hspace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wspace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sharex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sharey</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width_ratios</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height_ratios</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_shifts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_shifts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tacco/plots/_plots.html#subplots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tacco.plots.subplots" title="Link to this definition">¶</a></dt>
+<dd><p>Creates a new figure with a grid of subplots.
+This is a convenience wrapper around <a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots.html#matplotlib.pyplot.subplots" title="(in Matplotlib v3.8.2)"><code class="xref py py-func docutils literal notranslate"><span class="pre">matplotlib.pyplot.subplots()</span></code></a>
+with parameters for axis instead of figure and absolute instead of relative
+units.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_x</strong> – Number of plots in horizontal/x direction</p></li>
+<li><p><strong>n_y</strong> – Number of plots in vertical/y direction</p></li>
+<li><p><strong>axsize</strong> – Size of a single axis in the plot</p></li>
+<li><p><strong>hspace</strong> – Relative vertical spacing between plots</p></li>
+<li><p><strong>wspace</strong> – Relative horizontal spacing between plots</p></li>
+<li><p><strong>x_padding</strong> – Absolute horizontal spacing between plots; this setting overrides
+<cite>wspace</cite>; if <cite>None</cite>, use the value from <cite>wspace</cite></p></li>
+<li><p><strong>y_padding</strong> – Absolute vertical spacing between plots; this setting overrides
+<cite>hspace</cite>; if <cite>None</cite>, use the value from <cite>hspace</cite></p></li>
+<li><p><strong>title</strong> – Sets the figure suptitle</p></li>
+<li><p><strong>sharex</strong> – Parameter for sharing the x-axes between the subplots; see the
+documentation of <a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots.html#matplotlib.pyplot.subplots" title="(in Matplotlib v3.8.2)"><code class="xref py py-func docutils literal notranslate"><span class="pre">matplotlib.pyplot.subplots()</span></code></a></p></li>
+<li><p><strong>sharey</strong> – Parameter for sharing the y-axes between the subplots; see the
+documentation of <a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots.html#matplotlib.pyplot.subplots" title="(in Matplotlib v3.8.2)"><code class="xref py py-func docutils literal notranslate"><span class="pre">matplotlib.pyplot.subplots()</span></code></a></p></li>
+<li><p><strong>width_ratios</strong> – Sets the ratios of widths for the columns of the subplot grid keeping
+the width of the widest column; if <cite>None</cite>, all columns have the same
+width</p></li>
+<li><p><strong>height_ratios</strong> – Sets the ratios of heights for the rows of the subplot grid keeping the
+height of the highest row; if <cite>None</cite>, all rows have the same height</p></li>
+<li><p><strong>x_shifts</strong> – The absolute shifts in position in horizontal/x direction per column of
+subplots; if <cite>None</cite>, the columns are not shifted</p></li>
+<li><p><strong>y_shifts</strong> – The absolute shifts in position in vertical/y direction per row of
+subplots; if <cite>None</cite>, the rows are not shifted</p></li>
+<li><p><strong>dpi</strong> – The dpi setting to use for this figure</p></li>
+<li><p><strong>**kwargs</strong> – Extra keyword arguments are forwarded to
+<a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots.html#matplotlib.pyplot.subplots" title="(in Matplotlib v3.8.2)"><code class="xref py py-func docutils literal notranslate"><span class="pre">matplotlib.pyplot.subplots()</span></code></a></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A pair of the created <a class="reference external" href="https://matplotlib.org/stable/api/figure_api.html#matplotlib.figure.Figure" title="(in Matplotlib v3.8.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Figure</span></code></a> and an 2d    <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a> of <a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes" title="(in Matplotlib v3.8.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Axes</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tacco.plots.significances.html" class="btn btn-neutral float-left" title="tacco.plots.significances" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tacco.preprocessing.html" class="btn btn-neutral float-right" title="tacco.preprocessing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

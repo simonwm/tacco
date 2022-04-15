@@ -1,0 +1,6 @@
+tacco.plots.significances
+=========================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: significances

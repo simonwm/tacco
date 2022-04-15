@@ -1,0 +1,6 @@
+tacco.utils.get\_first\_principal\_axis
+=======================================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: get_first_principal_axis

@@ -1,0 +1,6 @@
+tacco.plots.annotated\_heatmap
+==============================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: annotated_heatmap

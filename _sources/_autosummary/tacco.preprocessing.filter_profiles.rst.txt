@@ -1,0 +1,6 @@
+tacco.preprocessing.filter\_profiles
+====================================
+
+.. currentmodule:: tacco.preprocessing
+
+.. autofunction:: filter_profiles

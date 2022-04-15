@@ -1,0 +1,52 @@
+tacco.tools
+===========
+
+.. automodule:: tacco.tools
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      affinity
+      annotate
+      annotate_NMFreg
+      annotate_OT
+      annotate_RCTD
+      annotate_SingleR
+      annotate_nnls
+      annotate_novosparc
+      annotate_projection
+      annotate_single_molecules
+      annotate_svm
+      annotate_tangram
+      annotate_wot
+      annotation_coordinate
+      co_occurrence
+      co_occurrence_matrix
+      distance_matrix
+      distribute_molecules
+      enrichments
+      fill_regions
+      find_regions
+      get_compositions
+      get_contributions
+      merge_observations
+      mix_in_silico
+      run_goa_analysis
+      run_orthology_converter
+      segment
+      setup_goa_analysis
+      setup_orthology_converter
+      spectral_clustering
+      split_observations
+   
+   
+   

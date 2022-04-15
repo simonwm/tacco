@@ -1,0 +1,6 @@
+tacco.plots.get\_default\_colors
+================================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: get_default_colors

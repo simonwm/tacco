@@ -1,0 +1,6 @@
+tacco.tools.annotate\_svm
+=========================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: annotate_svm

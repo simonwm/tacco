@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.utils &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tacco.utils.AnnData_query" href="tacco.utils.AnnData_query.html" />
+    <link rel="prev" title="tacco.tools.split_observations" href="tacco.tools.split_observations.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tacco.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tacco.benchmarking.html">tacco.benchmarking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.get.html">tacco.get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.plots.html">tacco.plots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.preprocessing.html">tacco.preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.testing.html">tacco.testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.tools.html">tacco.tools</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">tacco.utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.AnnData_query.html">tacco.utils.AnnData_query</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.anndata2dataframe.html">tacco.utils.anndata2dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.bin.html">tacco.utils.bin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.cdist.html">tacco.utils.cdist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.col_scale.html">tacco.utils.col_scale</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.complete_choice.html">tacco.utils.complete_choice</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.coo_tocsr_buffered.html">tacco.utils.coo_tocsr_buffered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.coo_tocsr_inplace.html">tacco.utils.coo_tocsr_inplace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.cpu_count.html">tacco.utils.cpu_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.dataframe2anndata.html">tacco.utils.dataframe2anndata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.dense_distance_matrix.html">tacco.utils.dense_distance_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.divide.html">tacco.utils.divide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.find_unused_key.html">tacco.utils.find_unused_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.fishers_exact.html">tacco.utils.fishers_exact</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.flat_inverse_mapping.html">tacco.utils.flat_inverse_mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.gemmT.html">tacco.utils.gemmT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.generate_mixture_profiles.html">tacco.utils.generate_mixture_profiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.get_average_profiles.html">tacco.utils.get_average_profiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.get_balanced_separated_intervals.html">tacco.utils.get_balanced_separated_intervals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.get_first_principal_axis.html">tacco.utils.get_first_principal_axis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.get_maximum_annotation.html">tacco.utils.get_maximum_annotation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.get_sum.html">tacco.utils.get_sum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.hash.html">tacco.utils.hash</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.heapsort3.html">tacco.utils.heapsort3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.log.html">tacco.utils.log</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.log1p.html">tacco.utils.log1p</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.mannwhitneyu.html">tacco.utils.mannwhitneyu</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.merge_annotation.html">tacco.utils.merge_annotation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.merge_colors.html">tacco.utils.merge_colors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.min_dtype.html">tacco.utils.min_dtype</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.mode.html">tacco.utils.mode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.parallel_nnls.html">tacco.utils.parallel_nnls</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.preprocess_single_cell_data.html">tacco.utils.preprocess_single_cell_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.projection.html">tacco.utils.projection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.row_scale.html">tacco.utils.row_scale</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.scale_counts.html">tacco.utils.scale_counts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.solve_OT.html">tacco.utils.solve_OT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.sparse_distance_matrix.html">tacco.utils.sparse_distance_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.sparse_result_gemmT.html">tacco.utils.sparse_result_gemmT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.spatial_split.html">tacco.utils.spatial_split</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.split_spatial_samples.html">tacco.utils.split_spatial_samples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.sqrt.html">tacco.utils.sqrt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.studentttest.html">tacco.utils.studentttest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.tsne_single_cell_data.html">tacco.utils.tsne_single_cell_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.umap_single_cell_data.html">tacco.utils.umap_single_cell_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.welchttest.html">tacco.utils.welchttest</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.write_adata_x_var_obs.html">tacco.utils.write_adata_x_var_obs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.sum.html">tacco.sum</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="tacco.html">tacco</a></li>
+      <li class="breadcrumb-item active">tacco.utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-tacco.utils">
+<span id="tacco-utils"></span><h1>tacco.utils<a class="headerlink" href="#module-tacco.utils" title="Link to this heading">¶</a></h1>
+<p>General utility functions</p>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.AnnData_query.html#tacco.utils.AnnData_query" title="tacco.utils.AnnData_query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AnnData_query</span></code></a></p></td>
+<td><p>Query the columns of <cite>.obs</cite> of an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> with a boolean expression and use the result to subset the <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.anndata2dataframe.html#tacco.utils.anndata2dataframe" title="tacco.utils.anndata2dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">anndata2dataframe</span></code></a></p></td>
+<td><p>Creates a long form <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> from an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.bin.html#tacco.utils.bin" title="tacco.utils.bin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bin</span></code></a></p></td>
+<td><p>Bins points in position space.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.cdist.html#tacco.utils.cdist" title="tacco.utils.cdist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cdist</span></code></a></p></td>
+<td><p>Calclulate a dense pairwise distance matrix of sparse and dense inputs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.col_scale.html#tacco.utils.col_scale" title="tacco.utils.col_scale"><code class="xref py py-obj docutils literal notranslate"><span class="pre">col_scale</span></code></a></p></td>
+<td><p>Rescales columns of dense or sparse matrix inplace.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.complete_choice.html#tacco.utils.complete_choice" title="tacco.utils.complete_choice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">complete_choice</span></code></a></p></td>
+<td><p>Similar to <a class="reference external" href="https://numpy.org/doc/stable/reference/random/generated/numpy.random.choice.html#numpy.random.choice" title="(in NumPy v1.26)"><code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.random.choice()</span></code></a> with <cite>replace=False</cite>, but with special behaviour for <cite>size&gt;a.shape[0]</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.coo_tocsr_buffered.html#tacco.utils.coo_tocsr_buffered" title="tacco.utils.coo_tocsr_buffered"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coo_tocsr_buffered</span></code></a></p></td>
+<td><p>Converts a sparse matrix in coo format into a sparse matrix in csr format consuming less memory than working in-memory by using hard disc buffer.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.coo_tocsr_inplace.html#tacco.utils.coo_tocsr_inplace" title="tacco.utils.coo_tocsr_inplace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coo_tocsr_inplace</span></code></a></p></td>
+<td><p>Converts a sparse matrix in coo format into a sparse matrix in csr format without allocating huge temporaries by reusing the memory of the input coo matrix.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.cpu_count.html#tacco.utils.cpu_count" title="tacco.utils.cpu_count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cpu_count</span></code></a></p></td>
+<td><p>Return the number of available CPU cores.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.dataframe2anndata.html#tacco.utils.dataframe2anndata" title="tacco.utils.dataframe2anndata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dataframe2anndata</span></code></a></p></td>
+<td><p>Creates an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> from a long form <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.1.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.dense_distance_matrix.html#tacco.utils.dense_distance_matrix" title="tacco.utils.dense_distance_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dense_distance_matrix</span></code></a></p></td>
+<td><p>Calclulate a dense pairwise euclidean distance matrix of dense inputs.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.divide.html#tacco.utils.divide" title="tacco.utils.divide"><code class="xref py py-obj docutils literal notranslate"><span class="pre">divide</span></code></a></p></td>
+<td><p>Calculates division <cite>out = a / b</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.find_unused_key.html#tacco.utils.find_unused_key" title="tacco.utils.find_unused_key"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_unused_key</span></code></a></p></td>
+<td><p>Finds an unused key.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.fishers_exact.html#tacco.utils.fishers_exact" title="tacco.utils.fishers_exact"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fishers_exact</span></code></a></p></td>
+<td><p>Perform Fisher's exact test.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.flat_inverse_mapping.html#tacco.utils.flat_inverse_mapping" title="tacco.utils.flat_inverse_mapping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">flat_inverse_mapping</span></code></a></p></td>
+<td><p>Given a condensed mapping construct a flat inverse mapping.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.gemmT.html#tacco.utils.gemmT" title="tacco.utils.gemmT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gemmT</span></code></a></p></td>
+<td><p>Perform a matrix-matrix multiplication A &#64; B.T for arbitrary sparseness of A and B in parallel.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.generate_mixture_profiles.html#tacco.utils.generate_mixture_profiles" title="tacco.utils.generate_mixture_profiles"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_mixture_profiles</span></code></a></p></td>
+<td><p>Creates symmetric pairwise mixture profiles.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.get_average_profiles.html#tacco.utils.get_average_profiles" title="tacco.utils.get_average_profiles"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_average_profiles</span></code></a></p></td>
+<td><p>Get average profiles for a certain annotation from a reference <code class="xref py py-class docutils literal notranslate"><span class="pre">Anndata</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.get_balanced_separated_intervals.html#tacco.utils.get_balanced_separated_intervals" title="tacco.utils.get_balanced_separated_intervals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_balanced_separated_intervals</span></code></a></p></td>
+<td><p>Find the approximations of intervals with equal number of points in each interval which keep a specified minimum separation between them.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.get_first_principal_axis.html#tacco.utils.get_first_principal_axis" title="tacco.utils.get_first_principal_axis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_first_principal_axis</span></code></a></p></td>
+<td><p>Get the first principal axis of a set of points.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.get_maximum_annotation.html#tacco.utils.get_maximum_annotation" title="tacco.utils.get_maximum_annotation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_maximum_annotation</span></code></a></p></td>
+<td><p>Turns a soft annotation into a categorical annotation by reporting the annotation categories with the maximum values per oberservation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.get_sum.html#tacco.utils.get_sum" title="tacco.utils.get_sum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_sum</span></code></a></p></td>
+<td><p>Calculates the sum of a sparse matrix or array-like in a specified axis and returns a flattened result.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.hash.html#tacco.utils.hash" title="tacco.utils.hash"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hash</span></code></a></p></td>
+<td><p>Create collision-free hash of several categorical columns by lexicograhical indexing.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.heapsort3.html#tacco.utils.heapsort3" title="tacco.utils.heapsort3"><code class="xref py py-obj docutils literal notranslate"><span class="pre">heapsort3</span></code></a></p></td>
+<td><p>Sorts an array in-place while following the reordering of the elements in two other arrays.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.log.html#tacco.utils.log" title="tacco.utils.log"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log</span></code></a></p></td>
+<td><p>Calculates log inplace and in parallel.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.log1p.html#tacco.utils.log1p" title="tacco.utils.log1p"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log1p</span></code></a></p></td>
+<td><p>Calculates log1p inplace and in parallel.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.mannwhitneyu.html#tacco.utils.mannwhitneyu" title="tacco.utils.mannwhitneyu"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mannwhitneyu</span></code></a></p></td>
+<td><p>Perform Mann-Whitney-U test.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.merge_annotation.html#tacco.utils.merge_annotation" title="tacco.utils.merge_annotation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_annotation</span></code></a></p></td>
+<td><p>Merges annotation into coarser groups, e.g. from subtypes to types.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.merge_colors.html#tacco.utils.merge_colors" title="tacco.utils.merge_colors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_colors</span></code></a></p></td>
+<td><p>Merges a dict-like of colors into coarser colors.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.min_dtype.html#tacco.utils.min_dtype" title="tacco.utils.min_dtype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_dtype</span></code></a></p></td>
+<td><p>Gives the smallest signed integer dtype which is necessary to represent <cite>maximum</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.mode.html#tacco.utils.mode" title="tacco.utils.mode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mode</span></code></a></p></td>
+<td><p>Calculates the most frequent value per row in a dataframe.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.parallel_nnls.html#tacco.utils.parallel_nnls" title="tacco.utils.parallel_nnls"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parallel_nnls</span></code></a></p></td>
+<td><p>Runs multiple nnls in parallel.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.preprocess_single_cell_data.html#tacco.utils.preprocess_single_cell_data" title="tacco.utils.preprocess_single_cell_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocess_single_cell_data</span></code></a></p></td>
+<td><p>Preprocess single cell data in a standardized way from bare counts as input.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.projection.html#tacco.utils.projection" title="tacco.utils.projection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">projection</span></code></a></p></td>
+<td><p>Calculate pairwise normalized projections of sparse and dense inputs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.row_scale.html#tacco.utils.row_scale" title="tacco.utils.row_scale"><code class="xref py py-obj docutils literal notranslate"><span class="pre">row_scale</span></code></a></p></td>
+<td><p>Rescales rows of dense or sparse matrix inplace.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.scale_counts.html#tacco.utils.scale_counts" title="tacco.utils.scale_counts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scale_counts</span></code></a></p></td>
+<td><p>Scales the count matrix in an <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> in various locations inplace.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.solve_OT.html#tacco.utils.solve_OT" title="tacco.utils.solve_OT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">solve_OT</span></code></a></p></td>
+<td><p>Solve optimal transport problem with entropy regularization and optionally Kullback-Leibler divergence penalty terms instead of exact marginal conservation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.sparse_distance_matrix.html#tacco.utils.sparse_distance_matrix" title="tacco.utils.sparse_distance_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sparse_distance_matrix</span></code></a></p></td>
+<td><p>Calclulate a sparse pairwise distance matrix of dense inputs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.sparse_result_gemmT.html#tacco.utils.sparse_result_gemmT" title="tacco.utils.sparse_result_gemmT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sparse_result_gemmT</span></code></a></p></td>
+<td><p>Perform a dense matrix-matrix multiplication A &#64; B.T for the case when only a sparse subset of the result is needed.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.spatial_split.html#tacco.utils.spatial_split" title="tacco.utils.spatial_split"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spatial_split</span></code></a></p></td>
+<td><p>Splits a dataset into spatial patches balancing the number of observations per split.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.split_spatial_samples.html#tacco.utils.split_spatial_samples" title="tacco.utils.split_spatial_samples"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_spatial_samples</span></code></a></p></td>
+<td><p>Splits a dataset into separated spatial patches.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.sqrt.html#tacco.utils.sqrt" title="tacco.utils.sqrt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sqrt</span></code></a></p></td>
+<td><p>Calculates sqrt inplace and in parallel.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.studentttest.html#tacco.utils.studentttest" title="tacco.utils.studentttest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">studentttest</span></code></a></p></td>
+<td><p>Perform Student's t test.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.tsne_single_cell_data.html#tacco.utils.tsne_single_cell_data" title="tacco.utils.tsne_single_cell_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tsne_single_cell_data</span></code></a></p></td>
+<td><p>Preprocess single cell data in a standardized way from bare counts as input and include the generation of a tsne embedding.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.umap_single_cell_data.html#tacco.utils.umap_single_cell_data" title="tacco.utils.umap_single_cell_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">umap_single_cell_data</span></code></a></p></td>
+<td><p>Preprocess single cell data in a standardized way from bare counts as input and include the generation of a umap embedding.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tacco.utils.welchttest.html#tacco.utils.welchttest" title="tacco.utils.welchttest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">welchttest</span></code></a></p></td>
+<td><p>Perform Welch's t test.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tacco.utils.write_adata_x_var_obs.html#tacco.utils.write_adata_x_var_obs" title="tacco.utils.write_adata_x_var_obs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_adata_x_var_obs</span></code></a></p></td>
+<td><p>Write only <cite>.X</cite>, <cite>.obs</cite>, and <cite>.var</cite> to an <cite>.h5ad</cite> file.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tacco.tools.split_observations.html" class="btn btn-neutral float-left" title="tacco.tools.split_observations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tacco.utils.AnnData_query.html" class="btn btn-neutral float-right" title="tacco.utils.AnnData_query" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

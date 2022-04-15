@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.tools.find_regions &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=ad0ac74c" />
+      <link rel="stylesheet" type="text/css" href="../_static/readthedocs-custom.css?v=c8300288" />
+      <link rel="stylesheet" type="text/css" href="../_static/notebook_hacks.css?v=e4ce2130" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tacco.tools.get_compositions" href="tacco.tools.get_compositions.html" />
+    <link rel="prev" title="tacco.tools.fill_regions" href="tacco.tools.fill_regions.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tacco.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tacco.benchmarking.html">tacco.benchmarking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.get.html">tacco.get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.plots.html">tacco.plots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.preprocessing.html">tacco.preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.testing.html">tacco.testing</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="tacco.tools.html">tacco.tools</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.affinity.html">tacco.tools.affinity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate.html">tacco.tools.annotate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_NMFreg.html">tacco.tools.annotate_NMFreg</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_OT.html">tacco.tools.annotate_OT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_RCTD.html">tacco.tools.annotate_RCTD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_SingleR.html">tacco.tools.annotate_SingleR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_nnls.html">tacco.tools.annotate_nnls</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_novosparc.html">tacco.tools.annotate_novosparc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_projection.html">tacco.tools.annotate_projection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_single_molecules.html">tacco.tools.annotate_single_molecules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_svm.html">tacco.tools.annotate_svm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_tangram.html">tacco.tools.annotate_tangram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotate_wot.html">tacco.tools.annotate_wot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.annotation_coordinate.html">tacco.tools.annotation_coordinate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.co_occurrence.html">tacco.tools.co_occurrence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.co_occurrence_matrix.html">tacco.tools.co_occurrence_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.distance_matrix.html">tacco.tools.distance_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.distribute_molecules.html">tacco.tools.distribute_molecules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.enrichments.html">tacco.tools.enrichments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.fill_regions.html">tacco.tools.fill_regions</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">tacco.tools.find_regions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tacco.tools.find_regions"><code class="docutils literal notranslate"><span class="pre">find_regions()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.get_compositions.html">tacco.tools.get_compositions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.get_contributions.html">tacco.tools.get_contributions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.merge_observations.html">tacco.tools.merge_observations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.mix_in_silico.html">tacco.tools.mix_in_silico</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.run_goa_analysis.html">tacco.tools.run_goa_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.run_orthology_converter.html">tacco.tools.run_orthology_converter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.segment.html">tacco.tools.segment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.setup_goa_analysis.html">tacco.tools.setup_goa_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.setup_orthology_converter.html">tacco.tools.setup_orthology_converter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.spectral_clustering.html">tacco.tools.spectral_clustering</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.tools.split_observations.html">tacco.tools.split_observations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.utils.html">tacco.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.sum.html">tacco.sum</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="tacco.html">tacco</a></li>
+          <li class="breadcrumb-item"><a href="tacco.tools.html">tacco.tools</a></li>
+      <li class="breadcrumb-item active">tacco.tools.find_regions</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tacco-tools-find-regions">
+<h1>tacco.tools.find_regions<a class="headerlink" href="#tacco-tools-find-regions" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="tacco.tools.find_regions">
+<span class="sig-name descname"><span class="pre">find_regions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_added</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'region'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotation_connectivity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotation_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position_connectivity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('x',</span> <span class="pre">'y')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_position_distance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitudes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_batch_overweight_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw_args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tacco/tools/_find_regions.html#find_regions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tacco.tools.find_regions" title="Link to this definition">¶</a></dt>
+<dd><p>Find regions in position space defined by proximity in position space and
+in expression (or annotation) space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>adata</strong> – An <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.1.dev51+ge883db2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> including expression data in <cite>.X</cite> and
+profiles in <cite>.varm</cite> and/or annotation in <cite>.obs</cite> or <cite>.obsm</cite>.</p></li>
+<li><p><strong>key_added</strong> – The <cite>.obs</cite> key where the resulting regions are written to. It is also
+used to determine where new neighbour and connectivity results should
+be written to, see parameters <cite>connectivity</cite> and
+<cite>position_connectivity</cite>.</p></li>
+<li><p><strong>batch_key</strong> – The <cite>.obs</cite> key with categorical batch information. The expression
+connectivity is then balanced within and between batches. If <cite>None</cite>, a
+single batch is assumed.</p></li>
+<li><p><strong>position_weight</strong> – The weight of the position connectivity compared to the expression
+connectivity.</p></li>
+<li><p><strong>resolution</strong> – The clustering resolution.</p></li>
+<li><p><strong>annotation_connectivity</strong> – The <cite>.obsp</cite> key where the precomputed expression connectivity can be
+found. If <cite>None</cite>, a new connectivity is computed with
+<a class="reference external" href="https://scanpy.readthedocs.io/en/stable/generated/scanpy.pp.neighbors.html#scanpy.pp.neighbors" title="(in Scanpy v0.1.0.dev)"><code class="xref py py-func docutils literal notranslate"><span class="pre">neighbors()</span></code></a> and default parameters and then saved
+under “nn_&lt;key_added&gt;_annotation”.</p></li>
+<li><p><strong>annotation_key</strong> – The <cite>.obsm</cite> key containing data to use instead of expression. If
+<cite>None</cite>, use expression data.</p></li>
+<li><p><strong>position_connectivity</strong> – The <cite>.obsp</cite> key where the precomputed position connectivity can be
+found. If <cite>None</cite>, a new connectivity is computed with
+<a class="reference external" href="https://scanpy.readthedocs.io/en/stable/generated/scanpy.pp.neighbors.html#scanpy.pp.neighbors" title="(in Scanpy v0.1.0.dev)"><code class="xref py py-func docutils literal notranslate"><span class="pre">scanpy.pp.neighbors()</span></code></a> and default parameters and then saved
+under “nn_&lt;key_added&gt;_position”.</p></li>
+<li><p><strong>position_key</strong> – The <cite>.obsm</cite> key or array-like of <cite>.obs</cite> keys with the position space
+coordinates</p></li>
+<li><p><strong>batch_position_distance</strong> – The additional position distance to apply to observations between
+batches. If <cite>None</cite>, it is taken much larger than any distance within a
+batch.</p></li>
+<li><p><strong>amplitudes</strong> – Whether to treat the annotation as probabilities and calculate
+amplitudes from them</p></li>
+<li><p><strong>cross_batch_overweight_factor</strong> – The factor to increase cross batch connection weight over within batch
+connections.</p></li>
+<li><p><strong>**kw_args</strong> – Additional key word arguments are forwarded to
+<a class="reference external" href="https://scanpy.readthedocs.io/en/stable/generated/scanpy.pp.neighbors.html#scanpy.pp.neighbors" title="(in Scanpy v0.1.0.dev)"><code class="xref py py-func docutils literal notranslate"><span class="pre">neighbors()</span></code></a>. Particularly interesting is probably
+<cite>n_neighbors</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The updated input <cite>adata</cite> containing e.g. the <cite>obs[key_added]</cite> containing    the region information.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tacco.tools.fill_regions.html" class="btn btn-neutral float-left" title="tacco.tools.fill_regions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tacco.tools.get_compositions.html" class="btn btn-neutral float-right" title="tacco.tools.get_compositions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
