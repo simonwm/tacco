@@ -1,0 +1,41 @@
+tacco.utils.math
+================
+
+.. automodule:: tacco.utils.math
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      _cscdense_gemm_dense
+      _csrcsr_gemm_dense
+      _densecsr_gemm_dense
+      _divide_parallel
+      _divide_serial
+      _log
+      _log1p
+      _sparse_result_gemmT
+      _sparse_result_gemmT_serial
+      _sqrt
+      cast_down_common
+      col_scale
+      divide
+      gemmT
+      get_sum
+      integrate_mean
+      log
+      log1p
+      row_scale
+      sparse_result_gemmT
+      sqrt
+   
+   
+   

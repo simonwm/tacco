@@ -1,0 +1,6 @@
+tacco.plots.dr\_split
+=====================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: dr_split

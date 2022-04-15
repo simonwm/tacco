@@ -1,0 +1,22 @@
+tacco.eval
+==========
+
+.. automodule:: tacco.eval
+
+   
+   
+   .. rubric:: Modules
+
+   .. autosummary::
+      :toctree:
+      :template: custom-module-template.rst
+      :recursive:
+   
+      tacco.eval.score_error
+   
+   
+
+   
+   
+   
+   

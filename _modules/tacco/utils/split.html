@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.utils.split &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/readthedocs-custom.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/notebook_hacks.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html">
+            <img src="../../../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/tacco.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>tacco.utils.split</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tacco.utils.split</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">njit</span><span class="p">,</span> <span class="n">prange</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">issparse</span><span class="p">,</span> <span class="n">hstack</span><span class="p">,</span> <span class="n">vstack</span><span class="p">,</span> <span class="n">coo_matrix</span><span class="p">,</span> <span class="n">csr_matrix</span>
+<span class="kn">import</span> <span class="nn">anndata</span> <span class="k">as</span> <span class="nn">ad</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">PCG64</span>
+<span class="kn">import</span> <span class="nn">joblib</span>
+<span class="kn">from</span> <span class="nn">._utils</span> <span class="kn">import</span> <span class="n">cpu_count</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">math</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">gc</span>
+
+<div class="viewcode-block" id="matrix_scaling"><a class="viewcode-back" href="../../../_autosummary/tacco.utils.split.matrix_scaling.html#tacco.utils.split.matrix_scaling">[docs]</a><span class="k">def</span> <span class="nf">matrix_scaling</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span> <span class="n">min_iter</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">check_iter</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">total_u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">total_v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="n">total_u</span> <span class="o">-</span> <span class="n">total_v</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">total_u</span> <span class="o">+</span> <span class="n">total_v</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">1e-5</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;&quot;u&quot; and &quot;v&quot; dont seem to be normalized identically! Make sure that the rows of u have the same sums as the columns of v.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;&quot;x&quot; has zero-only columns!&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;&quot;x&quot; has zero-only rows!&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">u</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">tocoo</span><span class="p">()</span>
+        <span class="n">u_data</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">a</span><span class="o">.</span><span class="n">data</span> <span class="o">*=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iter</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="n">min_iter</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+                <span class="n">_a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+            <span class="n">math</span><span class="o">.</span><span class="n">sparse_result_gemmT</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">math</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">u_data</span><span class="p">,</span><span class="n">a</span><span class="o">.</span><span class="n">data</span><span class="p">,</span><span class="n">out</span><span class="o">=</span><span class="n">a</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">temp2</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="nd">@x</span> <span class="c1"># tocsr is not necessary but marginally faster than directly using the coo format in the matrix multiplication</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">temp1</span> <span class="o">=</span> <span class="n">x</span><span class="o">@</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            <span class="n">math</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">temp1</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">temp2</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="nd">@x</span>
+            
+        <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="n">min_iter</span><span class="p">:</span>
+            <span class="n">_b</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        
+        <span class="n">math</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">temp2</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">b</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        
+        <span class="c1"># The convergence criterion is in principle defined per problem, i.e. per bead.</span>
+        <span class="c1"># We nevertheless run the algorithm for the whole batch for simplicity until every bead converges.</span>
+        <span class="c1"># In effect this also give a little bonus accuracy for the earlier converging beads. </span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="n">min_iter</span> <span class="ow">and</span> <span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="n">min_iter</span><span class="p">)</span> <span class="o">%</span> <span class="n">check_iter</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">nonzero</span> <span class="o">=</span> <span class="n">b</span> <span class="o">!=</span> <span class="mi">0</span>
+            <span class="n">b_rel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">_b</span><span class="p">[</span><span class="n">nonzero</span><span class="p">]</span><span class="o">/</span><span class="n">b</span><span class="p">[</span><span class="n">nonzero</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="c1"># check only b first: ntypes &lt;&lt; ngenes</span>
+            <span class="k">if</span> <span class="n">b_rel</span> <span class="o">&lt;</span> <span class="n">delta</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+                    <span class="n">a_rel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">_a</span><span class="o">/</span><span class="n">a</span><span class="o">.</span><span class="n">data</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">nonzero</span> <span class="o">=</span> <span class="n">a</span> <span class="o">!=</span> <span class="mi">0</span>
+                    <span class="n">a_rel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">_a</span><span class="p">[</span><span class="n">nonzero</span><span class="p">]</span><span class="o">/</span><span class="n">a</span><span class="p">[</span><span class="n">nonzero</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">a_rel</span> <span class="o">&lt;</span> <span class="n">delta</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+    <span class="c1"># Depending on the batch size the deltas change sometimes unpredictably - which should not happen, as the calculations for the beads should be (mostly) independent.</span>
+    <span class="c1"># Therefore TODO: investigate what is going on.</span>
+    <span class="c1"># But the variation has no (visible?) effect on the results, so it is not urgent...</span>
+    <span class="c1">#print(&#39;niter&#39;, i, &#39;b_rel&#39;, b_rel, &#39;a_rel&#39;, a_rel)</span>
+        
+    <span class="k">return</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span></div>
+
+<div class="viewcode-block" id="parallel_matrix_scaling"><a class="viewcode-back" href="../../../_autosummary/tacco.utils.split.parallel_matrix_scaling.html#tacco.utils.split.parallel_matrix_scaling">[docs]</a><span class="k">def</span> <span class="nf">parallel_matrix_scaling</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span> <span class="n">min_iter</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">check_iter</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">n_jobs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">n_jobs</span> <span class="o">=</span> <span class="n">cpu_count</span><span class="p">()</span>
+    
+    <span class="n">result</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)(</span>
+        <span class="n">joblib</span><span class="o">.</span><span class="n">delayed</span><span class="p">(</span><span class="n">matrix_scaling</span><span class="p">)(</span><span class="n">x</span><span class="p">,</span><span class="n">u</span><span class="p">[:,</span><span class="n">batch</span><span class="p">:(</span><span class="n">batch</span><span class="o">+</span><span class="n">batch_size</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span><span class="n">v</span><span class="p">[</span><span class="n">batch</span><span class="p">:(</span><span class="n">batch</span><span class="o">+</span><span class="n">batch_size</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">min_iter</span><span class="o">=</span><span class="n">min_iter</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="n">max_iter</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="n">delta</span><span class="p">,</span> <span class="n">check_iter</span><span class="o">=</span><span class="n">check_iter</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">batch_size</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">u</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">hstack</span><span class="p">([</span><span class="n">_a</span> <span class="k">for</span> <span class="n">_a</span><span class="p">,</span><span class="n">_b</span> <span class="ow">in</span> <span class="n">result</span><span class="p">])</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">tocsc</span><span class="p">()</span> <span class="c1"># this is necessary to have really identical results excluding all permutations of entries arising from concatenating several .coo matrices.</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">_a</span> <span class="k">for</span> <span class="n">_a</span><span class="p">,</span><span class="n">_b</span> <span class="ow">in</span> <span class="n">result</span><span class="p">])</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">_b</span> <span class="k">for</span> <span class="n">_a</span><span class="p">,</span><span class="n">_b</span> <span class="ow">in</span> <span class="n">result</span><span class="p">])</span>
+    
+    <span class="c1">#print(hash(a.indices.tobytes()),hash(a.indptr.tobytes()),hash(a.data.tobytes()),hash(b.tobytes()))</span>
+    
+    <span class="k">return</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span></div>
+
+<div class="viewcode-block" id="_scale"><a class="viewcode-back" href="../../../_autosummary/tacco.utils.split._scale.html#tacco.utils.split._scale">[docs]</a><span class="k">def</span> <span class="nf">_scale</span><span class="p">(</span><span class="n">cx</span><span class="p">,</span><span class="n">bead_type_map</span><span class="p">,</span><span class="n">type_profiles</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># implements RAS algorithm in the factor estimation version https://en.wikipedia.org/wiki/Iterative_proportional_fitting</span>
+    <span class="c1"># with custom optimizations</span>
+    <span class="c1"># background to matrix scaling: https://arxiv.org/pdf/1609.06349.pdf</span>
+
+    <span class="c1"># chunksize has an effect (of about the level as a different random seed) on the results as it influences the set on of the stopping criteria for the matrix scaling</span>
+    
+    <span class="c1"># bead_type_map may have zero elements, possibly leading to unsolvable situations for the matrix scaling</span>
+    <span class="c1"># e.g. some gene is only expressed by a single celltype and there is a read at a given bead, but counts_per_bead_and_type says there is less than 1 read expected of a given celltype.</span>
+    <span class="c1"># workaround: add epsilon expression probability for every gene in every celltype</span>
+    <span class="n">type_profiles</span> <span class="o">=</span> <span class="n">type_profiles</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">type_profiles</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e-3</span>
+    <span class="n">type_profiles</span> <span class="o">=</span> <span class="n">type_profiles</span> <span class="o">/</span> <span class="n">type_profiles</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="n">cx</span> <span class="o">=</span> <span class="n">cx</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">counts_per_bead_and_gene</span> <span class="o">=</span> <span class="n">cx</span>
+    <span class="n">counts_per_bead</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">counts_per_bead_and_gene</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">cx</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">counts_per_bead_and_type</span> <span class="o">=</span> <span class="n">bead_type_map</span> <span class="o">*</span> <span class="n">counts_per_bead</span><span class="p">[:,</span><span class="kc">None</span><span class="p">]</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">type_profiles</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">cx</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>  <span class="c1"># b_rescaled x will be diag(a_b).x.diag(b_b)</span>
+    
+    <span class="n">u</span> <span class="o">=</span> <span class="n">counts_per_bead_and_gene</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>          <span class="c1"># per_gene_and_bead</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">counts_per_bead_and_type</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">cx</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="c1"># per_bead_and_type</span>
+
+    <span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="o">=</span> <span class="n">parallel_matrix_scaling</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
+        
+    <span class="c1"># rescaled splitted count matrix is a_gb x_gt b_bt</span>
+    <span class="k">return</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">x</span></div>
+
+<div class="viewcode-block" id="_fuse"><a class="viewcode-back" href="../../../_autosummary/tacco.utils.split._fuse.html#tacco.utils.split._fuse">[docs]</a><span class="nd">@njit</span><span class="p">(</span><span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_fuse</span><span class="p">(</span><span class="n">a_rows</span><span class="p">,</span><span class="n">a_cols</span><span class="p">,</span><span class="n">a_data</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">nt</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">nz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">a_data</span><span class="p">)</span>
+    <span class="n">layers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nt</span><span class="p">,</span><span class="n">nz</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">gb</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="n">nz</span><span class="p">):</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">a_rows</span><span class="p">[</span><span class="n">gb</span><span class="p">]</span>
+        <span class="n">_b</span> <span class="o">=</span> <span class="n">a_cols</span><span class="p">[</span><span class="n">gb</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nt</span><span class="p">):</span>
+            <span class="n">layers</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">gb</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_data</span><span class="p">[</span><span class="n">gb</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="n">g</span><span class="p">,</span><span class="n">t</span><span class="p">]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="n">_b</span><span class="p">,</span><span class="n">t</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">layers</span></div>
+
+<div class="viewcode-block" id="_categorical"><a class="viewcode-back" href="../../../_autosummary/tacco.utils.split._categorical.html#tacco.utils.split._categorical">[docs]</a><span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="c1">#(fastmath=True,parallel=True) # fastmath and parallel optimizations give no significant performance gain, but fastmath decreases the accuracy slightly </span>
+<span class="k">def</span> <span class="nf">_categorical</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">cdf</span><span class="p">,</span> <span class="n">random</span><span class="p">):</span>
+    <span class="n">draws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">cdf</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">cg</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="n">cdf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">counts</span><span class="p">[</span><span class="n">cg</span><span class="p">]):</span>
+            <span class="n">random_r</span> <span class="o">=</span> <span class="n">random</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
+            <span class="n">pick</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cdf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">pick</span> <span class="o">=</span> <span class="n">random_r</span> <span class="o">&lt;</span> <span class="n">cdf</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">cg</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">pick</span><span class="p">:</span>
+                    <span class="n">draws</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">cg</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">break</span>
+            <span class="n">draws</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">cg</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">pick</span> <span class="c1"># make sure, that the read is accounted for somewhere even if there are rounding errors in cdf</span>
+            <span class="n">r</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">draws</span></div>
+<div class="viewcode-block" id="multinomial_rest"><a class="viewcode-back" href="../../../_autosummary/tacco.utils.split.multinomial_rest.html#tacco.utils.split.multinomial_rest">[docs]</a><span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">multinomial_rest</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">probabilities</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span> <span class="o">!=</span> <span class="n">probabilities</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;counts must be of the same length as the number of columns of probabilities!&#39;</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">random</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="c1"># randomness needed for eqivalent draws from the categorical distribution</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">probabilities</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span> <span class="c1"># manual version of cdf = probabilities.cumsum(axis=0) for numba</span>
+        <span class="n">probabilities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">probabilities</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">_categorical</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">probabilities</span><span class="p">,</span> <span class="n">random</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="_fuseall"><a class="viewcode-back" href="../../../_autosummary/tacco.utils.split._fuseall.html#tacco.utils.split._fuseall">[docs]</a><span class="nd">@njit</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_fuseall</span><span class="p">(</span><span class="n">a_rows</span><span class="p">,</span><span class="n">a_cols</span><span class="p">,</span><span class="n">a_data</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">x</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">50000</span><span class="p">):</span>
+    <span class="n">nt</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">nz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">a_data</span><span class="p">)</span>
+
+    <span class="n">n_batches</span> <span class="o">=</span> <span class="p">(</span><span class="n">nz</span><span class="o">+</span><span class="n">batch_size</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="n">batch_size</span>
+    
+    <span class="c1"># buffer the sparse splitted expression batch-wise</span>
+    <span class="n">l_rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">l_cols</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">l_data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># lengthy setup to tell numba what types will be stored in the lists</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nt</span><span class="p">):</span>
+        <span class="n">l_rows_i</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">l_cols_i</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">l_data_i</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_batches</span><span class="p">):</span>
+            <span class="n">l_rows_i_t</span> <span class="o">=</span> <span class="n">a_rows</span><span class="p">[:</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">l_cols_i_t</span> <span class="o">=</span> <span class="n">a_cols</span><span class="p">[:</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">l_data_i_t</span> <span class="o">=</span> <span class="n">a_data</span><span class="p">[:</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">l_rows_i</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l_rows_i_t</span><span class="p">)</span>
+            <span class="n">l_cols_i</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l_cols_i_t</span><span class="p">)</span>
+            <span class="n">l_data_i</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l_data_i_t</span><span class="p">)</span>
+        <span class="n">l_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l_rows_i</span><span class="p">)</span>
+        <span class="n">l_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l_cols_i</span><span class="p">)</span>
+        <span class="n">l_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l_data_i</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prange</span><span class="p">(</span><span class="n">n_batches</span><span class="p">):</span>
+        <span class="n">batch</span> <span class="o">=</span> <span class="n">i</span><span class="o">*</span><span class="n">batch_size</span>
+        
+        <span class="n">_batch_size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">batch</span><span class="o">+</span><span class="n">batch_size</span><span class="p">,</span><span class="n">nz</span><span class="p">)</span> <span class="o">-</span> <span class="n">batch</span>
+        
+        <span class="n">layers_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nt</span><span class="p">,</span><span class="n">_batch_size</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">a_data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">gb</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span><span class="n">batch</span><span class="o">+</span><span class="n">_batch_size</span><span class="p">):</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">a_rows</span><span class="p">[</span><span class="n">gb</span><span class="p">]</span>
+            <span class="n">_b</span> <span class="o">=</span> <span class="n">a_cols</span><span class="p">[</span><span class="n">gb</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nt</span><span class="p">):</span>
+                <span class="n">layers_data</span><span class="p">[</span><span class="n">t</span><span class="p">,</span><span class="n">gb</span><span class="o">-</span><span class="n">batch</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_data</span><span class="p">[</span><span class="n">gb</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="n">g</span><span class="p">,</span><span class="n">t</span><span class="p">]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="n">_b</span><span class="p">,</span><span class="n">t</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            
+            <span class="n">integer_part</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">layers_data</span><span class="p">)</span>
+            <span class="n">layers_data</span> <span class="o">-=</span> <span class="n">integer_part</span> <span class="c1"># layers_data contains now the remainder</span>
+            <span class="n">remaining_reads</span> <span class="o">=</span> <span class="n">layers_data</span>
+            <span class="n">remaining_total</span> <span class="o">=</span> <span class="n">remaining_reads</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">remaining_total</span><span class="p">)):</span>
+                <span class="n">remaining_reads</span><span class="p">[:,</span><span class="n">j</span><span class="p">]</span> <span class="o">/=</span> <span class="n">remaining_total</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="c1"># normalize remaining_reads to remaining_probabilities</span>
+
+            <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">remaining_total</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">remaining_total</span><span class="p">)</span>
+            <span class="n">counts</span> <span class="o">=</span> <span class="n">remaining_total</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+            <span class="n">probabilities</span> <span class="o">=</span> <span class="n">remaining_reads</span>
+            
+            <span class="c1"># Every batch gets its own random seed, so even though it might be parallel, the results will be identical irrespective of the degree of parallelism.</span>
+            <span class="c1"># But that means that changing the batch_size has an impact on the results, via changing the random seed for parts of the batchhes.</span>
+            <span class="n">layers_data</span> <span class="o">=</span> <span class="n">integer_part</span> <span class="o">+</span> <span class="n">multinomial_rest</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">probabilities</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="o">+</span><span class="n">batch</span><span class="o">//</span><span class="n">batch_size</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nt</span><span class="p">):</span>
+            <span class="n">nonzero</span> <span class="o">=</span> <span class="n">layers_data</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span>
+            <span class="n">l_rows</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_rows</span><span class="p">[</span><span class="n">batch</span><span class="p">:(</span><span class="n">batch</span><span class="o">+</span><span class="n">_batch_size</span><span class="p">)][</span><span class="n">nonzero</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">l_cols</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_cols</span><span class="p">[</span><span class="n">batch</span><span class="p">:(</span><span class="n">batch</span><span class="o">+</span><span class="n">_batch_size</span><span class="p">)][</span><span class="n">nonzero</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">l_data</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">layers_data</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">nonzero</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    
+    <span class="c1"># accumulate the sparse splitted expression batch-wise</span>
+    <span class="n">l_rows_acc</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">l_cols_acc</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">l_data_acc</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nt</span><span class="p">):</span>
+        <span class="n">nz_total</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_batches</span><span class="p">):</span>
+            <span class="n">nz_total</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">l_rows</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">l_rows_acc_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">nz_total</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">a_rows</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">l_cols_acc_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">nz_total</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">a_cols</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">l_data_acc_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">nz_total</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">a_data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">running_gb</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_batches</span><span class="p">):</span>
+            <span class="n">nz_i</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">l_rows</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">l_rows_acc_t</span><span class="p">[</span><span class="n">running_gb</span><span class="p">:(</span><span class="n">running_gb</span><span class="o">+</span><span class="n">nz_i</span><span class="p">)]</span> <span class="o">=</span> <span class="n">l_rows</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">l_cols_acc_t</span><span class="p">[</span><span class="n">running_gb</span><span class="p">:(</span><span class="n">running_gb</span><span class="o">+</span><span class="n">nz_i</span><span class="p">)]</span> <span class="o">=</span> <span class="n">l_cols</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">l_data_acc_t</span><span class="p">[</span><span class="n">running_gb</span><span class="p">:(</span><span class="n">running_gb</span><span class="o">+</span><span class="n">nz_i</span><span class="p">)]</span> <span class="o">=</span> <span class="n">l_data</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">running_gb</span> <span class="o">+=</span> <span class="n">nz_i</span>
+        <span class="n">l_rows_acc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l_rows_acc_t</span><span class="p">)</span>
+        <span class="n">l_cols_acc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l_cols_acc_t</span><span class="p">)</span>
+        <span class="n">l_data_acc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l_data_acc_t</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">l_rows_acc</span><span class="p">,</span> <span class="n">l_cols_acc</span><span class="p">,</span> <span class="n">l_data_acc</span></div>
+
+<div class="viewcode-block" id="split_beads"><a class="viewcode-back" href="../../../_autosummary/tacco.utils.split.split_beads.html#tacco.utils.split.split_beads">[docs]</a><span class="k">def</span> <span class="nf">split_beads</span><span class="p">(</span><span class="n">tdata</span><span class="p">,</span> <span class="n">bead_type_map</span><span class="p">,</span> <span class="n">type_profiles</span><span class="p">,</span> <span class="n">min_counts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">scaling_jobs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scaling_batch_size</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">rounding_batch_size</span><span class="o">=</span><span class="mi">50000</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">map_all_genes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_split_profiles</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">scaling_jobs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">scaling_jobs</span> <span class="o">=</span> <span class="n">cpu_count</span><span class="p">()</span>
+    
+    <span class="c1"># subset to common genes, beads, and types (with non-zero counts)</span>
+    <span class="k">if</span> <span class="n">map_all_genes</span><span class="p">:</span>
+        <span class="n">genes</span> <span class="o">=</span> <span class="n">tdata</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">type_profiles</span> <span class="o">=</span> <span class="n">type_profiles</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">genes</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nonzero_genes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tdata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">nonzero_genes</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;removed </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">nonzero_genes</span><span class="p">)</span><span class="o">-</span><span class="n">nonzero_genes</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s1"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">nonzero_genes</span><span class="p">)</span><span class="si">}</span><span class="s1"> genes from count matrix due to zero counts in gene&#39;</span><span class="p">)</span>
+        <span class="n">nonzero_profile_genes</span> <span class="o">=</span> <span class="n">type_profiles</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">nonzero_profile_genes</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;removed </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">nonzero_profile_genes</span><span class="p">)</span><span class="o">-</span><span class="n">nonzero_profile_genes</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s1"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">nonzero_profile_genes</span><span class="p">)</span><span class="si">}</span><span class="s1"> genes from profile definition due to zero appearance in the profiles&#39;</span><span class="p">)</span>
+        <span class="n">genes</span> <span class="o">=</span> <span class="n">tdata</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">nonzero_genes</span><span class="p">]</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">type_profiles</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">nonzero_profile_genes</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">nonzero_genes</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">genes</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;removed </span><span class="si">{</span><span class="p">(</span><span class="n">nonzero_genes</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">genes</span><span class="p">)</span><span class="si">}</span><span class="s1"> of </span><span class="si">{</span><span class="p">(</span><span class="n">nonzero_genes</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s1"> genes from count matrix due to missing intersection with profiles&#39;</span><span class="p">)</span>
+    
+    <span class="n">nonzero_beads</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tdata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">nonzero_beads</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;removed </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">nonzero_beads</span><span class="p">)</span><span class="o">-</span><span class="n">nonzero_beads</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s1"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">nonzero_beads</span><span class="p">)</span><span class="si">}</span><span class="s1"> observation from count matrix due to zero counts in observation&#39;</span><span class="p">)</span>
+    <span class="n">nonzero_map_beads</span> <span class="o">=</span> <span class="n">bead_type_map</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">nonzero_map_beads</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;removed </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">nonzero_map_beads</span><span class="p">)</span><span class="o">-</span><span class="n">nonzero_map_beads</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s1"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">nonzero_map_beads</span><span class="p">)</span><span class="si">}</span><span class="s1"> observations from mapping due to zero mapping&#39;</span><span class="p">)</span>
+    <span class="n">beads</span> <span class="o">=</span> <span class="n">tdata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">nonzero_beads</span><span class="p">]</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">bead_type_map</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">nonzero_map_beads</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">nonzero_beads</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">beads</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;removed </span><span class="si">{</span><span class="p">(</span><span class="n">nonzero_beads</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">beads</span><span class="p">)</span><span class="si">}</span><span class="s1"> of </span><span class="si">{</span><span class="p">(</span><span class="n">nonzero_beads</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s1"> observations from count matrix due to missing intersection with mapping&#39;</span><span class="p">)</span>
+    
+    <span class="n">types</span> <span class="o">=</span> <span class="n">type_profiles</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">bead_type_map</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+    <span class="n">tdata</span> <span class="o">=</span> <span class="n">tdata</span><span class="p">[</span><span class="n">beads</span><span class="p">,</span><span class="n">genes</span><span class="p">]</span>
+    <span class="n">type_profiles</span> <span class="o">=</span> <span class="n">type_profiles</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">genes</span><span class="p">,</span><span class="n">types</span><span class="p">]</span>
+    <span class="n">bead_type_map</span> <span class="o">=</span> <span class="n">bead_type_map</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">beads</span><span class="p">,</span><span class="n">types</span><span class="p">]</span>
+    
+    <span class="c1"># normalize bead_type_map: every bead has type fractions that sum to 1</span>
+    <span class="n">bead_type_map</span> <span class="o">=</span> <span class="n">bead_type_map</span> <span class="o">/</span> <span class="n">bead_type_map</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()[:,</span><span class="kc">None</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">min_counts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">min_counts</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">bead_type_counts</span> <span class="o">=</span> <span class="n">bead_type_map</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">get_sum</span><span class="p">(</span><span class="n">tdata</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span><span class="kc">None</span><span class="p">]</span>
+        <span class="n">keep_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">bead_type_counts</span> <span class="o">&gt;=</span> <span class="n">min_counts</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">bead_type_counts</span> <span class="o">==</span> <span class="n">bead_type_counts</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span><span class="kc">None</span><span class="p">])</span> <span class="c1"># keep the highest contribution and all others which meet the threshold</span>
+        <span class="n">bead_type_map</span> <span class="o">=</span> <span class="n">bead_type_map</span> <span class="o">*</span> <span class="n">keep_mask</span>
+        <span class="n">bead_type_map</span> <span class="o">=</span> <span class="n">bead_type_map</span> <span class="o">/</span> <span class="n">bead_type_map</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()[:,</span><span class="kc">None</span><span class="p">]</span>
+    
+    <span class="c1"># normalize type_profiles: every type has gene fractions that sum to 1</span>
+    <span class="n">type_profiles</span> <span class="o">=</span> <span class="n">type_profiles</span> <span class="o">/</span> <span class="n">type_profiles</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    
+    <span class="n">type_profiles</span> <span class="o">=</span> <span class="n">type_profiles</span><span class="p">[</span><span class="n">types</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;scale..&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;...&#39;</span><span class="p">)</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">_scale</span><span class="p">(</span><span class="n">tdata</span><span class="o">.</span><span class="n">X</span><span class="p">,</span><span class="n">bead_type_map</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span><span class="n">type_profiles</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">delta</span><span class="o">=</span><span class="n">delta</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">scaling_batch_size</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">scaling_jobs</span><span class="p">)</span>
+    <span class="c1">#print(hash(a.indices.tobytes()),hash(a.indptr.tobytes()),hash(a.data.tobytes()),hash(b.tobytes()),hash(x.tobytes()))</span>
+    <span class="c1"># rescaled splitted count matrix is a_gb x_gt b_bt</span>
+    <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">return_split_profiles</span><span class="p">:</span>
+        <span class="c1"># sum split over beads</span>
+        <span class="n">ab</span> <span class="o">=</span> <span class="n">a</span> <span class="o">@</span> <span class="n">b</span>
+        <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">ab</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ab</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">ab</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">ab</span>
+    
+    <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;fuseall&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;...&#39;</span><span class="p">)</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">tocoo</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">coo_matrix</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">_layers_data</span> <span class="o">=</span> <span class="n">_fuseall</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">row</span><span class="p">,</span><span class="n">a</span><span class="o">.</span><span class="n">col</span><span class="p">,</span><span class="n">a</span><span class="o">.</span><span class="n">data</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">x</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">rounding_batch_size</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">typ</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">types</span><span class="p">,</span><span class="o">*</span><span class="n">_layers_data</span><span class="p">):</span>
+        <span class="c1"># this way of constructing a coo_matrix has slightly less overhead...</span>
+        <span class="n">l_coo</span> <span class="o">=</span> <span class="n">coo_matrix</span><span class="p">(</span><span class="n">tdata</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">l_coo</span><span class="o">.</span><span class="n">row</span> <span class="o">=</span> <span class="n">cols</span> <span class="c1"># exchange rows and cols due to implicit transposition in _scale</span>
+        <span class="n">l_coo</span><span class="o">.</span><span class="n">col</span> <span class="o">=</span> <span class="n">rows</span>
+        <span class="n">l_coo</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="n">tdata</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">typ</span><span class="p">]</span> <span class="o">=</span> <span class="n">l_coo</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">tdata</span></div>
+
+<div class="viewcode-block" id="combine_layers"><a class="viewcode-back" href="../../../_autosummary/tacco.utils.split.combine_layers.html#tacco.utils.split.combine_layers">[docs]</a><span class="k">def</span> <span class="nf">combine_layers</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">layer_mapping</span><span class="p">,</span> <span class="n">remove_old_layers</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    
+    <span class="n">contributions</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="n">layer_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">new</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">contributions</span><span class="p">:</span>
+            <span class="n">contributions</span><span class="p">[</span><span class="n">new</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">old</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="n">contributions</span><span class="p">[</span><span class="n">new</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">old</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Warning: requested layer </span><span class="si">{</span><span class="n">old</span><span class="si">!r}</span><span class="s1"> did not exist in adata!&#39;</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">new</span><span class="p">,</span> <span class="n">olds</span> <span class="ow">in</span> <span class="n">contributions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">olds</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Warning: new layer </span><span class="si">{</span><span class="n">new</span><span class="si">!r}</span><span class="s1"> effectively did not get any mapping in adata and is set to 0!&#39;</span><span class="p">)</span>
+            <span class="n">adata</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">new</span><span class="p">]</span> <span class="o">=</span> <span class="n">csr_matrix</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">olds</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="n">remove_old_layers</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">adata</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">olds</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">olds</span><span class="p">)):</span>
+                <span class="n">X</span> <span class="o">=</span> <span class="n">X</span> <span class="o">+</span> <span class="n">adata</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">olds</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+                <span class="k">if</span> <span class="n">remove_old_layers</span><span class="p">:</span>
+                    <span class="k">del</span> <span class="n">adata</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">olds</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+            <span class="n">adata</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">new</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span></div>
+
+<div class="viewcode-block" id="merge_layers"><a class="viewcode-back" href="../../../_autosummary/tacco.utils.split.merge_layers.html#tacco.utils.split.merge_layers">[docs]</a><span class="k">def</span> <span class="nf">merge_layers</span><span class="p">(</span><span class="n">tdata</span><span class="p">,</span> <span class="n">layer_names</span><span class="p">,</span> <span class="n">merge_annotation_name</span><span class="o">=</span><span class="s1">&#39;layers&#39;</span><span class="p">,</span> <span class="n">bead_annotation_name</span><span class="o">=</span><span class="s1">&#39;bc&#39;</span><span class="p">,</span> <span class="n">min_reads</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">vstack</span><span class="p">([</span><span class="n">tdata</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">layer_names</span><span class="p">])</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">assign</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">value</span><span class="p">,</span><span class="n">i</span><span class="p">):</span>
+        <span class="n">df</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="n">bead_annotation_name</span> <span class="ow">in</span> <span class="n">tdata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">bead_annotation_name</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">),</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># unique index for all observations to avoid warnings at AnnData creation</span>
+        <span class="k">return</span> <span class="n">df</span>
+    <span class="n">obs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">assign</span><span class="p">(</span><span class="n">tdata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span><span class="n">merge_annotation_name</span><span class="p">,</span><span class="n">l</span><span class="p">,</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">l</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">layer_names</span><span class="p">)])</span>
+    <span class="c1"># conserve categorical layer_names dtype</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">layer_names</span><span class="p">),</span> <span class="s1">&#39;cat&#39;</span><span class="p">):</span>
+        <span class="n">obs</span><span class="p">[</span><span class="n">merge_annotation_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="n">merge_annotation_name</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">layer_names</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">AnnData</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span><span class="n">var</span><span class="o">=</span><span class="n">tdata</span><span class="o">.</span><span class="n">var</span><span class="p">,</span><span class="n">varm</span><span class="o">=</span><span class="n">tdata</span><span class="o">.</span><span class="n">varm</span><span class="p">)</span>
+    <span class="n">keep</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">min_reads</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">keep</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">get_sum</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="k">elif</span> <span class="n">min_reads</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">keep</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">get_sum</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">min_reads</span>
+    <span class="k">if</span> <span class="n">keep</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span> <span class="c1"># anndata copies are not well garbage collected and accumulate in memory</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="c1"># convenient for some downstream analysis</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+<div class="viewcode-block" id="merge_beads"><a class="viewcode-back" href="../../../_autosummary/tacco.utils.split.merge_beads.html#tacco.utils.split.merge_beads">[docs]</a><span class="k">def</span> <span class="nf">merge_beads</span><span class="p">(</span><span class="n">mdata</span><span class="p">,</span> <span class="n">merge_annotation_name</span><span class="o">=</span><span class="s1">&#39;layers&#39;</span><span class="p">,</span> <span class="n">bead_annotation_name</span><span class="o">=</span><span class="s1">&#39;bc&#39;</span><span class="p">,</span> <span class="n">min_counts</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">mean_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">merge_annotation_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">joined</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([(</span><span class="n">t</span><span class="p">,</span><span class="n">bc</span><span class="p">)</span><span class="k">for</span> <span class="n">t</span><span class="p">,</span><span class="n">bc</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">mdata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">merge_annotation_name</span><span class="p">],</span><span class="n">mdata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">bead_annotation_name</span><span class="p">])])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">joined</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">mdata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">bead_annotation_name</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span>
+    <span class="n">joined_cat</span> <span class="o">=</span> <span class="n">joined</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">issparse</span><span class="p">(</span><span class="n">mdata</span><span class="o">.</span><span class="n">X</span><span class="p">):</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">mdata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">tocoo</span><span class="p">()</span>
+        <span class="n">X</span><span class="o">.</span><span class="n">row</span> <span class="o">=</span> <span class="n">joined_cat</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">codes</span><span class="p">[</span><span class="n">X</span><span class="o">.</span><span class="n">row</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        <span class="n">X</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">joined_cat</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">categories</span><span class="p">),</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">X</span><span class="o">.</span><span class="n">eliminate_zeros</span><span class="p">()</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">joined_dummies</span> <span class="o">=</span> <span class="n">coo_matrix</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mdata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">dtype</span><span class="p">),(</span><span class="n">joined_cat</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">codes</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mdata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)))))</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">gemmT</span><span class="p">(</span><span class="n">joined_dummies</span><span class="p">,</span> <span class="n">mdata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    
+    <span class="c1"># recover (some version of) all the observable annotation we had before.</span>
+    <span class="c1"># if it is not consistent between the different contributions for merge_annotation_name and bead_annotation, the first one will be picked</span>
+    <span class="n">obs</span> <span class="o">=</span> <span class="n">mdata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">obs</span><span class="p">[</span><span class="s1">&#39;__cat_codes__&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">joined_cat</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">codes</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    
+    <span class="c1"># create mean obs annotations</span>
+    <span class="k">if</span> <span class="n">mean_keys</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mean_keys</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">mean_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">mean_keys</span><span class="p">]</span>
+        <span class="n">means</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;__cat_codes__&#39;</span><span class="p">)[</span><span class="n">mean_keys</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        
+    <span class="n">obs</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;__cat_codes__&#39;</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">obs</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;__cat_codes__&#39;</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">mean_keys</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">mean_key</span> <span class="ow">in</span> <span class="n">mean_keys</span><span class="p">:</span>
+            <span class="n">obs</span><span class="p">[</span><span class="n">mean_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="s1">&#39;__cat_codes__&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">means</span><span class="p">[</span><span class="n">mean_key</span><span class="p">])</span>
+    
+    <span class="k">del</span> <span class="n">obs</span><span class="p">[</span><span class="s1">&#39;__cat_codes__&#39;</span><span class="p">]</span>
+    
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">AnnData</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span><span class="n">var</span><span class="o">=</span><span class="n">mdata</span><span class="o">.</span><span class="n">var</span><span class="p">,</span><span class="n">varm</span><span class="o">=</span><span class="n">mdata</span><span class="o">.</span><span class="n">varm</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">min_counts</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">&gt;=</span><span class="n">min_counts</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span> <span class="c1"># anndata copies are not well garbage collected and accumulate in memory</span>
+    
+    <span class="k">return</span> <span class="n">data</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

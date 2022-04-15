@@ -1,0 +1,6 @@
+tacco.utils.transfer\_pca
+=========================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: transfer_pca

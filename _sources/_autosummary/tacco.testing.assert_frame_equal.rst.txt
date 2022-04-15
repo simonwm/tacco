@@ -1,0 +1,6 @@
+tacco.testing.assert\_frame\_equal
+==================================
+
+.. currentmodule:: tacco.testing
+
+.. autofunction:: assert_frame_equal

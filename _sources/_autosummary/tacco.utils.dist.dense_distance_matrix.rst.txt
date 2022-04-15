@@ -1,0 +1,6 @@
+tacco.utils.dist.dense\_distance\_matrix
+========================================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: dense_distance_matrix

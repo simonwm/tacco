@@ -1,0 +1,6 @@
+tacco.utils.log
+===============
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: log

@@ -1,0 +1,6 @@
+tacco.utils.split.merge\_layers
+===============================
+
+.. currentmodule:: tacco.utils.split
+
+.. autofunction:: merge_layers

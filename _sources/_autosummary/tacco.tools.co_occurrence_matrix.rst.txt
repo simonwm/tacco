@@ -1,0 +1,6 @@
+tacco.tools.co\_occurrence\_matrix
+==================================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: co_occurrence_matrix

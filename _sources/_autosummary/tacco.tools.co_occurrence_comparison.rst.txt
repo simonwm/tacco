@@ -1,0 +1,6 @@
+tacco.tools.co\_occurrence\_comparison
+======================================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: co_occurrence_comparison

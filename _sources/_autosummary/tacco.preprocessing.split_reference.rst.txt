@@ -1,0 +1,6 @@
+tacco.preprocessing.split\_reference
+====================================
+
+.. currentmodule:: tacco.preprocessing
+
+.. autofunction:: split_reference

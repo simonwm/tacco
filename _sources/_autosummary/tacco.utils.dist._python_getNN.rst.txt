@@ -1,0 +1,6 @@
+tacco.utils.dist.\_python\_getNN
+================================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: _python_getNN

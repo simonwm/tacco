@@ -1,0 +1,6 @@
+tacco.preprocessing.construct\_reference\_annotation
+====================================================
+
+.. currentmodule:: tacco.preprocessing
+
+.. autofunction:: construct_reference_annotation

@@ -1,0 +1,6 @@
+tacco.utils.dist.\_collect\_results
+===================================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: _collect_results

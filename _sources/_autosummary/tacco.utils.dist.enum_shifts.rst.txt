@@ -1,0 +1,6 @@
+tacco.utils.dist.enum\_shifts
+=============================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: enum_shifts

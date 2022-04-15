@@ -1,0 +1,8 @@
+Examples
+--------
+
+The notebooks for the examples and the workflow to prepare the necessary datasets are available in the `example repository <https://github.com/simonwm/tacco_examples>`_.
+
+.. nbgallery::
+   notebooks/slideseq_mouse_olfactory_bulb
+   notebooks/slideseq_mouse_olfactory_bulb_single

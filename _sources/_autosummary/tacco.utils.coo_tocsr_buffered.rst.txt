@@ -1,0 +1,6 @@
+tacco.utils.coo\_tocsr\_buffered
+================================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: coo_tocsr_buffered

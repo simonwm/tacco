@@ -1,0 +1,6 @@
+tacco.utils.split.multinomial\_rest
+===================================
+
+.. currentmodule:: tacco.utils.split
+
+.. autofunction:: multinomial_rest

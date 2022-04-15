@@ -1,0 +1,32 @@
+tacco.utils.split
+=================
+
+.. automodule:: tacco.utils.split
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      _categorical
+      _fuse
+      _fuseall
+      _scale
+      combine_layers
+      cpu_count
+      matrix_scaling
+      merge_beads
+      merge_layers
+      multinomial_rest
+      parallel_matrix_scaling
+      split_beads
+   
+   
+   

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.preprocessing.apply_random_platform_effect &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/readthedocs-custom.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/notebook_hacks.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tacco.preprocessing.check_counts_validity" href="tacco.preprocessing.check_counts_validity.html" />
+    <link rel="prev" title="tacco.preprocessing" href="tacco.preprocessing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html">
+            <img src="../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tacco.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tacco.eval.html">tacco.eval</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.get.html">tacco.get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.plots.html">tacco.plots</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="tacco.preprocessing.html">tacco.preprocessing</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">tacco.preprocessing.apply_random_platform_effect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.preprocessing.check_counts_validity.html">tacco.preprocessing.check_counts_validity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.preprocessing.construct_reference_annotation.html">tacco.preprocessing.construct_reference_annotation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.preprocessing.construct_reference_profiles.html">tacco.preprocessing.construct_reference_profiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.preprocessing.create_reference.html">tacco.preprocessing.create_reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.preprocessing.filter.html">tacco.preprocessing.filter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.preprocessing.filter_annotation.html">tacco.preprocessing.filter_annotation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.preprocessing.filter_profiles.html">tacco.preprocessing.filter_profiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.preprocessing.filter_reference.html">tacco.preprocessing.filter_reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.preprocessing.filter_reference_genes.html">tacco.preprocessing.filter_reference_genes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.preprocessing.get_unique_keys.html">tacco.preprocessing.get_unique_keys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.preprocessing.infer_annotation_key.html">tacco.preprocessing.infer_annotation_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.preprocessing.normalize_platform.html">tacco.preprocessing.normalize_platform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.preprocessing.normalize_reference.html">tacco.preprocessing.normalize_reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.preprocessing.refine_reference.html">tacco.preprocessing.refine_reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.preprocessing.split_reference.html">tacco.preprocessing.split_reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.preprocessing.subsample_annotation.html">tacco.preprocessing.subsample_annotation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.testing.html">tacco.testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.tools.html">tacco.tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.utils.html">tacco.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.sum.html">tacco.sum</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="tacco.html">tacco</a> &raquo;</li>
+          <li><a href="tacco.preprocessing.html">tacco.preprocessing</a> &raquo;</li>
+      <li>tacco.preprocessing.apply_random_platform_effect</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="tacco-preprocessing-apply-random-platform-effect">
+<h1>tacco.preprocessing.apply_random_platform_effect<a class="headerlink" href="#tacco-preprocessing-apply-random-platform-effect" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="tacco.preprocessing.apply_random_platform_effect">
+<span class="sig-name descname"><span class="pre">apply_random_platform_effect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">platform_log10_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">platform_log10_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">counts_location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gene_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tacco/preprocessing/_platform.html#apply_random_platform_effect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tacco.preprocessing.apply_random_platform_effect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies a random log-laplace distributed rescaling per gene inplace.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>adata</strong> – An <a class="reference external" href="https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html#anndata.AnnData" title="(in anndata v0.8.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></a> containing the expression and/or profiles
+to rescale inplace.</p></li>
+<li><p><strong>platform_log10_mean</strong> – log10 mean of the Laplace distribution</p></li>
+<li><p><strong>platform_log10_std</strong> – log10 of the standard deviation of the Laplace distribution</p></li>
+<li><p><strong>seed</strong> – The random seed to use</p></li>
+<li><p><strong>round</strong> – Whether to round the resulting expression matrix to integer counts
+after rescaling</p></li>
+<li><p><strong>counts_location</strong> – A string or tuple specifying where the count matrix is stored, e.g.
+<cite>‘X’</cite>, <cite>(‘raw’,’X’)</cite>, <cite>(‘raw’,’obsm’,’my_counts_key’)</cite>,
+<cite>(‘layer’,’my_counts_key’)</cite>, … For details see
+<code class="xref py py-func docutils literal notranslate"><span class="pre">counts()</span></code>.</p></li>
+<li><p><strong>gene_keys</strong> – String or list of strings specifying additional count-like <cite>.var</cite> and
+<cite>.varm</cite> annotations to scale along with the platform effect. If <cite>True</cite>,
+take all <cite>.var</cite> and <cite>.varm</cite> keys.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Returns a <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v1.4.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a> with the random recaling factors.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tacco.preprocessing.html" class="btn btn-neutral float-left" title="tacco.preprocessing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tacco.preprocessing.check_counts_validity.html" class="btn btn-neutral float-right" title="tacco.preprocessing.check_counts_validity" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

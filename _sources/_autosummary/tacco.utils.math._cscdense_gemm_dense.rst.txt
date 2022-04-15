@@ -1,0 +1,6 @@
+tacco.utils.math.\_cscdense\_gemm\_dense
+========================================
+
+.. currentmodule:: tacco.utils.math
+
+.. autofunction:: _cscdense_gemm_dense

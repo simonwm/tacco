@@ -1,0 +1,6 @@
+tacco.utils.split.merge\_beads
+==============================
+
+.. currentmodule:: tacco.utils.split
+
+.. autofunction:: merge_beads

@@ -1,0 +1,6 @@
+tacco.utils.split.\_categorical
+===============================
+
+.. currentmodule:: tacco.utils.split
+
+.. autofunction:: _categorical

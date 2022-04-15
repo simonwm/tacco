@@ -1,0 +1,6 @@
+tacco.utils.dist.\_max\_n\_i
+============================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: _max_n_i

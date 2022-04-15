@@ -1,0 +1,6 @@
+tacco.utils.dist.\_row\_col\_data
+=================================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: _row_col_data

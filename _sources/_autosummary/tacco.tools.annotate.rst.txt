@@ -1,0 +1,6 @@
+tacco.tools.annotate
+====================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: annotate

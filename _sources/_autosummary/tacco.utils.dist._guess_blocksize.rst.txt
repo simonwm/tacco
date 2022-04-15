@@ -1,0 +1,6 @@
+tacco.utils.dist.\_guess\_blocksize
+===================================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: _guess_blocksize

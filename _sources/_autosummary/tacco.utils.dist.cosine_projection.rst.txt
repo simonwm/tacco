@@ -1,0 +1,6 @@
+tacco.utils.dist.cosine\_projection
+===================================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: cosine_projection

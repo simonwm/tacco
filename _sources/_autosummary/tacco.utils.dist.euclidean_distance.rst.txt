@@ -1,0 +1,6 @@
+tacco.utils.dist.euclidean\_distance
+====================================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: euclidean_distance

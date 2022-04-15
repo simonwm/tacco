@@ -1,0 +1,6 @@
+tacco.utils.split.cpu\_count
+============================
+
+.. currentmodule:: tacco.utils.split
+
+.. autofunction:: cpu_count

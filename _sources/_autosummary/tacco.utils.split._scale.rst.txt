@@ -1,0 +1,6 @@
+tacco.utils.split.\_scale
+=========================
+
+.. currentmodule:: tacco.utils.split
+
+.. autofunction:: _scale

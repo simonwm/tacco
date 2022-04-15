@@ -1,0 +1,6 @@
+tacco.utils.dist.kl\_distance
+=============================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: kl_distance

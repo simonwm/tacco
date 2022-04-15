@@ -1,0 +1,6 @@
+tacco.plots.sigmap
+==================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: sigmap

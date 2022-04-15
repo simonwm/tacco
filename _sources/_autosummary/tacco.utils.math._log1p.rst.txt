@@ -1,0 +1,6 @@
+tacco.utils.math.\_log1p
+========================
+
+.. currentmodule:: tacco.utils.math
+
+.. autofunction:: _log1p

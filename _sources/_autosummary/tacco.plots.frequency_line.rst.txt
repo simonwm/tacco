@@ -1,0 +1,6 @@
+tacco.plots.frequency\_line
+===========================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: frequency_line

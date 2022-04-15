@@ -1,0 +1,6 @@
+tacco.utils.solve\_OT
+=====================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: solve_OT

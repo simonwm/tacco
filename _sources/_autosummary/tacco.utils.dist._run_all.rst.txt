@@ -1,0 +1,6 @@
+tacco.utils.dist.\_run\_all
+===========================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: _run_all

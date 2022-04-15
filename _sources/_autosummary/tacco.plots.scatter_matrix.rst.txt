@@ -1,0 +1,6 @@
+tacco.plots.scatter\_matrix
+===========================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: scatter_matrix

@@ -1,0 +1,6 @@
+tacco.preprocessing.infer\_annotation\_key
+==========================================
+
+.. currentmodule:: tacco.preprocessing
+
+.. autofunction:: infer_annotation_key

@@ -1,0 +1,6 @@
+tacco.utils.math.sparse\_result\_gemmT
+======================================
+
+.. currentmodule:: tacco.utils.math
+
+.. autofunction:: sparse_result_gemmT

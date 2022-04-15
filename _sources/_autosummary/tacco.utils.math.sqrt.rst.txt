@@ -1,0 +1,6 @@
+tacco.utils.math.sqrt
+=====================
+
+.. currentmodule:: tacco.utils.math
+
+.. autofunction:: sqrt

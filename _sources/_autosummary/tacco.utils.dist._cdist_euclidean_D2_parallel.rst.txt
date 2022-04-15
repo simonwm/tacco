@@ -1,0 +1,6 @@
+tacco.utils.dist.\_cdist\_euclidean\_D2\_parallel
+=================================================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: _cdist_euclidean_D2_parallel

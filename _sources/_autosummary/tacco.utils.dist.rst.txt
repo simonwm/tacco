@@ -1,0 +1,69 @@
+tacco.utils.dist
+================
+
+.. automodule:: tacco.utils.dist
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      _cdist_euclidean_D1_parallel
+      _cdist_euclidean_D2_parallel
+      _cdist_euclidean_D3_parallel
+      _cdist_euclidean_DN_parallel
+      _cdist_euclidean_parallel
+      _cdist_euclidean_parallel_
+      _cdist_euclidean_serial
+      _collect_results
+      _getNN
+      _get_indptr
+      _guess_blocksize
+      _lexicographic_hash
+      _max_n_i
+      _numba_getNN
+      _numba_sparse_distance_matrix
+      _python_getNN
+      _row_col_data
+      _run_all
+      _run_batch
+      _run_batch_balanced
+      _run_batch_balanced_core
+      _run_batch_balanced_serial
+      _run_batch_serial
+      _run_single
+      bhattacharyya2_coefficient
+      bhattacharyya2_cosine_distance
+      bhattacharyya_coefficient
+      bhattacharyya_cosine_distance
+      bin
+      cdist
+      cosine_distance
+      cosine_projection
+      data_copy
+      dense_distance_matrix
+      enum_shifts
+      euclidean_distance
+      get_norm
+      get_sqnorm
+      hash
+      hellinger_distance
+      kl_distance
+      min_dtype
+      naive_projection
+      naive_projection_distance
+      normalized_weighted_scalar_product
+      projection
+      restore_data
+      sparse_distance_matrix
+      weighted_projection
+   
+   
+   

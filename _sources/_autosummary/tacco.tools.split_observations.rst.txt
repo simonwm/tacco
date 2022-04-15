@@ -1,0 +1,6 @@
+tacco.tools.split\_observations
+===============================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: split_observations

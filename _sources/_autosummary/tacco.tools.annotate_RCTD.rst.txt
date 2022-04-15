@@ -1,0 +1,6 @@
+tacco.tools.annotate\_RCTD
+==========================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: annotate_RCTD

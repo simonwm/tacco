@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.preprocessing._create_reference &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/readthedocs-custom.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/notebook_hacks.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html">
+            <img src="../../../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/tacco.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>tacco.preprocessing._create_reference</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tacco.preprocessing._create_reference</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">anndata</span> <span class="k">as</span> <span class="nn">ad</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">get</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">preprocessing</span>
+
+<span class="k">def</span> <span class="nf">get_profiles_from_marker_genes</span><span class="p">(</span><span class="n">marker_genes</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; Convert marker gene lists into (binary) reference profiles. &#39;&#39;&#39;</span>
+    <span class="n">gene_list</span> <span class="o">=</span> <span class="p">{</span><span class="n">g</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">marker_genes</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">v</span><span class="p">}</span>
+    <span class="n">profiles</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">gene_list</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">profile</span><span class="p">,</span> <span class="n">genes</span> <span class="ow">in</span> <span class="n">marker_genes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">profiles</span><span class="p">[</span><span class="n">profile</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">profiles</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">genes</span><span class="p">,</span><span class="n">profile</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">profiles</span>
+
+<div class="viewcode-block" id="infer_annotation_key"><a class="viewcode-back" href="../../../_autosummary/tacco.preprocessing.infer_annotation_key.html#tacco.preprocessing.infer_annotation_key">[docs]</a><span class="k">def</span> <span class="nf">infer_annotation_key</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">annotation_key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; Return annotation key, if supplied or unique. &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">annotation_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">annotation_key</span>
+    <span class="k">if</span> <span class="n">adata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;adata cannot be none it no annotation key is specified!&#39;</span><span class="p">)</span>
+    
+    <span class="n">keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">varm</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">keys</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;adata has more than a unique annotation key, so it has to be specified explicitly!&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;adata has no annotation keys!&#39;</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="get_unique_keys"><a class="viewcode-back" href="../../../_autosummary/tacco.preprocessing.get_unique_keys.html#tacco.preprocessing.get_unique_keys">[docs]</a><span class="k">def</span> <span class="nf">get_unique_keys</span><span class="p">(</span><span class="n">annotation_key</span><span class="p">,</span> <span class="n">other_keys</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; Get unique keys. &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">other_keys</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">annotation_key</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other_keys</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">annotation_key</span><span class="p">,</span> <span class="n">other_keys</span><span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">annotation_key</span><span class="p">,</span> <span class="o">*</span><span class="n">other_keys</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="normalize_reference"><a class="viewcode-back" href="../../../_autosummary/tacco.preprocessing.normalize_reference.html#tacco.preprocessing.normalize_reference">[docs]</a><span class="k">def</span> <span class="nf">normalize_reference</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">annotation_key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; Normalize profiles per annotation and annotation per cell - if available. &#39;&#39;&#39;</span>
+    
+    <span class="n">annotation_key</span> <span class="o">=</span> <span class="n">infer_annotation_key</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">)</span>
+    
+    <span class="c1"># normalize annotation weights to 1 per cell</span>
+    <span class="k">if</span> <span class="n">annotation_key</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">:</span>
+        <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))[:,</span><span class="kc">None</span><span class="p">]</span>
+    <span class="c1"># normalize profiles to 1 per annotation</span>
+    <span class="k">if</span> <span class="n">annotation_key</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">varm</span><span class="p">:</span>
+        <span class="n">adata</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="create_reference"><a class="viewcode-back" href="../../../_autosummary/tacco.preprocessing.create_reference.html#tacco.preprocessing.create_reference">[docs]</a><span class="k">def</span> <span class="nf">create_reference</span><span class="p">(</span>
+    <span class="n">adata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">profiles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">marker</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">annotation_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">counts_location</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">keep_annotation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Create a reference data set for the transfer of annotation from various</span>
+<span class="sd">    inputs for use in :func:`~tc.tl.transfer_annotation`.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adata</span>
+<span class="sd">        An :class:`~anndata.AnnData` for creating the reference data set. It</span>
+<span class="sd">        should contain one of each (1) expression data (e.g. in `.X`) or</span>
+<span class="sd">        reference  expression profiles (in `.varm`) and (2) the annotation to</span>
+<span class="sd">        transfer as categorical annotation (in `.obs`) or as weights (in</span>
+<span class="sd">        `.obsm`). If reference expression profiles are specified but no</span>
+<span class="sd">        annotation, this is exactly equivalent to only supplying these profiles</span>
+<span class="sd">        via `profiles` with `adata=None`.</span>
+<span class="sd">    profiles</span>
+<span class="sd">        A :class:`~pandas.DataFrame` containing a reference expression profile</span>
+<span class="sd">        per column. Can be used standalone or together with `adata`.</span>
+<span class="sd">    marker</span>
+<span class="sd">        A :class:`~dict` containing a list of marker genes per key. Can be used</span>
+<span class="sd">        standalone or together with `adata`.</span>
+<span class="sd">    annotation_key</span>
+<span class="sd">        If `profiles` or `marker` is not `None`, this is the `.varm` key where</span>
+<span class="sd">        the annotation i.e. expression profiles will be stored.</span>
+<span class="sd">        If `adata` is not `None`, this is the `.obs`, `.obsm`, and/or</span>
+<span class="sd">        `.varm` key where the annotation is and/or will be stored.</span>
+<span class="sd">    normalize</span>
+<span class="sd">        Whether to normalize the reference annotation and profiles.</span>
+<span class="sd">    counts_location</span>
+<span class="sd">        A string or tuple specifying where the count matrix is stored, e.g.</span>
+<span class="sd">        `&#39;X&#39;`, `(&#39;raw&#39;,&#39;X&#39;)`, `(&#39;raw&#39;,&#39;obsm&#39;,&#39;my_counts_key&#39;)`,</span>
+<span class="sd">        `(&#39;layer&#39;,&#39;my_counts_key&#39;)`, ... For details see</span>
+<span class="sd">        :func:`~tc.get.counts`.</span>
+<span class="sd">        Only relevant if `adata` is provided.</span>
+<span class="sd">    keep_annotation</span>
+<span class="sd">        Keys of `.var`, `.varm`, `.obs`, and `.obsm` to keep in addition to the</span>
+<span class="sd">        `annotation_key`.</span>
+<span class="sd">        Only relevant if `adata` is provided.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Returns a minimial :class:`~anndata.AnnData` populated only with the data\</span>
+<span class="sd">    necessary for annotation transfer (with the exception of `keep_annotation`).\</span>
+<span class="sd">    These may be one or more of `.X`, `.varm`, `.obsm`, and `.obs`.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Handle simple and corner cases</span>
+
+    <span class="n">annotation_key</span> <span class="o">=</span> <span class="n">infer_annotation_key</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">profiles</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">marker</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;&quot;profiles&quot; and &quot;marker&quot; cannot be specified at the same time!&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">marker</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">profiles</span> <span class="o">=</span> <span class="n">get_profiles_from_marker_genes</span><span class="p">(</span><span class="n">marker</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">profiles</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">adata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">genes</span> <span class="o">=</span> <span class="n">profiles</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="c1"># AnnData prefers string indices</span>
+        <span class="n">reference</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">AnnData</span><span class="p">(</span><span class="n">var</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">genes</span><span class="p">))</span>
+        <span class="n">reference</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">profiles</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">genes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">reference</span>
+
+    <span class="k">if</span> <span class="n">adata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;&quot;adata&quot;, &quot;profiles&quot;, and &quot;marker&quot; were None! At least one of them has to be provided!&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Handle AnnData case</span>
+
+    <span class="n">keep_annotation</span> <span class="o">=</span> <span class="n">get_unique_keys</span><span class="p">(</span><span class="n">annotation_key</span><span class="p">,</span> <span class="n">keep_annotation</span><span class="p">)</span>
+    <span class="n">reference</span> <span class="o">=</span> <span class="n">get</span><span class="o">.</span><span class="n">counts</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">counts_location</span><span class="o">=</span><span class="n">counts_location</span><span class="p">,</span> <span class="n">annotation</span><span class="o">=</span><span class="n">keep_annotation</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">preprocessing</span><span class="o">.</span><span class="n">check_counts_validity</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">annotation_key</span> <span class="ow">in</span> <span class="n">reference</span><span class="o">.</span><span class="n">obsm</span> <span class="ow">and</span> <span class="n">annotation_key</span> <span class="ow">in</span> <span class="n">reference</span><span class="o">.</span><span class="n">obs</span><span class="p">:</span>
+        <span class="k">del</span> <span class="n">reference</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span> <span class="c1"># priority for the obs annotation</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Found the key &quot;</span><span class="si">%s</span><span class="s1">&quot; in .obs and .obsm! Using only the one in .obs for reference creation.&#39;</span> <span class="o">%</span> <span class="n">annotation_key</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">annotation_key</span> <span class="ow">in</span> <span class="n">reference</span><span class="o">.</span><span class="n">varm</span> <span class="ow">and</span> <span class="n">profiles</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">reference</span><span class="o">.</span><span class="n">varm</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">profiles</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">reference</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Found the key &quot;</span><span class="si">%s</span><span class="s1">&quot; in .varm and got profiles (or marker genes) explicitly specified! Using only the explicitly specfied profiles.&#39;</span> <span class="o">%</span> <span class="n">annotation_key</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
+        <span class="n">normalize_reference</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">reference</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

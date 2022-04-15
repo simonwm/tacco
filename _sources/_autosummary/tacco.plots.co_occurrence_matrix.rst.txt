@@ -1,0 +1,6 @@
+tacco.plots.co\_occurrence\_matrix
+==================================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: co_occurrence_matrix

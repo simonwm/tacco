@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.utils.bin &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/readthedocs-custom.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/notebook_hacks.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tacco.utils.cast_down_common" href="tacco.utils.cast_down_common.html" />
+    <link rel="prev" title="tacco.utils.AnnData_query" href="tacco.utils.AnnData_query.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html">
+            <img src="../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tacco.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tacco.eval.html">tacco.eval</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.get.html">tacco.get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.plots.html">tacco.plots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.preprocessing.html">tacco.preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.testing.html">tacco.testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.tools.html">tacco.tools</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="tacco.utils.html">tacco.utils</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.dist.html">tacco.utils.dist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.math.html">tacco.utils.math</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.split.html">tacco.utils.split</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.AnnData_query.html">tacco.utils.AnnData_query</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">tacco.utils.bin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.cast_down_common.html">tacco.utils.cast_down_common</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.cdist.html">tacco.utils.cdist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.col_scale.html">tacco.utils.col_scale</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.complete_choice.html">tacco.utils.complete_choice</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.coo_tocsr_buffered.html">tacco.utils.coo_tocsr_buffered</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.coo_tocsr_inplace.html">tacco.utils.coo_tocsr_inplace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.cpu_count.html">tacco.utils.cpu_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.dense_distance_matrix.html">tacco.utils.dense_distance_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.divide.html">tacco.utils.divide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.find_unused_key.html">tacco.utils.find_unused_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.flat_inverse_mapping.html">tacco.utils.flat_inverse_mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.gemmT.html">tacco.utils.gemmT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.generate_mixture_profiles.html">tacco.utils.generate_mixture_profiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.generate_random_mixture_profiles.html">tacco.utils.generate_random_mixture_profiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.get_average_profiles.html">tacco.utils.get_average_profiles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.get_maximum_annotation.html">tacco.utils.get_maximum_annotation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.get_sum.html">tacco.utils.get_sum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.hash.html">tacco.utils.hash</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.heapsort3.html">tacco.utils.heapsort3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.log.html">tacco.utils.log</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.log1p.html">tacco.utils.log1p</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.merge_annotation.html">tacco.utils.merge_annotation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.merge_colors.html">tacco.utils.merge_colors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.min_dtype.html">tacco.utils.min_dtype</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.mode.html">tacco.utils.mode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.parallel_nnls.html">tacco.utils.parallel_nnls</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.preprocess_single_cell_data.html">tacco.utils.preprocess_single_cell_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.projection.html">tacco.utils.projection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.pure_profile_split.html">tacco.utils.pure_profile_split</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.row_scale.html">tacco.utils.row_scale</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.run_OT.html">tacco.utils.run_OT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.run_nnls.html">tacco.utils.run_nnls</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.scale_counts.html">tacco.utils.scale_counts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.solve_OT.html">tacco.utils.solve_OT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.sparse_distance_matrix.html">tacco.utils.sparse_distance_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.sparse_result_gemmT.html">tacco.utils.sparse_result_gemmT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.spatial_split.html">tacco.utils.spatial_split</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.sqrt.html">tacco.utils.sqrt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.transfer_pca.html">tacco.utils.transfer_pca</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.tsne_single_cell_data.html">tacco.utils.tsne_single_cell_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.umap_single_cell_data.html">tacco.utils.umap_single_cell_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tacco.utils.write_adata_x_var_obs.html">tacco.utils.write_adata_x_var_obs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tacco.sum.html">tacco.sum</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="tacco.html">tacco</a> &raquo;</li>
+          <li><a href="tacco.utils.html">tacco.utils</a> &raquo;</li>
+      <li>tacco.utils.bin</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="tacco-utils-bin">
+<h1>tacco.utils.bin<a class="headerlink" href="#tacco-utils-bin" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="tacco.utils.bin">
+<span class="sig-name descname"><span class="pre">bin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['x',</span> <span class="pre">'y']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tacco/utils/dist.html#bin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tacco.utils.bin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bins points in position space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – A <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.4.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>.</p></li>
+<li><p><strong>bin_size</strong> – The spatial size of a bin. Bins are of the same size in all
+dimensions.</p></li>
+<li><p><strong>position_keys</strong> – Array-like of column keys which contain the position of the points.</p></li>
+<li><p><strong>bin_keys</strong> – The names of the columns to contain the bin assignment. Has to be of
+the same length as <cite>position_keys</cite>. If <a href="#id1"><span class="problematic" id="id2">`</span></a>None, a dataframe of bin
+assignments is returned.</p></li>
+<li><p><strong>shift</strong> – An array-like of the same length as <cite>position_keys</cite>, giving the
+shift of the start point of the bin grid in every dimension. If
+<cite>None</cite>, then no shift is used and the bin grid starts at the minimum
+value in each dimension.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Depending on <cite>bin_key</cite> returns either a <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.4.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> of bin    assignments or the updated input <cite>data</cite> contining the bin assignments    under <cite>bin_keys</cite>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tacco.utils.AnnData_query.html" class="btn btn-neutral float-left" title="tacco.utils.AnnData_query" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tacco.utils.cast_down_common.html" class="btn btn-neutral float-right" title="tacco.utils.cast_down_common" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

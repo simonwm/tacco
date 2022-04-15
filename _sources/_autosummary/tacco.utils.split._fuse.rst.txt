@@ -1,0 +1,6 @@
+tacco.utils.split.\_fuse
+========================
+
+.. currentmodule:: tacco.utils.split
+
+.. autofunction:: _fuse

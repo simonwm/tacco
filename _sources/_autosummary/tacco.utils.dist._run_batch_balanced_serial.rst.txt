@@ -1,0 +1,6 @@
+tacco.utils.dist.\_run\_batch\_balanced\_serial
+===============================================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: _run_batch_balanced_serial

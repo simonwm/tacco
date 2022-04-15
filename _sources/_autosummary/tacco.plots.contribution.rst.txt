@@ -1,0 +1,6 @@
+tacco.plots.contribution
+========================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: contribution

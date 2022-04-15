@@ -1,0 +1,6 @@
+tacco.utils.math.col\_scale
+===========================
+
+.. currentmodule:: tacco.utils.math
+
+.. autofunction:: col_scale

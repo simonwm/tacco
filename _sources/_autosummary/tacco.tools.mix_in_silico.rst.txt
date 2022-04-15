@@ -1,0 +1,6 @@
+tacco.tools.mix\_in\_silico
+===========================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: mix_in_silico

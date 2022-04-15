@@ -1,0 +1,6 @@
+tacco.tools.map\_hash\_annotation
+=================================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: map_hash_annotation

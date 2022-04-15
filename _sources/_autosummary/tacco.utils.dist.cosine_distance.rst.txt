@@ -1,0 +1,6 @@
+tacco.utils.dist.cosine\_distance
+=================================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: cosine_distance

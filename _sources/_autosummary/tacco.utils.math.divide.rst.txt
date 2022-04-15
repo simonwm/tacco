@@ -1,0 +1,6 @@
+tacco.utils.math.divide
+=======================
+
+.. currentmodule:: tacco.utils.math
+
+.. autofunction:: divide

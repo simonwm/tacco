@@ -1,0 +1,6 @@
+tacco.utils.split.parallel\_matrix\_scaling
+===========================================
+
+.. currentmodule:: tacco.utils.split
+
+.. autofunction:: parallel_matrix_scaling

@@ -1,0 +1,6 @@
+tacco.plots.umap\_split
+=======================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: umap_split

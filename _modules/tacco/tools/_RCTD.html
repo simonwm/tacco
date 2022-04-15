@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tacco.tools._RCTD &mdash; TACCO  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/readthedocs-custom.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/notebook_hacks.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html">
+            <img src="../../../_static/logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/tacco.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TACCO</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>tacco.tools._RCTD</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tacco.tools._RCTD</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.sparse</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_helper</span> <span class="k">as</span> <span class="n">helper</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">get</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">preprocessing</span>
+
+<span class="k">def</span> <span class="nf">_round_X</span><span class="p">(</span><span class="n">adata</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+        <span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">adata</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>
+
+<div class="viewcode-block" id="annotate_RCTD"><a class="viewcode-back" href="../../../_autosummary/tacco.tools.annotate_RCTD.html#tacco.tools.annotate_RCTD">[docs]</a><span class="k">def</span> <span class="nf">annotate_RCTD</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">,</span>
+    <span class="n">reference</span><span class="p">,</span>
+    <span class="n">annotation_key</span><span class="p">,</span>
+    <span class="n">counts_location</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">conda_env</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">x_coord_name</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span>
+    <span class="n">y_coord_name</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span>
+    <span class="n">doublet</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">min_ct</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">UMI_min_sigma</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_cores</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">working_directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    Annotates an :class:`~anndata.AnnData` using reference data by RCTD</span>
+<span class="sd">    [Cable21]_.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adata</span>
+<span class="sd">        An :class:`~anndata.AnnData` including expression data in `.X` and</span>
+<span class="sd">        profiles in `.varm` and/or annotation in `.obs` or `.obsm`.</span>
+<span class="sd">    reference</span>
+<span class="sd">        Reference data to get the annotation definition from. See e.g. </span>
+<span class="sd">        :func:`~tc.pp.create_reference` for options to create it.</span>
+<span class="sd">    annotation_key</span>
+<span class="sd">        The `.obs`, `.obsm`, and/or `.varm` key where the annotation and</span>
+<span class="sd">        profiles are stored in the `reference`. If `None`, it is inferred from</span>
+<span class="sd">        `reference`, if possible.</span>
+<span class="sd">    counts_location</span>
+<span class="sd">        A string or tuple specifying where the count matrix is stored, e.g.</span>
+<span class="sd">        `&#39;X&#39;`, `(&#39;raw&#39;,&#39;X&#39;)`, `(&#39;raw&#39;,&#39;obsm&#39;,&#39;my_counts_key&#39;)`,</span>
+<span class="sd">        `(&#39;layer&#39;,&#39;my_counts_key&#39;)`, ... For details see</span>
+<span class="sd">        :func:`~tc.get.counts`.</span>
+<span class="sd">    conda_env</span>
+<span class="sd">        The path of a conda environment where `RCTD` is installed and</span>
+<span class="sd">        importable as &#39;library(RCTD)&#39;.</span>
+<span class="sd">    x_coord_name</span>
+<span class="sd">        Name of an `.obs` column to forward to RCTD as x coordinates. If not</span>
+<span class="sd">        available, forwards a new 0-only column.</span>
+<span class="sd">    y_coord_name</span>
+<span class="sd">        Name of an `.obs` column to forward to RCTD as y coordinates. If not</span>
+<span class="sd">        available, forwards a new 0-only column.</span>
+<span class="sd">    doublet</span>
+<span class="sd">        Whether to run in &quot;doublet&quot; mode. Alternative is &quot;full&quot; mode.</span>
+<span class="sd">    min_ct</span>
+<span class="sd">        Minimum number of cells in a group to include in the RCTD run.</span>
+<span class="sd">    UMI_min_sigma</span>
+<span class="sd">        As default, RCTD has this value at `300`, which is quite large for some</span>
+<span class="sd">        datasets, and breaks RCTD. Therefore the default heuristic for `None`</span>
+<span class="sd">        here is at `min(300,median(total_counts_per_observation)-1)`. See RCTD</span>
+<span class="sd">        docs for details about this parameter. </span>
+<span class="sd">    n_cores</span>
+<span class="sd">        Number of cores to use for RCTD. If `None`, use all available cores.</span>
+<span class="sd">    working_directory</span>
+<span class="sd">        The directory where to store all the intermediates. If `None`, a</span>
+<span class="sd">        temporary directory is used and cleaned in the end. This option is</span>
+<span class="sd">        probably only relevant for debugging.</span>
+<span class="sd">    verbose</span>
+<span class="sd">        Whether to print stderr and stdout of the RCTD run.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Returns the annotation in a :class:`~pandas.DataFrame`.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">conda_env</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">conda_env</span> <span class="o">=</span> <span class="s1">&#39;/ahg/regevdata/users/jklugham/src/anaconda3/envs/R_RCTD&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">conda_env</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;The conda environment &quot;</span><span class="si">%s</span><span class="s1">&quot; does not exist! A conda environment with a working `RCTD` setup is needed and can be supplied by the `conda_env` argument.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">conda_env</span><span class="p">))</span>
+        
+    <span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">validate_annotation_args</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">annotation_key</span><span class="p">,</span> <span class="n">counts_location</span><span class="p">,</span> <span class="n">full_reference</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="c1"># since 1.2: RCTD requires integer input - to make it work also otherwise, round data here.</span>
+    <span class="n">_round_X</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+    <span class="n">_round_X</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">UMI_min_sigma</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">UMI_min_sigma</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">get_sum</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">X</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">n_cores</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">n_cores</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">:</span> <span class="c1"># remove overhead for very small problems</span>
+        <span class="n">n_cores</span> <span class="o">=</span> <span class="mi">1</span>
+        
+    <span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;doublet&#39;</span> <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">doublet</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">and</span> <span class="n">doublet</span><span class="p">)</span> <span class="ow">or</span> <span class="n">doublet</span> <span class="o">==</span> <span class="s1">&#39;doublet&#39;</span> <span class="k">else</span> <span class="s1">&#39;full&#39;</span>
+    
+    <span class="n">tempdir</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">working_directory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">tempdir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;temp_RCTD_&#39;</span><span class="p">,</span><span class="nb">dir</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="n">working_directory</span> <span class="o">=</span> <span class="n">tempdir</span><span class="o">.</span><span class="n">name</span>
+    <span class="n">working_directory</span> <span class="o">=</span> <span class="n">working_directory</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span>
+    
+    <span class="n">data_file_name</span> <span class="o">=</span> <span class="s1">&#39;data.h5ad&#39;</span>
+    <span class="n">ref_file_name</span> <span class="o">=</span> <span class="s1">&#39;reference.h5ad&#39;</span>
+    <span class="n">result_file_namebase</span> <span class="o">=</span> <span class="s1">&#39;result&#39;</span>
+    <span class="n">result_file_name</span> <span class="o">=</span> <span class="n">result_file_namebase</span> <span class="o">+</span> <span class="s1">&#39;.tsv&#39;</span>
+
+    <span class="n">RCTD_R_script</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39;/RCTD.R&#39;</span>
+
+    <span class="n">new_x</span> <span class="o">=</span> <span class="n">x_coord_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span>
+    <span class="n">new_y</span> <span class="o">=</span> <span class="n">y_coord_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span>
+    <span class="k">if</span> <span class="n">new_x</span> <span class="ow">or</span> <span class="n">new_y</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">new_x</span><span class="p">:</span>
+            <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">x_coord_name</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">new_y</span><span class="p">:</span>
+            <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">y_coord_name</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1">#print(&#39;writing data&#39;)</span>
+    <span class="n">utils</span><span class="o">.</span><span class="n">write_adata_x_var_obs</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">working_directory</span> <span class="o">+</span> <span class="n">data_file_name</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;gzip&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">new_x</span><span class="p">:</span>
+        <span class="k">del</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">x_coord_name</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">new_y</span><span class="p">:</span>
+        <span class="k">del</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">y_coord_name</span><span class="p">]</span>
+
+    <span class="c1">#print(&#39;writing reference&#39;)</span>
+    <span class="n">utils</span><span class="o">.</span><span class="n">write_adata_x_var_obs</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">working_directory</span> <span class="o">+</span> <span class="n">ref_file_name</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;gzip&#39;</span><span class="p">)</span>
+    <span class="c1">#print(&#39;running RCTD&#39;)</span>
+    <span class="n">process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="s1">&#39;bash&#39;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">universal_newlines</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span> <span class="p">)</span>
+    <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="se">\</span>
+<span class="s1">cd </span><span class="si">{</span><span class="n">working_directory</span><span class="si">}</span><span class="se">\n\</span>
+<span class="s1">source $(dirname $(dirname $(which conda)))/bin/activate</span><span class="se">\n\</span>
+<span class="s1">conda activate </span><span class="si">{</span><span class="n">conda_env</span><span class="si">}</span><span class="se">\n\</span>
+<span class="s1">Rscript &quot;</span><span class="si">{</span><span class="n">RCTD_R_script</span><span class="si">}</span><span class="s1">&quot; &quot;</span><span class="si">{</span><span class="n">ref_file_name</span><span class="si">}</span><span class="s1">&quot; &quot;</span><span class="si">{</span><span class="n">data_file_name</span><span class="si">}</span><span class="s1">&quot; &quot;</span><span class="si">{</span><span class="n">result_file_namebase</span><span class="si">}</span><span class="s1">&quot; </span><span class="si">{</span><span class="n">min_ct</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">n_cores</span><span class="si">}</span><span class="s1"> &quot;</span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s1">&quot; &quot;</span><span class="si">{</span><span class="n">annotation_key</span><span class="si">}</span><span class="s1">&quot; &quot;</span><span class="si">{</span><span class="n">x_coord_name</span><span class="si">}</span><span class="s1">&quot; &quot;</span><span class="si">{</span><span class="n">y_coord_name</span><span class="si">}</span><span class="s1">&quot; </span><span class="si">{</span><span class="n">UMI_min_sigma</span><span class="si">}</span><span class="se">\n\</span>
+<span class="s1">&#39;</span>
+    <span class="c1">#print(command)</span>
+    <span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+    <span class="c1">#print(&#39;done&#39;)</span>
+    
+    <span class="n">successful</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">working_directory</span> <span class="o">+</span> <span class="n">result_file_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">successful</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">successful</span><span class="p">:</span>
+            <span class="n">type_fractions</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">working_directory</span> <span class="o">+</span> <span class="n">result_file_name</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;RCTD did not work properly!&#39;</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">tempdir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tempdir</span><span class="o">.</span><span class="n">cleanup</span><span class="p">()</span>
+    
+    <span class="n">type_fractions</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">normalize_result_format</span><span class="p">(</span><span class="n">type_fractions</span><span class="p">,</span> <span class="n">types</span><span class="o">=</span><span class="n">reference</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">annotation_key</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+    
+    <span class="k">return</span> <span class="n">type_fractions</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Broad Institute.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+tacco.utils.dist.sparse\_distance\_matrix
+=========================================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: sparse_distance_matrix

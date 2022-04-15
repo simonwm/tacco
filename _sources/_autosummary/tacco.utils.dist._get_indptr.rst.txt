@@ -1,0 +1,6 @@
+tacco.utils.dist.\_get\_indptr
+==============================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: _get_indptr

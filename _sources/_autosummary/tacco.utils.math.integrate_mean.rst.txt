@@ -1,0 +1,6 @@
+tacco.utils.math.integrate\_mean
+================================
+
+.. currentmodule:: tacco.utils.math
+
+.. autofunction:: integrate_mean

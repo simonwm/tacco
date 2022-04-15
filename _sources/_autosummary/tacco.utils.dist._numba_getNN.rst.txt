@@ -1,0 +1,6 @@
+tacco.utils.dist.\_numba\_getNN
+===============================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: _numba_getNN

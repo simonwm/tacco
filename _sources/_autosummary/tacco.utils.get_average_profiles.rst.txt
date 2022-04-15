@@ -1,0 +1,6 @@
+tacco.utils.get\_average\_profiles
+==================================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: get_average_profiles

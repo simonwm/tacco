@@ -1,0 +1,6 @@
+tacco.utils.dist.bhattacharyya2\_cosine\_distance
+=================================================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: bhattacharyya2_cosine_distance

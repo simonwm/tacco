@@ -1,0 +1,6 @@
+tacco.utils.dist.hash
+=====================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: hash

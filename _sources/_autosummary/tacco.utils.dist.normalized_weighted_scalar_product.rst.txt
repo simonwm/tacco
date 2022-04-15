@@ -1,0 +1,6 @@
+tacco.utils.dist.normalized\_weighted\_scalar\_product
+======================================================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: normalized_weighted_scalar_product

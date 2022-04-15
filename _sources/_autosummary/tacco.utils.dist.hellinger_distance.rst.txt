@@ -1,0 +1,6 @@
+tacco.utils.dist.hellinger\_distance
+====================================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: hellinger_distance

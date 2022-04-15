@@ -1,0 +1,75 @@
+tacco.utils
+===========
+
+.. automodule:: tacco.utils
+
+   
+   
+   .. rubric:: Modules
+
+   .. autosummary::
+      :toctree:
+      :template: custom-module-template.rst
+      :recursive:
+   
+      tacco.utils.dist
+      tacco.utils.math
+      tacco.utils.split
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      AnnData_query
+      bin
+      cast_down_common
+      cdist
+      col_scale
+      complete_choice
+      coo_tocsr_buffered
+      coo_tocsr_inplace
+      cpu_count
+      dense_distance_matrix
+      divide
+      find_unused_key
+      flat_inverse_mapping
+      gemmT
+      generate_mixture_profiles
+      generate_random_mixture_profiles
+      get_average_profiles
+      get_maximum_annotation
+      get_sum
+      hash
+      heapsort3
+      log
+      log1p
+      merge_annotation
+      merge_colors
+      min_dtype
+      mode
+      parallel_nnls
+      preprocess_single_cell_data
+      projection
+      pure_profile_split
+      row_scale
+      run_OT
+      run_nnls
+      scale_counts
+      solve_OT
+      sparse_distance_matrix
+      sparse_result_gemmT
+      spatial_split
+      sqrt
+      transfer_pca
+      tsne_single_cell_data
+      umap_single_cell_data
+      write_adata_x_var_obs
+   
+   
+   

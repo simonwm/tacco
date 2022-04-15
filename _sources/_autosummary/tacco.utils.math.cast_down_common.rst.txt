@@ -1,0 +1,6 @@
+tacco.utils.math.cast\_down\_common
+===================================
+
+.. currentmodule:: tacco.utils.math
+
+.. autofunction:: cast_down_common

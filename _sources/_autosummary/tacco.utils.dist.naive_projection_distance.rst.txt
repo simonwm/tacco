@@ -1,0 +1,6 @@
+tacco.utils.dist.naive\_projection\_distance
+============================================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: naive_projection_distance

@@ -1,0 +1,6 @@
+tacco.tools.fill\_regions
+=========================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: fill_regions

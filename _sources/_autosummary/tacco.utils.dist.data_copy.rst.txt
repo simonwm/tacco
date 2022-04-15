@@ -1,0 +1,6 @@
+tacco.utils.dist.data\_copy
+===========================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: data_copy

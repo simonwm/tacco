@@ -1,0 +1,6 @@
+tacco.utils.math.\_divide\_serial
+=================================
+
+.. currentmodule:: tacco.utils.math
+
+.. autofunction:: _divide_serial

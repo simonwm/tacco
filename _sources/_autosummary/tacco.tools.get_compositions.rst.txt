@@ -1,0 +1,6 @@
+tacco.tools.get\_compositions
+=============================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: get_compositions

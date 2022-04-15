@@ -1,0 +1,6 @@
+tacco.tools.priors\_OT
+======================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: priors_OT

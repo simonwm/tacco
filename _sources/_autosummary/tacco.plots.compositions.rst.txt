@@ -1,0 +1,6 @@
+tacco.plots.compositions
+========================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: compositions

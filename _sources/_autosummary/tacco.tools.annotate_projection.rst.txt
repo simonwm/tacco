@@ -1,0 +1,6 @@
+tacco.tools.annotate\_projection
+================================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: annotate_projection

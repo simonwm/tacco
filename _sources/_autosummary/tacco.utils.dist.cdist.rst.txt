@@ -1,0 +1,6 @@
+tacco.utils.dist.cdist
+======================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: cdist

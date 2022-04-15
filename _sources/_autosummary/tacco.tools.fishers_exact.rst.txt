@@ -1,0 +1,6 @@
+tacco.tools.fishers\_exact
+==========================
+
+.. currentmodule:: tacco.tools
+
+.. autofunction:: fishers_exact

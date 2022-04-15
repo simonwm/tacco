@@ -1,0 +1,6 @@
+tacco.plots.heatmap
+===================
+
+.. currentmodule:: tacco.plots
+
+.. autofunction:: heatmap

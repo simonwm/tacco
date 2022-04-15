@@ -1,0 +1,6 @@
+tacco.utils.pure\_profile\_split
+================================
+
+.. currentmodule:: tacco.utils
+
+.. autofunction:: pure_profile_split

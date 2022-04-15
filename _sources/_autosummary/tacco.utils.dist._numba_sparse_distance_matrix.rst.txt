@@ -1,0 +1,6 @@
+tacco.utils.dist.\_numba\_sparse\_distance\_matrix
+==================================================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: _numba_sparse_distance_matrix

@@ -1,0 +1,6 @@
+tacco.utils.math.gemmT
+======================
+
+.. currentmodule:: tacco.utils.math
+
+.. autofunction:: gemmT

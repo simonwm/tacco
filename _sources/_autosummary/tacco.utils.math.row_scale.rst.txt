@@ -1,0 +1,6 @@
+tacco.utils.math.row\_scale
+===========================
+
+.. currentmodule:: tacco.utils.math
+
+.. autofunction:: row_scale

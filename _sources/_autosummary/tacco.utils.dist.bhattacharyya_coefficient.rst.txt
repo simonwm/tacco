@@ -1,0 +1,6 @@
+tacco.utils.dist.bhattacharyya\_coefficient
+===========================================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: bhattacharyya_coefficient

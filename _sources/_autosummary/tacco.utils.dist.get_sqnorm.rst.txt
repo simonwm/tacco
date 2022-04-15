@@ -1,0 +1,6 @@
+tacco.utils.dist.get\_sqnorm
+============================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: get_sqnorm

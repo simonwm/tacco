@@ -1,0 +1,6 @@
+tacco.utils.dist.restore\_data
+==============================
+
+.. currentmodule:: tacco.utils.dist
+
+.. autofunction:: restore_data
