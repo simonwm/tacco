@@ -1,6 +1,6 @@
 # TACCO: Transfer of Annotations to Cells and their COmbinations
 
-TACCO is a python framework for working with categorical and compositional annotations for high-dimensional observations, in particular for transferring annotations from single cell to spatial transcriptomics data. An extensive ever expanding documentation is accessible [here](https://simonwm.github.io/tacco/).
+TACCO is a python framework for working with categorical and compositional annotations for high-dimensional observations, in particular for transferring annotations from single cell to spatial transcriptomics data. TACCO comes with an extensive ever expanding [documentation](https://simonwm.github.io/tacco/) and a set of [example notebooks](https://github.com/simonwm/tacco_examples).
 
 ## How to install TACCO
 
@@ -17,3 +17,15 @@ To install TACCO in an already existing environment, one can use `pip` to direct
 pip install tacco@git+https://github.com/simonwm/tacco.git
 ```
 
+## How to use TACCO
+
+TACCO features a fast and straightforward API for the compositional annotation of one dataset, given as an anndata object `adata`, with a categorically annotated second dataset, given as an anndata object `reference`. The annotation is wrapped in a single function call
+
+```
+import tacco as tc
+tc.tl.annotate(adata, reference, annotation_key='my_categorical_annotation', result_key='my_compositional_annotation')
+```
+
+where `'my_categorical_annotation'` is the name of the categorical `.obs` annotation in `reference` and `'my_compositional_annotation'` is the name of the new compositional `.obsm` annotation to be created in `adata`. There are many options for customizing this function to call e.g. external annotation tools, which are described in the [documentation of the `annotate` function](https://simonwm.github.io/tacco/_autosummary/tacco.tools.annotate.html#tacco.tools.annotate).
+
+As the TACCO framework contains much more than a compositional annotation method (single-molecule annotation, object-splitting, spatial co-occurrence analysis, enrichments, visualization, ...), its [documentation](https://simonwm.github.io/tacco/) does not fit into a README.

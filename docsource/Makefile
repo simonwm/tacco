@@ -21,6 +21,8 @@ github:
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 
 %: Makefile
+	python download_notebooks.py
 	rm -rf ../docbuild
 	rm -rf _autosummary
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	python cleanup_notebooks.py

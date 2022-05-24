@@ -26,6 +26,7 @@ jobs:
             pydata-sphinx-theme
             sphinx-autodoc-typehints
             nbsphinx
+            sphinx-gallery
             ipython
             jupytext
             jupyter 

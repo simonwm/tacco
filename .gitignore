@@ -1,6 +1,5 @@
 .ipynb_checkpoints/
 *.log
-*.png
 *.pdf
 *.csv
 *.h5ad
@@ -10,3 +9,4 @@ docsource/_autosummary/
 docsource/_build/
 tacco.egg-info/
 /dist/
+/docsource/examples.rst

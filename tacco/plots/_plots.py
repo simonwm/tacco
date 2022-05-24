@@ -1643,7 +1643,9 @@ def frequency_bar(
     norm_tf = (type_freqs/type_freqs.sum(axis=0)).T
     norm_tf = norm_tf.fillna(0)
     
-    return _composition_bar(norm_tf, colors, horizontal=horizontal, ax=ax)
+    _composition_bar(norm_tf, colors, horizontal=horizontal, ax=ax)
+
+    return fig
 
 def frequency_line(
     adata,
@@ -3325,6 +3327,10 @@ def significances(
     pmax=0.05,
     pmin=1e-5,
     annotate_pvalues=True,
+    value_cluster=False,
+    group_cluster=False,
+    value_order=None,
+    group_order=None,
     axsize=None,
 ):
 
@@ -3347,6 +3353,18 @@ def significances(
         The minimum p-value on the color scale.
     annotate_pvalues
         Whether to annotate p-values
+    value_cluster
+        Whether to cluster and reorder the values.
+    group_cluster
+        Whether to cluster and reorder the groups.
+    value_order
+        Set the order of the values explicitly with a list or to be close to
+        diagonal by specifying "diag"; this option is incompatible with
+        `value_cluster`.
+    group_order
+        Set the order of the groups explicitly with a list or to be close to
+        diagonal by specifying "diag"; this option is incompatible with
+        `group_cluster`.
     axsize
         Tuple of width and size of a single axis. If `None`, use
         automatic values.
@@ -3402,7 +3420,7 @@ def significances(
                      [1.0,  enriched_color[2], enriched_color[2]]]}
     cmap = LinearSegmentedColormap('sigmap', segmentdata=cdict, N=256)
 
-    fig = heatmap(enr.T, None, None, cmap=cmap, cmap_vmin_vmax=(-max_log,max_log), annotation=ann, colorbar=False, axsize=axsize);
+    fig = heatmap(enr.T, None, None, cmap=cmap, cmap_vmin_vmax=(-max_log,max_log), annotation=ann, colorbar=False, value_cluster=value_cluster, group_cluster=group_cluster, value_order=value_order, group_order=group_order, axsize=axsize);
 
     rel_dpi_factor = matplotlib.rcParams['figure.dpi'] / 72
     height_pxl = 200 * rel_dpi_factor
