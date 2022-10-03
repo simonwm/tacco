@@ -18,7 +18,9 @@ def annotate_SingleR(
     counts_location=None,
     conda_env=None,
     fine_tune=True,
-    aggr_ref=True,
+    aggr_ref=False,
+    genes='de',
+    de_method='classic',
     working_directory=None,
     verbose=True,
 ):
@@ -50,6 +52,10 @@ def annotate_SingleR(
         Forwards the 'fine.tune' parameter to SingleR.
     aggr_ref
         Forwards the 'aggr.ref' parameter to SingleR.
+    genes
+        Forwards the 'genes' parameter to SingleR.
+    de_method
+        Forwards the 'de_method' parameter to SingleR.
     working_directory
         The directory where to store all the intermediates. If `None`, a
         temporary directory is used and cleaned in the end. This option is
@@ -79,7 +85,42 @@ def annotate_SingleR(
     result_file_namebase = 'result'
     result_file_name = result_file_namebase + '.tsv'
 
-    R_script = os.path.dirname(os.path.abspath(__file__)) + '/SingleR.R'
+    R_script_file_name = 'run.R'
+    R_script = utils.anndata2R_header() + """
+args=commandArgs(trailingOnly = TRUE)
+
+library(data.table)
+library(SingleR)
+
+sc_adata=args[1]
+sp_adata=args[2]
+out = args[3]
+annotation_key = args[4]
+fine.tune = args[5]
+aggr.ref = args[6]
+genes = args[7]
+de.method = args[8]
+
+print(args)
+
+print('reading data')
+adata = read_adata(sp_adata)
+adata.Xt <- t(adata$X)
+print('reading reference')
+reference = read_adata(sc_adata)
+reference.Xt <- t(reference$X)
+
+meta_data = reference$obs
+cell_types=reference$obs[,annotation_key]
+names(cell_types)=row.names(reference$obs)
+
+print('running SingleR')
+SingleR_result <- SingleR(test=adata.Xt, ref=reference.Xt, labels=cell_types, fine.tune=fine.tune, genes=genes, de.method=de.method, aggr.ref=aggr.ref)
+
+write.table(cbind(row.names(SingleR_result),SingleR_result$labels),paste0(out,".tsv"),sep="\t",quote=FALSE,row.names=FALSE)
+"""
+    with open(working_directory + R_script_file_name, 'w') as f:
+        f.write(R_script)
     
     # SingleR expects log-normalized data
     adata = utils.preprocess_single_cell_data(adata, hvg=False, scale=False, pca=False, inplace=False, min_cells=0, min_genes=0)
@@ -96,7 +137,7 @@ def annotate_SingleR(
 cd {working_directory}\n\
 source $(dirname $(dirname $(which conda)))/bin/activate\n\
 conda activate {conda_env}\n\
-Rscript "{R_script}" "{ref_file_name}" "{data_file_name}" "{result_file_namebase}" "{annotation_key}" "{fine_tune}" "{aggr_ref}"\n\
+Rscript "{R_script_file_name}" "{ref_file_name}" "{data_file_name}" "{result_file_namebase}" "{annotation_key}" "{fine_tune}" "{aggr_ref}" "{genes}" "{de_method}"\n\
 '
     #print(command)
     out, err = process.communicate(command)

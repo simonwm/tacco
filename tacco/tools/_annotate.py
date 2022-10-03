@@ -168,7 +168,7 @@ def boost_annotation_method(
     performs the actual boosted annotation.
     
     """
-
+    
     def _method(adata, reference, annotation_key, annotation_prior, verbose):
         
         nonlocal annotation_method, bisections, bisection_divisor
@@ -176,7 +176,7 @@ def boost_annotation_method(
         adata = ad.AnnData(adata.X.copy(), obs=adata.obs[[]], var=adata.var[[]])
         average_profiles = utils.get_average_profiles(annotation_key, reference)
         average_profiles /= average_profiles.sum(axis=0).to_numpy()
-
+        
         if bisection_divisor < 2:
             raise ValueError('`bisection_divisor` is smaller than 2!')
 
@@ -833,7 +833,7 @@ def annotate(
         adata.obsm[result_key] = cell_type.reindex(adata.obs.index)
         result = adata
     else:
-        result = cell_type
+        result = cell_type.reindex(adata.obs.index)
     result = (result, reference) if return_reference else result
     
     del tdata, reference # clean up the copies.

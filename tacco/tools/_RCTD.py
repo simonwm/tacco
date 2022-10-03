@@ -119,7 +119,116 @@ def annotate_RCTD(
     result_file_namebase = 'result'
     result_file_name = result_file_namebase + '.tsv'
 
-    RCTD_R_script = os.path.dirname(os.path.abspath(__file__)) + '/RCTD.R'
+    R_script_file_name = 'run.R'
+    R_script = utils.anndata2R_header() + """
+args=commandArgs(trailingOnly = TRUE)
+
+library(data.table)
+if("spacexr" %in% rownames(installed.packages())) {
+    library(spacexr)
+    RCTD_API="spacexr"
+} else if ("RCTD" %in% rownames(installed.packages())) {
+    library(RCTD)
+    RCTD_API="RCTD"
+} else {
+    stop('Neither "RCTD" nor "spacexr" seem to be available! Ensure that one of them is installed properly!')
+}
+
+sc_adata=args[1]
+
+sp_adata=args[2]
+
+out = args[3]
+
+min_ct = as.numeric(args[4])
+cores = as.numeric(args[5])
+mode = args[6]
+ct_col = args[7]
+x_col = args[8]
+y_col = args[9]
+UMI_min_sigma = args[10]
+
+print(args)
+
+read_reference=function(adata_file,ct_col) {
+    adata = read_adata(adata_file)
+    
+    meta_data = adata$obs
+    cell_types = meta_data[,ct_col]
+    names(cell_types) = row.names(meta_data)
+    
+    return(Reference(as(t(adata$X),'dgCMatrix'), as.factor(cell_types)))
+}
+
+read_spatial=function (adata_file,x_col,y_col) {
+    adata = read_adata(adata_file)
+    
+    counts <- as(t(adata$X),'dgCMatrix')
+    coords = adata$obs[,c(x_col,y_col)]
+    colnames(coords)[1] = "x"
+    colnames(coords)[2] = "y"
+    
+    return(SpatialRNA(coords, counts))
+}
+
+print('reading data')
+puck=read_spatial(sp_adata,x_col, y_col)
+print('reading reference')
+reference=read_reference(sc_adata,ct_col)
+
+print('running RCTD')
+myRCTD <- create.RCTD(puck, reference, max_cores = cores, CELL_MIN_INSTANCE = min_ct,  UMI_min = 0, UMI_min_sigma=UMI_min_sigma) # UMI_min filter is already applied when data arrives here
+
+myRCTD <- run.RCTD(myRCTD, doublet_mode = mode)
+
+if (mode == "doublet") {
+    full_df = myRCTD@results$results_df
+
+    full_df$bc = row.names(full_df)
+    full_df$w1 = myRCTD@results$weights_doublet[,1]
+    full_df$w2 = myRCTD@results$weights_doublet[,2]
+
+    full_df = full_df[full_df$spot_class != 'reject',]
+
+    sub_df1 = data.frame(bc=full_df[,'bc'],type=full_df[,'first_type'],weight=full_df[,'w1'])
+    sub_df2 = data.frame(bc=full_df[,'bc'],type=full_df[,'second_type'],weight=full_df[,'w2'])
+
+    w1 = reshape(sub_df1, idvar = "bc", timevar = "type", direction = "wide")
+    w2 = reshape(sub_df2, idvar = "bc", timevar = "type", direction = "wide")
+
+    w1[is.na(w1)] = 0
+    w2[is.na(w2)] = 0
+
+    w1 = data.frame(w1, row.names='bc')
+    w2 = data.frame(w2, row.names='bc')
+
+    # ensure all columns appear in both data.frames
+    for (col in colnames(w1)) {
+        if (!(col %in% colnames(w2))) {
+            w2[,col] = 0.0
+        }
+    }
+    for (col in colnames(w2)) {
+        if (!(col %in% colnames(w1))) {
+            w1[,col] = 0.0
+        }
+    }
+
+    weights = w1 + w2[names(w1)]
+
+    names(weights) <- sub("^weight.", "", names(weights))
+} else {
+    weights=myRCTD@results$weights
+}
+
+if (is(weights, 'sparseMatrix')) {
+    weights = as.data.frame(as.matrix(weights))
+}
+
+write.table(weights,paste0(out,".tsv"),sep="\t",quote=FALSE)
+"""
+    with open(working_directory + R_script_file_name, 'w') as f:
+        f.write(R_script)
 
     new_x = x_coord_name not in adata.obs
     new_y = y_coord_name not in adata.obs
@@ -145,7 +254,7 @@ def annotate_RCTD(
 cd {working_directory}\n\
 source $(dirname $(dirname $(which conda)))/bin/activate\n\
 conda activate {conda_env}\n\
-Rscript "{RCTD_R_script}" "{ref_file_name}" "{data_file_name}" "{result_file_namebase}" {min_ct} {n_cores} "{mode}" "{annotation_key}" "{x_coord_name}" "{y_coord_name}" {UMI_min_sigma}\n\
+Rscript "{R_script_file_name}" "{ref_file_name}" "{data_file_name}" "{result_file_namebase}" {min_ct} {n_cores} "{mode}" "{annotation_key}" "{x_coord_name}" "{y_coord_name}" {UMI_min_sigma}\n\
 '
     #print(command)
     out, err = process.communicate(command)

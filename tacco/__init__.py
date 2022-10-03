@@ -9,6 +9,7 @@ from . import tools as tl
 from . import eval as ev
 from . import utils
 from . import testing
+from . import benchmarking
 # expose frequently used functions on top level for convenience
 from .utils import get_sum as sum
 

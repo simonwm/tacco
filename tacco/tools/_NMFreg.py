@@ -15,7 +15,7 @@ def annotate_NMFreg(
     adata,
     reference,
     annotation_key,
-    K=40,
+    K=30,
     random_state=42,
     counts_location=None,
     min_counts_per_cell=0,

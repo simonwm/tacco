@@ -272,7 +272,7 @@ def test_annotate_NMFreg(adata_reference_and_typing, dataset):
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
 
-    result = tc.tl.annotate(adata, reference, 'type', method='NMFreg', K=3)
+    result = tc.tl.annotate(adata, reference, annotation_key='type', method='NMFreg', K=3)
 
     tc.testing.assert_frame_equal(result, typing, rtol=1e-14, atol=1e-14)
 
@@ -281,7 +281,7 @@ def test_annotate_nnls(adata_reference_and_typing, dataset):
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
 
-    result = tc.tl.annotate(adata, reference, 'type', method='nnls')
+    result = tc.tl.annotate(adata, reference, annotation_key='type', method='nnls')
 
     tc.testing.assert_frame_equal(result, typing, rtol=1e-14, atol=1e-14)
 
@@ -293,7 +293,7 @@ def test_annotate_OT(adata_reference_and_typing, dataset, decomposition, metric)
     typing = adata.obsm['type']
     annotation_prior=adata.uns['annotation_prior']
     
-    result = tc.tl.annotate(adata, reference, 'type', method='OT', bisections=0, annotation_prior=annotation_prior, metric=metric, decomposition=decomposition)
+    result = tc.tl.annotate(adata, reference, annotation_key='type', method='OT', bisections=0, annotation_prior=annotation_prior, metric=metric, decomposition=decomposition)
 
     tc.testing.assert_frame_equal(result, typing, rtol=1e-14, atol=1e-14)
 
@@ -305,7 +305,7 @@ def test_annotate_OT_deconvolution(adata_reference_and_typing, dataset, deconvol
     typing = adata.obsm['type']
     annotation_prior=adata.uns['annotation_prior']
     
-    result = tc.tl.annotate(adata, reference, 'type', method='OT', bisections=0, annotation_prior=annotation_prior, metric=metric, deconvolution=deconvolution)
+    result = tc.tl.annotate(adata, reference, annotation_key='type', method='OT', bisections=0, annotation_prior=annotation_prior, metric=metric, deconvolution=deconvolution)
 
     tc.testing.assert_frame_equal(result, typing, rtol=1e-6, atol=1e-14)
 
@@ -315,7 +315,7 @@ def test_annotate_OT_max(adata_reference_and_typing, dataset):
     typing = adata.obsm['type']
     annotation_prior=adata.uns['annotation_prior']
 
-    result = tc.tl.annotate(adata, reference, 'type', method='OT', bisections=0, annotation_prior=annotation_prior, max_annotation=1)
+    result = tc.tl.annotate(adata, reference, annotation_key='type', method='OT', bisections=0, annotation_prior=annotation_prior, max_annotation=1)
     
     tc.testing.assert_frame_equal(result, typing, rtol=1e-14, atol=1e-14)
 
@@ -330,7 +330,7 @@ def test_annotate_OT_multi_center(adata_reference_and_typing, dataset, multi_cen
     
     adata = adata.copy() # dont change the input
     
-    tc.tl.annotate(adata, reference, 'type', method='OT', bisections=0, annotation_prior=annotation_prior, multi_center=multi_center, multi_center_amplitudes=multi_center_amplitudes, result_key='annotation', reconstruction_key=reconstruction_key)
+    tc.tl.annotate(adata, reference, annotation_key='type', method='OT', bisections=0, annotation_prior=annotation_prior, multi_center=multi_center, multi_center_amplitudes=multi_center_amplitudes, result_key='annotation', reconstruction_key=reconstruction_key)
     result = adata.obsm['annotation']
 
     tc.testing.assert_frame_equal(result, typing, rtol=1e-14, atol=1e-14)
@@ -365,7 +365,7 @@ def test_annotate_projection(adata_reference_and_typing, dataset, projection, bi
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
 
-    result = tc.tl.annotate(adata, reference, 'type', method='projection', bisections=bisections, projection=projection, deconvolution=deconvolution)
+    result = tc.tl.annotate(adata, reference, annotation_key='type', method='projection', bisections=bisections, projection=projection, deconvolution=deconvolution)
 
     if dataset == 1 and deconvolution == 0 and projection == 'naive': # this method has huge error on the this dataset
         tc.testing.assert_frame_equal(result, typing, rtol=1e-14, atol=2e-1)
@@ -378,7 +378,7 @@ def test_annotate_SVM(adata_reference_and_typing, dataset, mode):
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
 
-    result = tc.tl.annotate(adata, reference, 'type', method='svm', mode=mode, platform_iterations=None)
+    result = tc.tl.annotate(adata, reference, annotation_key='type', method='svm', mode=mode, platform_iterations=None)
 
     if mode == 'classification':
         # classification can only find a single type per cell
@@ -395,7 +395,7 @@ def test_annotate_RCTD(adata_reference_and_typing, dataset, doublet):
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
 
-    result = tc.tl.annotate(adata, reference, 'type', method='RCTD', min_ct=1, verbose=False, platform_iterations=None, doublet=doublet, conda_env='RCTD')
+    result = tc.tl.annotate(adata, reference, annotation_key='type', method='RCTD', min_ct=1, verbose=False, platform_iterations=None, doublet=doublet, conda_env='RCTD')
 
     tc.testing.assert_frame_equal(result, typing, rtol=1e-14, atol=2e-3)
 
@@ -405,7 +405,7 @@ def test_annotate_tangram(adata_reference_and_typing, dataset):
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
 
-    result = tc.tl.annotate(adata, reference, 'type', method='tangram', verbose=True, platform_iterations=None, conda_env='tangram')
+    result = tc.tl.annotate(adata, reference, annotation_key='type', method='tangram', verbose=True, platform_iterations=None, conda_env='tangram')
 
     tc.testing.assert_frame_equal(result, typing, rtol=4e-2, atol=4e-2) # tangram gets not reproducible results with quite some distance from the ground truth
 
@@ -415,7 +415,7 @@ def test_annotate_SingleR(adata_reference_and_typing, dataset):
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
 
-    result = tc.tl.annotate(adata, reference, 'type', method='SingleR', verbose=True, platform_iterations=None, conda_env='SingleR')
+    result = tc.tl.annotate(adata, reference, annotation_key='type', method='SingleR', verbose=True, platform_iterations=None, conda_env='SingleR')
 
     # SingleR can only find a single type per cell
     single_types = (typing.to_numpy() != 0).sum(axis=1) == 1
@@ -430,7 +430,7 @@ def test_annotate_WOT(adata_reference_and_typing, dataset):
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
 
-    result = tc.tl.annotate(adata, reference, 'type', method='WOT', verbose=True, platform_iterations=None)
+    result = tc.tl.annotate(adata, reference, annotation_key='type', method='WOT', verbose=True, platform_iterations=None)
 
     tc.testing.assert_frame_equal(result, typing, rtol=1e-7, atol=2e-2)
 
@@ -440,6 +440,16 @@ def test_annotate_NovoSpaRc(adata_reference_and_typing, dataset):
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
 
-    result = tc.tl.annotate(adata, reference, 'type', method='novosparc', verbose=True, platform_iterations=None)
+    result = tc.tl.annotate(adata, reference, annotation_key='type', method='novosparc', verbose=True, platform_iterations=None)
 
     tc.testing.assert_frame_equal(result, typing, rtol=1e-7, atol=3.4e-1) # exact marginal enforcement by optimal transport makes a better result impossible...
+
+@pytest.mark.parametrize('dataset', [0,1,2,])
+def test_benchmark_annotate(adata_reference_and_typing, dataset):
+    adata, reference = adata_reference_and_typing[dataset]
+    typing = adata.obsm['type']
+    annotation_prior=adata.uns['annotation_prior']
+    
+    result = tc.benchmarking.benchmark_annotate(adata, reference, annotation_key='type', method='OT', bisections=0, annotation_prior=annotation_prior)
+
+    tc.testing.assert_frame_equal(result['annotation'], typing, rtol=1e-14, atol=1e-14)
