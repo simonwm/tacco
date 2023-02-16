@@ -30,13 +30,13 @@ def compute_err(adata, result_keys, annotation_keys, err_method='lp', **kwargs):
     Parameters
     ----------
     adata
-        An :class:`~anndata.AnnData` including expression data in `.X` and
-        profiles in `.varm` and/or annotation in `.obs` or `.obsm`.
+        An :class:`~anndata.AnnData` including annotations in in `.obs` or
+        `.obsm`.
     result_keys
         A list of keys in `.obsm` that contain annotation results
     annotation_keys
-        The `.obs`, `.obsm`, and/or `.varm` key where the annotation and
-        profiles are stored in the `adata`.
+        The `.obs` or `.obsm` keys where the ground truth annotation is
+        stored.
     err_method
         The method to use to calculate errors. Available are:
         
@@ -44,7 +44,8 @@ def compute_err(adata, result_keys, annotation_keys, err_method='lp', **kwargs):
           default `2`.
         - "corr"
         - "max_correct"
-        - "proj"
+        - "proj": projection, can use an additional keyword argument 'metric'
+          with default "bc"
     
     Returns
     -------
@@ -67,10 +68,8 @@ def compute_err(adata, result_keys, annotation_keys, err_method='lp', **kwargs):
         annotation_df = adata.obs[annotation_keys]
     elif set(annotation_keys).issubset(set(adata.obsm_keys())): # should be a string then
         annotation_df = adata.obsm[annotation_keys[0]]
-    elif set(annotation_keys).issubset(set(adata.varm_keys())): # should be a string then
-        annotation_df = adata.varm[annotation_keys]
     else:
-        raise ValueError('`annotation_keys` not found in `obs`, `obsm`, or `varm`')
+        raise ValueError('`annotation_keys` not found in `obs` or `obsm`')
 
     if isinstance(annotation_df.iloc[0], str):
         annotation_df = pd.get_dummies(annotation_df)

@@ -49,15 +49,17 @@ def annotate_tangram(
     """\
     Annotates an :class:`~anndata.AnnData` using reference data by Tangram
     [Biancalani20]_.
+
+    This is the direct interface to this annotation method. In practice using
+    the general wrapper :func:`~tacco.tools.annotate` is recommended due to its
+    higher flexibility.
     
     Parameters
     ----------
     adata
-        An :class:`~anndata.AnnData` including expression data in `.X` and
-        annotation in `.obs`.
+        An :class:`~anndata.AnnData` including expression data in `.X`.
     reference
-        Reference data to get the annotation definition from. See e.g. 
-        :func:`~tc.pp.create_reference` for options to create it.
+        Reference data to get the annotation definition from.
     annotation_key
         The `.obs` key where the annotation is stored in the `reference`. If
         `None`, it is inferred from `reference`, if possible.
@@ -65,7 +67,7 @@ def annotate_tangram(
         A string or tuple specifying where the count matrix is stored, e.g.
         `'X'`, `('raw','X')`, `('raw','obsm','my_counts_key')`,
         `('layer','my_counts_key')`, ... For details see
-        :func:`~tc.get.counts`.
+        :func:`~tacco.get.counts`.
     conda_env
         The path of a conda environment where `tangram` is installed and
         importable as 'import tangram'.
@@ -80,7 +82,7 @@ def annotate_tangram(
         Whether to print stderr and stdout of the tangram run.
     **kw_args
         Additional keyword arguments are forwarded to
-        :func:`~tangram.map_cells_to_space`. Interesting should be in
+        :func:`tangram.map_cells_to_space`. Interesting should be in
         particular 'device' to use a gpu. Note that the arguments 'mode' and
         'cluster_label' are should be used via specifying `cluster_mode==True`.
         

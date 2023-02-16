@@ -219,9 +219,7 @@ def adata_coocc():
         'interval': np.array([ 0., 15., 32.]),
         'annotation': ann_c,
         'center': ann_c,
-        'p_t': None,
         'permutation_counts': None,
-        'n_boot': 0,
     }
     counts = np.array([[
         [[ 6.,  4.],
@@ -354,9 +352,7 @@ def adata_coocc():
         'interval': np.array([ 0., 15., 32.]),
         'annotation': ann_c,
         'center': ann_d,
-        'p_t': None,
         'permutation_counts': None,
-        'n_boot': 0,
     }
     counts = np.array([[
         [[ 6.,  4.],
@@ -471,9 +467,7 @@ def adata_coocc():
         'interval': np.array([ 0., 15., 32.]),
         'annotation': ann_d,
         'center': ann_c,
-        'p_t': None,
         'permutation_counts': None,
-        'n_boot': 0,
     }
     counts = np.array([[
         [[14., 16.],
@@ -552,9 +546,7 @@ def adata_coocc():
         'interval': np.array([ 0., 15., 32.]),
         'annotation': ann_d,
         'center': ann_d,
-        'p_t': None,
         'permutation_counts': None,
-        'n_boot': 0,
     }
     return adata
 
@@ -575,12 +567,6 @@ def assert_coocc_equal(left, right):
     tc.testing.assert_index_equal(left['center'], right['center'])
     tc.testing.assert_dense_equal(left['occ'], right['occ'])
     tc.testing.assert_dense_equal(left['log_occ'], right['log_occ'])
-    for p_key in ['p_t', 'p_t_fdr_bh']:
-        if p_key in left:
-            if left[p_key] is None:
-                assert(right[p_key] is None)
-            else:
-                tc.testing.assert_dense_equal(left[p_key], right[p_key])
     if left['z'] is None:
         assert(right['z'] is None)
     else:
@@ -595,20 +581,6 @@ def assert_coocc_equal(left, right):
         assert(right['permutation_counts'] is None)
     else:
         tc.testing.assert_dense_equal(left['permutation_counts'], right['permutation_counts'])
-    assert(left['n_boot'] == right['n_boot'])
-    if 'comparisons' in left:
-        for k in left['comparisons']:
-            assert(k in right['comparisons'])
-        for k in right['comparisons']:
-            assert(k in left['comparisons'])
-        for k in left['comparisons']:
-            tc.testing.assert_dense_equal(left['comparisons'][k]['rel_occ'], right['comparisons'][k]['rel_occ'])
-            for p_key in ['p_t', 'p_t_fdr_bh']:
-                if p_key in left['comparisons'][k]:
-                    if left['comparisons'][k][p_key] is None:
-                        assert(right['comparisons'][k][p_key] is None)
-                    else:
-                        tc.testing.assert_dense_equal(left['comparisons'][k][p_key], right['comparisons'][k][p_key])
 
 @pytest.mark.parametrize('anno', ['c','d'])
 @pytest.mark.parametrize('center', ['c','d'])
@@ -630,114 +602,7 @@ def test_cooccurrence(adata_coocc, anno, center, soft_anno, soft_center, sparse)
     assert_coocc_equal(result, adata.uns[f'coocc_{anno}_{center}'])
 
 @pytest.fixture(scope="session")
-def adata_coocc_comp():
-    ann_c = pd.Index(['a','b','c'])
-    ann_c.name = 'c'
-    ann_d = pd.Index(['A','B'])
-    ann_d.name = 'd'
-    counts = np.array([[
-       [[ 100.0, 10.0, 1.0, ],[ 200.0, 20.0, 2.0, ],[ 300.0, 30.0, 3.0, ]],
-       [[ 10.0, 10.0, 10.0, ],[ 20.0, 20.0, 20.0, ],[ 30.0, 30.0, 30.0, ]],
-    ],[
-       [[ 100.1, 10.1, 1.1, ],[ 200.1, 20.1, 2.1, ],[ 300.1, 30.1, 3.1, ]],
-       [[ 10.1, 10.1, 10.1, ],[ 20.1, 20.1, 20.1, ],[ 30.1, 30.1, 30.1, ]],
-    ]])
-    adata1 = ad.AnnData(scipy.sparse.csr_matrix((10,10)))
-    adata1.uns['coocc_d_c'] = {
-        'occ': np.zeros_like(counts[0]),
-        'sample_counts': counts,
-        'interval': np.array([ 0., 1., 2., 3., ]),
-        'annotation': ann_d,
-        'center': ann_c,
-        'p_t': None,
-        'n_boot': 0,
-        'comparisons': {
-            'correct': {
-                'rel_occ': np.array([
-                    [[ 1.91670057e-03,  1.11022302e-16, -2.57285430e-02],
-                     [ 0.00000000e+00,  0.00000000e+00,  5.55111512e-17],
-                     [-6.57537182e-04,  5.55111512e-17,  1.93146753e-02]],
-
-                    [[-1.57519376e-02,  1.11022302e-16,  1.10709434e-02],
-                     [ 0.00000000e+00,  0.00000000e+00, -5.55111512e-17],
-                     [ 5.87671976e-03,  5.55111512e-17, -4.79729450e-03]]
-                ]),
-                'p_t_fdr_bh': np.array([
-                    [[ 0.01582267,  0.47548095, -0.01843644],
-                     [ 0.47548095,  0.47548095,  0.73957622],
-                     [-0.01582267,  0.47548095,  0.01582267]],
-
-                    [[-0.01582267,  0.47548095,  0.01582267],
-                     [ 0.47548095,  0.47548095, -0.80754991],
-                     [ 0.01582267,  0.47548095, -0.01582267]]
-                ]),
-            },
-        },
-    }
-    adata2 = ad.AnnData(scipy.sparse.csr_matrix((10,10)))
-    adata2.uns['coocc_d_c'] = {
-        'occ': np.zeros_like(counts[0]),
-        'sample_counts': counts+1,
-        'interval': np.array([ 0., 1., 2., 3., ]),
-        'annotation': ann_d,
-        'center': ann_c,
-        'p_t': None,
-        'n_boot': 0,
-        'comparisons': {
-            'correct': {
-                'rel_occ': np.array([
-                    [[-1.91670057e-03, -1.11022302e-16,  2.57285430e-02],
-                     [ 0.00000000e+00,  0.00000000e+00, -5.55111512e-17],
-                     [ 6.57537182e-04, -5.55111512e-17, -1.93146753e-02]],
-
-                    [[ 1.57519376e-02, -1.11022302e-16, -1.10709434e-02],
-                     [ 0.00000000e+00,  0.00000000e+00,  5.55111512e-17],
-                     [-5.87671976e-03, -5.55111512e-17,  4.79729450e-03]]
-                ]),
-                'p_t_fdr_bh': np.array([
-                    [[-0.01582267, -0.47548095,  0.01843644],
-                     [-0.47548095, -0.47548095, -0.73957622],
-                     [ 0.01582267, -0.47548095, -0.01582267]],
-
-                    [[ 0.01582267, -0.47548095, -0.01582267],
-                     [-0.47548095, -0.47548095,  0.80754991],
-                     [-0.01582267, -0.47548095,  0.01582267]]
-                ]),
-            },
-        },
-    }
-    
-    return {
-        'adata1': adata1,
-        'adata2': adata2,
-    }
-
-def test_co_occurrence_comparison(adata_coocc_comp):
-    adatas = adata_coocc_comp
-    
-    adatas = {k:a.copy() for k,a in adatas.items()} # dont change the input
-    
-    tc.tl.co_occurrence_comparison(adatas, analysis_key='coocc_d_c', result_key='results')
-    
-    tc.testing.assert_dense_equal(
-        adatas['adata1'].uns['coocc_d_c']['comparisons']['results']['rel_occ'], 
-        adatas['adata1'].uns['coocc_d_c']['comparisons']['correct']['rel_occ'],
-    )
-    tc.testing.assert_dense_equal(
-        adatas['adata1'].uns['coocc_d_c']['comparisons']['results']['p_t_fdr_bh'], 
-        adatas['adata1'].uns['coocc_d_c']['comparisons']['correct']['p_t_fdr_bh'],
-    )
-    tc.testing.assert_dense_equal(
-        adatas['adata2'].uns['coocc_d_c']['comparisons']['results']['rel_occ'], 
-        adatas['adata2'].uns['coocc_d_c']['comparisons']['correct']['rel_occ'],
-    )
-    tc.testing.assert_dense_equal(
-        adatas['adata2'].uns['coocc_d_c']['comparisons']['results']['p_t_fdr_bh'], 
-        adatas['adata2'].uns['coocc_d_c']['comparisons']['correct']['p_t_fdr_bh'],
-    )
-
-@pytest.fixture(scope="session")
-def adatas_coocc_boot_and_permute():
+def adatas_coocc_permute():
 
     N = 1000
     n_samples_dir = 2
@@ -764,34 +629,29 @@ def adatas_coocc_boot_and_permute():
     
     adataA.uns['correct'] = {
         'occ': np.array([
-            [[0.01540834], [1.97700387], [0.06788494]],
-            [[1.97700387], [0.00400844], [1.97692021]],
-            [[0.06788494], [1.97692021], [0.0154457 ]]
+            [[0.015407113095], [1.977658645013], [0.065194656208]],
+            [[1.977658645013], [0.003997679548], [1.977658645013]],
+            [[0.065194656208], [1.977658645013], [0.015407113095]]
         ]),
         'log_occ': np.array([
-            [[-4.17293162], [ 0.68157646], [-2.78766036]],
-            [[ 0.68157646], [-5.51937345], [ 0.681534  ]],
-            [[-2.78766036], [ 0.681534  ], [-4.17047076]]
-        ]),
-        'p_t_fdr_bh': np.array([
-            [[-3.89569304e-08], [ 7.50074596e-08], [-1.88556898e-03]],
-            [[ 7.50074596e-08], [-6.39295900e-09], [ 7.50074596e-08]],
-            [[-1.88556898e-03], [ 7.50074596e-08], [-2.32481552e-08]]
+            [[-4.17298347], [ 0.68190772], [-2.82916387]],
+            [[ 0.68190772], [-5.52205138], [ 0.68190772]],
+            [[-2.82916387], [ 0.68190772], [-4.17298347]]
         ]),
         'z': np.array([
-            [[-119.59174901041 ], [   2.199978319226], [ -71.050367249653]],
-            [[   2.199978319226], [-331.863880857422], [   2.134114319077]],
-            [[ -71.050367249653], [   2.134114319077], [-108.759292575991]]
+            [[-119.59174901], [   2.20494998], [ -71.97792357]],
+            [[   2.20494998], [-331.86388086], [   2.14255343]],
+            [[ -71.97792357], [   2.14255343], [-108.75929258]]
         ]),
         'composition': np.array([
-            [[0.00389144], [0.49932517], [0.01717742]],
-            [[0.97896768], [0.00198483], [0.9789264 ]],
-            [[0.01714089], [0.49869   ], [0.00389618]]
+            [[0.00388749], [0.49900989], [0.01647366]],
+            [[0.97963886], [0.00198021], [0.97963886]],
+            [[0.01647366], [0.49900989], [0.00388749]]
         ]),
         'log_composition': np.array([
-            [[-5.54901041], [-0.69450232], [-4.16373914]],
-            [[-0.02128141], [-6.22223132], [-0.02132387]],
-            [[-4.16496957], [-0.69577521], [-5.54777998]]
+            [[-5.55002055], [-0.69512936], [-4.20620095]],
+            [[-0.0205954 ], [-6.22455451], [-0.0205954 ]],
+            [[-4.20620095], [-0.69512936], [-5.55002055]]
         ]),
         'distance_distribution': np.array([
             [[1.], [1.], [1.]],
@@ -817,39 +677,15 @@ def adatas_coocc_boot_and_permute():
            [[[  0.        ], [251.        ], [  2.        ]],
             [[251.        ], [  0.        ], [251.        ]],
             [[  2.        ], [251.        ], [  0.        ]]],
-           [[[  0.        ], [250.65685425], [  2.        ]],
-            [[250.65685425], [  0.        ], [249.        ]],
-            [[  2.        ], [249.        ], [  0.        ]]],
-           [[[  0.        ], [251.        ], [  4.        ]],
-            [[251.        ], [  0.        ], [251.        ]],
-            [[  4.        ], [251.        ], [  0.        ]]],
-           [[[  0.        ], [251.        ], [  1.        ]],
-            [[251.        ], [  0.        ], [251.        ]],
-            [[  1.        ], [251.        ], [  0.        ]]],
-           [[[  0.        ], [248.82842712], [  1.        ]],
-            [[248.82842712], [  0.        ], [252.41421356]],
-            [[  1.        ], [252.41421356], [  0.        ]]],
            [[[  0.        ], [251.        ], [  1.        ]],
             [[251.        ], [  0.        ], [251.        ]],
             [[  1.        ], [251.        ], [  0.        ]]],
            [[[  0.        ], [250.        ], [  5.        ]],
             [[250.        ], [  0.        ], [250.        ]],
             [[  5.        ], [250.        ], [  0.        ]]],
-           [[[  0.        ], [249.41421356], [  5.        ]],
-            [[249.41421356], [  0.        ], [248.        ]],
-            [[  5.        ], [248.        ], [  0.        ]]],
-           [[[  0.        ], [248.        ], [  6.        ]],
-            [[248.        ], [  0.        ], [248.        ]],
-            [[  6.        ], [248.        ], [  0.        ]]],
            [[[  0.        ], [252.        ], [  5.        ]],
             [[252.        ], [  0.        ], [252.        ]],
             [[  5.        ], [252.        ], [  0.        ]]],
-           [[[  0.        ], [252.        ], [  5.        ]],
-            [[252.        ], [  0.        ], [250.82842712]],
-            [[  5.        ], [250.82842712], [  0.        ]]],
-           [[[  0.        ], [252.        ], [  4.        ]],
-            [[252.        ], [  0.        ], [248.82842712]],
-            [[  4.        ], [248.82842712], [  0.        ]]]
         ]),
         'permutation_counts': np.array([
             [[[ 82.], [170.], [ 82.]],
@@ -880,52 +716,31 @@ def adatas_coocc_boot_and_permute():
         'interval': np.array([0. , 0.2]),
         'annotation': pd.Index(['A', 'B', 'C'], dtype='object', name='a'),
         'center': pd.Index(['A', 'B', 'C'], dtype='object', name='a'),
-        'n_boot': 2,
-        'comparisons': {
-            'diff': {
-                'p_t_fdr_bh': np.array([
-                    [[ 3.391017723058e-11], [ 2.924727480266e-11], [-2.104088443134e-05]],
-                    [[ 2.924727480266e-11], [-2.346719092148e-10], [ 2.924727480266e-11]],
-                    [[-2.104088443134e-05], [ 2.924727480266e-11], [ 2.552506080306e-11]]
-                ]),
-                'rel_occ': np.array([
-                    [[ 0.474114883478], [ 0.138895081098], [-1.546257735719]],
-                    [[ 0.138895081098], [-0.197666627517], [ 0.138742137963]],
-                    [[-1.546257735719], [ 0.138742137963], [ 0.475595188589]]
-                ]),
-            }
-        }
     }
     adataB.uns['correct'] = {
         'occ': np.array([
-            [[0.0059696 ], [1.49749294], [1.49567031]],
-            [[1.49749294], [0.00595206], [1.49788769]],
-            [[1.49567031], [1.49788769], [0.00596638]]
-        ]),
+            [[0.005954361049], [1.498264374151], [1.495284250813]],
+            [[1.498264374151], [0.005936713687], [1.497523267432]],
+            [[1.495284250813], [1.497523267432], [0.005960260342]]]),
         'log_occ': np.array([
-            [[-5.1210845 ], [ 0.40379187], [ 0.40257317]],
-            [[ 0.40379187], [-5.1240299 ], [ 0.40405491]],
-            [[ 0.40257317], [ 0.40405491], [-5.12161629]]
-        ]),
-        'p_t_fdr_bh': np.array([
-            [[-9.98028095e-10], [ 1.06934794e-08], [ 2.74202605e-08]],
-            [[ 1.06934794e-08], [-1.00528524e-09], [ 2.34254492e-08]],
-            [[ 2.74202605e-08], [ 2.34254492e-08], [-1.01313349e-10]]
+            [[-5.123632416687], [ 0.404307093429], [ 0.402316062746]],
+            [[ 0.404307093429], [-5.126603697897], [ 0.403812533426]],
+            [[ 0.402316062746], [ 0.403812533426], [-5.122641336085]]
         ]),
         'z': np.array([
-            [[-157.816226292941], [  25.749410153286], [  11.477728095315]],
-            [[  25.749410153286], [-346.365421236357], [  23.555920956835]],
-            [[  11.477728095315], [  23.555920956835], [-211.77044466573 ]]
+            [[-157.816226292941], [  25.940853763277], [  11.523060669285]],
+            [[  25.940853763277], [-346.365421236357], [  23.648108033949]],
+            [[  11.523060669285], [  23.648108033949], [-211.77044466573 ]]
         ]),
         'composition': np.array([
-            [[0.0019887 ], [0.49887514], [0.49826878]],
-            [[0.49961082], [0.00198578], [0.49974305]],
-            [[0.49840048], [0.49913908], [0.00198817]]
+            [[0.00198413089 ], [0.499256441549], [0.498263395816]],
+            [[0.499999015806], [0.001981188049], [0.499751491054]],
+            [[0.498016853304], [0.498762370402], [0.001985113131]]
         ]),
         'log_composition': np.array([
-            [[-6.22027745], [-0.69540108], [-0.69661978]],
-            [[-0.69392838], [-6.22175015], [-0.69366534]],
-            [[-0.69635388], [-0.69487215], [-6.22054334]]
+            [[-6.222575283879], [-0.694635773764], [-0.696626804447]],
+            [[-0.693150133159], [-6.224060924484], [-0.693644693162]],
+            [[-0.697122344748], [-0.695625874068], [-6.222079743578]]
         ]),
         'distance_distribution': np.array([
             [[1.], [1.], [1.]],
@@ -951,39 +766,15 @@ def adatas_coocc_boot_and_permute():
             [[[  0.        ], [251.        ], [250.        ]], 
              [[251.        ], [  0.        ], [251.        ]], 
              [[250.        ], [251.        ], [  0.        ]]], 
-            [[[  0.        ], [249.82842712], [250.        ]], 
-             [[249.82842712], [  0.        ], [249.82842712]], 
-             [[250.        ], [249.82842712], [  0.        ]]], 
-            [[[  0.        ], [251.        ], [249.        ]], 
-             [[251.        ], [  0.        ], [251.        ]], 
-             [[249.        ], [251.        ], [  0.        ]]], 
-            [[[  0.        ], [251.        ], [250.        ]], 
-             [[251.        ], [  0.        ], [251.        ]], 
-             [[250.        ], [251.        ], [  0.        ]]], 
-            [[[  0.        ], [249.82842712], [248.        ]], 
-             [[249.82842712], [  0.        ], [251.82842712]], 
-             [[248.        ], [251.82842712], [  0.        ]]], 
             [[[  0.        ], [251.        ], [250.        ]], 
              [[251.        ], [  0.        ], [251.        ]], 
              [[250.        ], [251.        ], [  0.        ]]], 
             [[[  0.        ], [250.        ], [250.        ]], 
              [[250.        ], [  0.        ], [250.        ]], 
              [[250.        ], [250.        ], [  0.        ]]], 
-            [[[  0.        ], [249.41421356], [249.41421356]], 
-             [[249.41421356], [  0.        ], [249.        ]], 
-             [[249.41421356], [249.        ], [  0.        ]]], 
-            [[[  0.        ], [248.        ], [248.        ]], 
-             [[248.        ], [  0.        ], [250.        ]], 
-             [[248.        ], [250.        ], [  0.        ]]], 
             [[[  0.        ], [252.        ], [250.        ]], 
              [[252.        ], [  0.        ], [251.        ]], 
              [[250.        ], [251.        ], [  0.        ]]], 
-            [[[  0.        ], [250.82842712], [250.        ]], 
-             [[250.82842712], [  0.        ], [249.82842712]], 
-             [[250.        ], [249.82842712], [  0.        ]]], 
-            [[[  0.        ], [248.82842712], [251.        ]], 
-             [[248.82842712], [  0.        ], [248.82842712]], 
-             [[251.        ], [248.82842712], [  0.        ]]]
         ]),
         'permutation_counts': np.array([
              [[[162.], [170.], [171.]],
@@ -1014,35 +805,19 @@ def adatas_coocc_boot_and_permute():
         'interval': np.array([0. , 0.2]),
         'annotation': pd.Index(['A', 'B', 'C'], dtype='object', name='a'),
         'center': pd.Index(['A', 'B', 'C'], dtype='object', name='a'),
-        'n_boot': 2,
-        'comparisons': {
-            'diff': {
-                'p_t_fdr_bh': np.array([
-                    [[-3.391017723058e-11], [-2.924727480266e-11], [ 2.104088443134e-05]],
-                    [[-2.924727480266e-11], [ 2.346719092148e-10], [-2.924727480266e-11]],
-                    [[ 2.104088443134e-05], [-2.924727480266e-11], [-2.552506080306e-11]]
-                ]),
-                'rel_occ': np.array([
-                    [[-0.474114883478], [-0.138895081098], [ 1.546257735719]],
-                    [[-0.138895081098], [ 0.197666627517], [-0.138742137963]],
-                    [[ 1.546257735719], [-0.138742137963], [-0.475595188589]]
-                ]),
-            }
-        }
     }
     
     return {'adataA':adataA, 'adataB':adataB}
 
-def test_cooccurrence_boot_and_permute(adatas_coocc_boot_and_permute):
+def test_cooccurrence_permute(adatas_coocc_permute):
     
-    adatas = {k:a.copy() for k,a in adatas_coocc_boot_and_permute.items()} # dont change the input
+    adatas = {k:a.copy() for k,a in adatas_coocc_permute.items()} # dont change the input
 
     for name,adata in adatas.items():
-        tc.tl.co_occurrence(adata, n_boot=2, annotation_key='a', sample_key='sample', max_distance=0.2, delta_distance=0.2, min_distance=0, sparse=False, result_key='results', position_split=2, n_permutation=2,)
-
-    tc.tl.co_occurrence_comparison(adatas, analysis_key='results', result_key='diff')
+        tc.tl.co_occurrence(adata, annotation_key='a', sample_key='sample', max_distance=0.2, delta_distance=0.2, min_distance=0, sparse=False, result_key='results', n_permutation=2,)
 
     for key, adata in adatas.items():
+#        print(adata.uns['results'])
         assert_coocc_equal(adata.uns['results'], adata.uns['correct'])
 
 @pytest.fixture(scope="session")

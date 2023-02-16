@@ -6,6 +6,7 @@ from .. import get
 from .. import preprocessing
 from . import _helper as helper
 from .. import utils
+from ..utils._utils import _infer_annotation_key
 import scipy.sparse
 import scipy.linalg
 
@@ -83,19 +84,20 @@ def annotate_novosparc(
     """\
     Annotates an :class:`~anndata.AnnData` using reference data by NovoSpaRc
     [Nitzan19]_.
+
+    This is the direct interface to this annotation method. In practice using
+    the general wrapper :func:`~tacco.tools.annotate` is recommended due to its
+    higher flexibility.
     
     Parameters
     ----------
     adata
-        An :class:`~anndata.AnnData` including expression data in `.X` and
-        profiles in `.varm` and/or annotation in `.obs` or `.obsm`.
+        An :class:`~anndata.AnnData` including expression data in `.X`.
     reference
-        Reference data to get the annotation definition from. See e.g. 
-        :func:`~tacco.preprocessing.create_reference` for options to create it.
+        Reference data to get the annotation definition from.
     annotation_key
-        The `.obs`, `.obsm`, and/or `.varm` key where the annotation and
-        profiles are stored in the `reference`. If `None`, it is inferred from
-        `reference`, if possible.
+        The `.obs` key where the annotation is stored in the `reference`. If
+        `None`, it is inferred from `reference`, if possible.
     counts_location
         A string or tuple specifying where the count matrix is stored, e.g.
         `'X'`, `('raw','X')`, `('raw','obsm','my_counts_key')`,
@@ -123,7 +125,7 @@ def annotate_novosparc(
     if reference is None:
         raise ValueError('"reference" cannot be None!')
         
-    annotation_key = preprocessing.infer_annotation_key(reference, annotation_key)
+    annotation_key = _infer_annotation_key(reference, annotation_key)
     
     adata = get.counts(adata, counts_location=counts_location, annotation=True, copy=False)
     reference = get.counts(reference, counts_location=counts_location, annotation=annotation_key, copy=False)

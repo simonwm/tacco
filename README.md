@@ -1,6 +1,6 @@
 # TACCO: Transfer of Annotations to Cells and their COmbinations
 
-TACCO is a python framework for working with categorical and compositional annotations for high-dimensional observations, in particular for transferring annotations from single cell to spatial transcriptomics data. TACCO comes with an extensive ever expanding [documentation](https://simonwm.github.io/tacco/) and a set of [example notebooks](https://github.com/simonwm/tacco_examples).
+TACCO is a python framework for working with categorical and compositional annotations for high-dimensional observations, in particular for transferring annotations from single cell to spatial transcriptomics data. TACCO comes with an extensive ever expanding [documentation](https://simonwm.github.io/tacco/) and a set of [example notebooks](https://github.com/simonwm/tacco_examples). If TACCO is useful for your research, you can cite [bioRxiv (2022)](https://doi.org/10.1101/2022.10.02.508471).
 
 ## How to install TACCO
 

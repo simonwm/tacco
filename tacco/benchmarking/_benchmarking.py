@@ -23,8 +23,9 @@ def _set_up_benchmark_working_directory(
         
     Returns
     -------
-    Returns a pair consiting of the path to the working directory and created :class:`~tempfile.TemporaryDirectory` or `None` if no
-    temporary directory was created.
+    Returns a pair consiting of the path to the working directory and created\
+    :class:`~tempfile.TemporaryDirectory` or `None` if no temporary directory\
+    was created.
     
     """
     
@@ -80,7 +81,7 @@ def benchmark_shell(
         
     Returns
     -------
-    Returns a dict containing the runtime in seconds under the key
+    Returns a dict containing the runtime in seconds under the key\
     "shell_time_s" and the memory usage under "max_mem_usage_GB".
     
     """
@@ -151,7 +152,7 @@ def benchmark_script(
         
     Returns
     -------
-    Returns a dict containing the runtime in seconds under the key
+    Returns a dict containing the runtime in seconds under the key\
     "shell_time_s" and the memory usage under "max_mem_usage_GB".
     
     """
@@ -181,40 +182,42 @@ def benchmark_annotate(
 ):
     """\
     Benchmarks time and memory consumption of an annotation run. This will run
-    :func:`tc.tl.annotate` within an isolated script, in a separate python
-    session on h5ad-serialized `adata` and `reference` data sets. Due to this
+    :func:`tacco.tools.annotate` within an isolated script, in a separate
+    python session on serialized `adata` and `reference` data sets. Due to this
     setup, `adata` and `reference` will not be changed by this call (in
-    contrast to calling :func:`tc.tl.annotate` directly). This removes all
-    interactions between consecutive calls to this function.
+    contrast to calling :func:`~tacco.tools.annotate` directly). This removes
+    all interactions between consecutive calls to this function.
     
     Parameters
     ----------
     adata
-        An :class:`~anndata.AnnData` including expression data in `.X` and
-        profiles in `.varm` and/or annotation in `.obs` or `.obsm`.
+        An :class:`~anndata.AnnData` including expression data in `.X`.
     reference
-        Reference data to get the annotation definition from. See e.g. 
-        :func:`~tacco.preprocessing.create_reference` for options to create it.
+        Reference data to get the annotation definition from.
     working_directory
         The directory where to execute the command. If `None`, a temporary
         directory is used and cleaned in the end.
     verbose
         Whether to print stderr and stdout of the command run.
     **kw_args
-        All extra arguments are forwarded to the :func:`tc.tl.annotate` call.
+        All extra arguments are forwarded to the :func:`~tacco.tools.annotate`
+        call.
         
     Returns
     -------
-    Returns a dict containing the runtime of the wrapper script including I/O
-    for reading data in seconds under the key "shell_time_s", the runtime of
-    the call to :func:`tc.tl.annotate` under the key "annotation_time_s", the
-    memory usage under "max_mem_usage_GB", the annotation result under
-    "annotation", and the runtime of the call to
-    :func:`tc.tl.benchmark_annotate` including I/O for writing and reading data
-    under the key "benchmark_time_s".
+    Returns a dict containing the runtime of the wrapper script including I/O\
+    for reading data in seconds under the key "shell_time_s", the runtime of\
+    the call to :func:`~tacco.tools.annotate` under the key\
+    "annotation_time_s", the memory usage under "max_mem_usage_GB", the\
+    annotation result under "annotation", and the runtime of the call to\
+    :func:`~tacco.tools.benchmark_annotate` including I/O for writing and\
+    reading data under the key "benchmark_time_s".
     
     """
     
+    if working_directory is not None and 'annotation_key' not in kw_args:
+        print('`working_directory` is set, but `annotation_key` is not. This frequently is a mistake.\nIf you are certain that it it not, you can deactivate this message by explicitly setting `annotation_key` to `None`.')
+     
     start = time.time()
 
     working_directory, tmp_dir = _set_up_benchmark_working_directory(working_directory)
@@ -222,15 +225,13 @@ def benchmark_annotate(
     # pickle instead of AnnData write and read to avoid AnnData's serialization limitations...
     reference_file = tempfile.NamedTemporaryFile(suffix='.pickle.gzip', prefix='reference_', dir=working_directory, delete=False)
     reference_file.close()
-    with gzip.open(reference_file.name, 'wb') as f:
+    with gzip.open(reference_file.name, 'wb', compresslevel=4) as f:
         pickle.dump(reference, f)
-    #reference.write(reference_file.name, compression='gzip')
     
     adata_file = tempfile.NamedTemporaryFile(suffix='.pickle.gzip', prefix='adata_', dir=working_directory, delete=False)
     adata_file.close()
-    with gzip.open(adata_file.name, 'wb') as f:
+    with gzip.open(adata_file.name, 'wb', compresslevel=4) as f:
         pickle.dump(adata, f)
-    #adata.write(adata_file.name, compression='gzip')
     
     args_file = tempfile.NamedTemporaryFile(suffix='.pickle', prefix='args_', dir=working_directory, delete=False)
     args_file.close()
@@ -245,23 +246,25 @@ def benchmark_annotate(
     
     if 'result_key' in kw_args:
         print(f'The argument "result_key" was set in a call to tc.benchmark.annotate, but will be ignored.')
+        del kw_args['result_key']
     
+    tacco_benchmarking_dir = os.path.dirname(os.path.abspath(__file__))
+    tacco_dir = os.path.dirname(tacco_benchmarking_dir)
+    tacco_parent_dir = os.path.dirname(tacco_dir)
     script = f"""
+# support devel builds by providing the path to the current tacco installation folder
 import sys
-sys.path.insert(1, '/ahg/regevdata/projects/mouse_CRC/rerun/tacco')
+sys.path.insert(1, {tacco_parent_dir!r})
 
 import time
 import gzip
 import pickle
-import anndata as ad
 import tacco as tc
 
 with gzip.open('{reference_file.name}', 'rb') as f:
     reference = pickle.load(f)
 with gzip.open('{adata_file.name}', 'rb') as f:
     adata = pickle.load(f)
-#reference = ad.read('{reference_file.name}')
-#adata = ad.read('{adata_file.name}')
 
 with open('{args_file.name}', 'rb') as f:
     kw_args = pickle.load(f)

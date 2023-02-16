@@ -33,11 +33,12 @@ extensions = [
 # Mappings for sphinx.ext.intersphinx. Projects have to have Sphinx-generated doc! (.inv file)
 intersphinx_mapping = dict(
     anndata=('https://anndata.readthedocs.io/en/stable/', None),
-    matplotlib=('https://matplotlib.org/', None),
-    numpy=('https://docs.scipy.org/doc/numpy/', None),
+    scanpy=('https://scanpy.readthedocs.io/en/stable/', None),
+    matplotlib=('https://matplotlib.org/stable/', None),
+    numpy=('https://numpy.org/doc/stable/', None),
     pandas=('https://pandas.pydata.org/pandas-docs/stable/', None),
     python=('https://docs.python.org/3', None),
-    scipy=('https://docs.scipy.org/doc/scipy/reference/', None),
+    scipy=('https://docs.scipy.org/doc/scipy/', None),
 )
 
 ## Enable "show on github" button
@@ -84,9 +85,9 @@ templates_path = ['_templates']
 # tables by explicit 'if-not' statements. Re-inclusion is effective for the main doc though not for
 # the summary tables.
 def autodoc_skip_member_callback(app, what, name, obj, skip, options):
-    excluded_modules = ['tacco.eval','numpy','scipy','matplotlib','sklearn','numba','statsmodels','difflib'] # completely exclude modules which are not essential or provide external imported members
+    excluded_modules = ['numpy','scipy','matplotlib','sklearn','numba','statsmodels','difflib'] # completely exclude modules which are not essential or provide external imported members
     exclusions = {
-        'module': ['eval','score_error'],
+        'module': [],
         'class': [],
         'exception': [],
         'function': [],
@@ -100,8 +101,7 @@ def autodoc_skip_member_callback(app, what, name, obj, skip, options):
             for ex_mod in excluded_modules:
                 if obj.__module__.startswith(ex_mod):
                     return True
-        if name in ['eval','score_error']:#exclusions[what]:
-            print(f"############# GOT {name}")
+        if name in exclusions[what]:
             return True
     return skip
 def setup(app):

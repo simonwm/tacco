@@ -9,10 +9,10 @@ from numba import njit,prange
 from numpy.random import Generator, PCG64
 
 from .. import get
-from .. import preprocessing
+from . _reference import construct_reference_profiles
 from .. import utils
-from ..utils.split import split_beads
-from ._refine_reference import construct_reference_profiles
+from ..utils._split import split_beads
+from ..utils._utils import _infer_annotation_key, _get_unique_keys
 
 def subsample_annotation(
     adata,
@@ -52,7 +52,7 @@ def subsample_annotation(
     
     """
     
-    annotation_key = preprocessing.infer_annotation_key(adata, annotation_key)
+    annotation_key = _infer_annotation_key(adata, annotation_key)
     
     if annotation_key not in adata.obs.columns:
         raise Exception('Only categorical `.obs` annotation columns are supported for subsampling!')
@@ -153,7 +153,7 @@ def apply_random_platform_effect(
         A string or tuple specifying where the count matrix is stored, e.g.
         `'X'`, `('raw','X')`, `('raw','obsm','my_counts_key')`,
         `('layer','my_counts_key')`, ... For details see
-        :func:`~tc.get.counts`.
+        :func:`~tacco.get.counts`.
     gene_keys
         String or list of strings specifying additional count-like `.var` and
         `.varm` annotations to scale along with the platform effect. If `True`,
@@ -211,7 +211,6 @@ def get_platform_normalization_factors(
     reg_a=0.0,
     reg_b=0.0,
     tol=1e-12,
-    norm=False,
 ):
     """\
     Find platform normalization factors `a_g` per gene and `b_p` per profiles
@@ -268,11 +267,7 @@ def get_platform_normalization_factors(
     
     guess[:m] = PB.sum(axis=0) / PA.sum(axis=0)
     guess[m:] = 1
-    #print('mean,std( guess(gene) ) ', guess[:m].mean(), guess[:m].std())
-    #print('mean,std( guess(type) ) ', guess[m:].mean(), guess[m:].std())
     result = scipy.optimize.minimize(_platform_objective_fdf, guess, args=(PA, PB, reg_a, reg_b), method='L-BFGS-B', jac=True, tol=tol, bounds=[(0,np.inf)]*len(guess)).x
-    #print('mean,std( result(gene) ) ', result[:m].mean(), result[:m].std())
-    #print('mean,std( result(type) ) ', result[m:].mean(), result[m:].std())
     # fix gauge degree of freedom
     factor = result[m:].mean()
     result[m:] /= factor
@@ -292,8 +287,6 @@ def normalize_platform(
     reg_a=0.0,
     reg_b=0.0,
     tol=1e-12,
-    norm=False,
-    aggregate=False,
     verbose=1,
     ):
 
@@ -326,7 +319,7 @@ def normalize_platform(
         A string or tuple specifying where the count matrix is stored, e.g.
         `'X'`, `('raw','X')`, `('raw','obsm','my_counts_key')`,
         `('layer','my_counts_key')`, ... For details see
-        :func:`~tc.get.counts`.
+        :func:`~tacco.get.counts`.
     gene_keys
         String or list of strings specifying additional count-like `.var` and
         `.varm` annotations to scale along with the platform normalization. The
@@ -344,7 +337,7 @@ def normalize_platform(
     tol
         Solver tolerance.
     verbose
-        Level of verbosity, with `0` (not output), `1` (some output), ...
+        Level of verbosity, with `0` (no output), `1` (some output), ...
         
     Returns
     -------
@@ -361,7 +354,7 @@ def normalize_platform(
     if isinstance(gene_keys, bool) and gene_keys:
         pass # gene_keys == True means take all .var and .varm keys
     else:
-        gene_keys = preprocessing.get_unique_keys(annotation_key, gene_keys)
+        gene_keys = _get_unique_keys(annotation_key, gene_keys)
     
     got_adata = annotation_key in adata.obs or annotation_key in adata.obsm or annotation_key in adata.varm
     got_other = reference_annotation_key in reference.obs or reference_annotation_key in reference.obsm or reference_annotation_key in reference.varm
@@ -410,24 +403,24 @@ def normalize_platform(
             if profilesB is not None: # reconstruct counts-weighted profiles from bead splitting with reference profiles
                 #print('.obsm1')
                 
-                profilesA = utils.split.split_beads(adata, bead_type_map=adata.obsm[annotation_key], type_profiles=profilesB, scaling_jobs=None, return_split_profiles=True)
+                profilesA = split_beads(adata, bead_type_map=adata.obsm[annotation_key], type_profiles=profilesB, scaling_jobs=None, return_split_profiles=True)
 
             elif reference_annotation_key in reference.varm: # reconstruct counts-weighted profiles from bead splitting with buffered reference profiles
                 #print('.obsm2')
                 
-                profilesA = utils.split.split_beads(adata, bead_type_map=adata.obsm[annotation_key], type_profiles=reference.varm[reference_annotation_key], scaling_jobs=None, return_split_profiles=True)
+                profilesA = split_beads(adata, bead_type_map=adata.obsm[annotation_key], type_profiles=reference.varm[reference_annotation_key], scaling_jobs=None, return_split_profiles=True)
 
         if profilesB is None and reference_annotation_key in reference.obsm:
 
             if profilesA is not None: # reconstruct counts-weighted profiles from bead splitting with reference profiles
                 #print('other .obsm1')
                 
-                profilesB = utils.split.split_beads(reference, bead_type_map=reference.obsm[reference_annotation_key], type_profiles=profilesA, scaling_jobs=None, return_split_profiles=True)
+                profilesB = split_beads(reference, bead_type_map=reference.obsm[reference_annotation_key], type_profiles=profilesA, scaling_jobs=None, return_split_profiles=True)
 
             elif annotation_key in adata.varm: # reconstruct counts-weighted profiles from bead splitting with buffered reference profiles
                 #print('other .obsm2')
                 
-                profilesB = utils.split.split_beads(reference, bead_type_map=reference.obsm[reference_annotation_key], type_profiles=adata.varm[annotation_key], scaling_jobs=None, return_split_profiles=True)
+                profilesB = split_beads(reference, bead_type_map=reference.obsm[reference_annotation_key], type_profiles=adata.varm[annotation_key], scaling_jobs=None, return_split_profiles=True)
 
         if profilesA is None or profilesB is None:
             raise ValueError(f'The annotation information is not sufficient to run platform normalization with annotation! You can specify explicitly not to use annotation by setting `annotation_key` to `None`.')

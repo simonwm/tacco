@@ -8,7 +8,7 @@ dependencies:
   - joblib
   - numba>=0.51.2
   - numpy
-  - matplotlib
+  - matplotlib!=3.7.0
   - pyqt!=5.9.2
   - seaborn
   - sparse_dot_mkl>=0.7.3

@@ -96,7 +96,7 @@ def test_dataframe2anndata(points_binsize_adata_counts_reference):
     points, binsize, adata, counts, reference = points_binsize_adata_counts_reference
     ref = points[['hash','gene']]
 
-    result = tc.tl.dataframe2anndata(points, obs_key='hash', var_key='gene')
+    result = tc.utils.dataframe2anndata(points, obs_key='hash', var_key='gene')
 
     tc.testing.assert_sparse_equal(result.X, adata.X)
     tc.testing.assert_frame_equal(result.obs, adata.obs, rtol=1e-14, atol=1e-50)
@@ -108,7 +108,7 @@ def test_anndata2dataframe(points_binsize_adata_counts_reference):
     counts = counts[['hash','gene','X']].copy()
     counts['hash'] = counts['hash'].astype(str) # anndatas always have string indices...
 
-    result = tc.tl.anndata2dataframe(adata)
+    result = tc.utils.anndata2dataframe(adata)
 
     tc.testing.assert_frame_equal(result, counts[['hash','gene','X']], rtol=1e-14, atol=1e-50)
 
@@ -116,7 +116,7 @@ def test_map_hash_annotation(points_binsize_adata_counts_reference):
     points, binsize, adata, counts, reference = points_binsize_adata_counts_reference
     types = points['type']
 
-    result = tc.tl.map_hash_annotation(points, counts, 'type')
+    result = tc.tl._points._map_hash_annotation(points, counts, 'type')
 
     tc.testing.assert_series_equal(result, types, rtol=1e-14, atol=1e-50)
 

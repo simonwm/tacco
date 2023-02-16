@@ -11,185 +11,10 @@ import gc
 import tempfile
 
 from .. import utils
+from ..utils import _math
 from .. import preprocessing
 from .. import get
 from . import _helper as helper
-
-@njit(cache=True)
-def _groupby_mean(data, codes, n_codes):
-    counts = np.zeros(n_codes, dtype=np.int64)
-    sums = np.zeros(n_codes, dtype=data.dtype)
-    assert(len(data)==len(codes))
-    for i in range(len(data)):
-        code_i = codes[i]
-        counts[code_i] += 1
-        sums[code_i] += data[i]
-    for code_i in range(n_codes):
-        sums[code_i] /= counts[code_i]
-    return sums
-
-def dataframe2anndata(
-    data,
-    obs_key,
-    var_key,
-    count_key=None,
-    compositional_keys=None,
-    mean_keys=None,
-):
-
-    """\
-    Creates an :class:`~anndata.AnnData` from a long form
-    :class:`~pandas.DataFrame`. The entries of the `.obs` columns in the result
-    :class:`~anndata.AnnData` are only well defined if they are identical per
-    observation.
-    
-    Parameters
-    ----------
-    data
-        A :class:`~pandas.DataFrame`.
-    obs_key
-        The name of the column containing the categorical property to become
-        the `.obs` dimension. Can also be a categorical :class:`~pandas.Series`
-        compatible with `data`. If `None`, use the index as `.obs` dimension
-        and keep all unused annotation in `.obs`. 
-    var_key
-        The name of the column containing the categorical property to become
-        the `.var` dimension. If `None`, the `.var` dimension will be of length
-        `0`.
-    count_key
-        The name of the column containing counts/weights to sum. If `None`,
-        bare occurences (i.e. 1) are summed over.
-    compositional_keys
-        The names of the columns containing categorical properties to populate
-        `.obsm` dataframes with.
-    mean_keys
-        The names of the columns containing numerical properties to construct
-        mean quantities for `.obs` columns with.
-        
-    Returns
-    -------
-    An :class:`~adata.AnnData` containing the counts in `.X`.
-    
-    """
-
-    if obs_key is None:
-        row = pd.Series(data.index, index=data.index).astype('category')
-    elif isinstance(obs_key, pd.Series):
-        row = obs_key if hasattr(obs_key, 'cat') else obs_key.astype('category')
-        obs_key = row.name
-    else:
-        row = data[obs_key] if hasattr(data[obs_key], 'cat') else data[obs_key].astype('category')
-    if var_key is not None:
-        col = data[var_key] if hasattr(data[var_key], 'cat') else data[var_key].astype('category')
-
-    dtype = utils.min_dtype(len(row))
-    if var_key is None:
-        counts = scipy.sparse.csr_matrix((len(row.cat.categories),0))
-    else:
-        if count_key is None:
-            count = np.ones_like(row, dtype=dtype)
-        else:
-            count = data[count_key]
-        counts = scipy.sparse.coo_matrix((count, (row.cat.codes,col.cat.codes)))
-        counts = counts.tocsr()
-
-    obs = pd.DataFrame(index=row.cat.categories.astype(str))
-    var = None if var_key is None else pd.DataFrame(index=col.cat.categories.astype(str))
-
-    adata = ad.AnnData(counts, obs=obs, var=var, dtype=dtype)
-
-    adata.obs.index.name = obs_key
-    adata.var.index.name = var_key
-
-    if obs_key is None:
-        special_keys = [var_key]
-        if count_key is not None:
-            special_keys.append(count_key)
-        for k in data.columns:
-            if k not in special_keys:
-                if data[k].isna().all(): # hangs in this special case if not taken care of separately
-                    adata.obs[k] = data[k]
-                else:
-                    adata.obs[k] = pd.Series(data[k].to_numpy(), index=adata.obs.index, dtype=data[k].dtype)
-
-    # create compositional obsm annotations
-    if compositional_keys is None:
-        compositional_keys = []
-    elif isinstance(compositional_keys, str):
-        compositional_keys = [compositional_keys]
-    for compositional_key in compositional_keys:
-        obsm_data = dataframe2anndata(data, obs_key=obs_key, var_key=compositional_key)
-        adata.obsm[compositional_key] = pd.DataFrame(obsm_data.X.toarray(), index=obsm_data.obs.index, columns=obsm_data.var.index)
-        adata.obsm[compositional_key] /= adata.obsm[compositional_key].sum(axis=1).to_numpy()[:,None]
-    
-    # create mean obs annotations
-    if mean_keys is None:
-        mean_keys = []
-    elif isinstance(mean_keys, str):
-        mean_keys = [mean_keys]
-    for mean_key in mean_keys:
-        adata.obs[mean_key] = _groupby_mean(data[mean_key].to_numpy(), row.cat.codes.to_numpy(), len(row.cat.categories))
-                    
-    return adata
-
-def anndata2dataframe(
-    adata,
-    obs_name=None,
-    var_name=None,
-    obs_keys=None,
-    var_keys=None,
-):
-
-    """\
-    Creates a long form :class:`~pandas.DataFrame` from an
-    :class:`~adata.AnnData`.
-    
-    Parameters
-    ----------
-    adata
-        A :class:`~adata.AnnData`.
-    obs_name
-        The name of the obs column in the dataframe. If `None`, tries to use
-        `adata.obs.index.name`.
-    var_name
-        The name of the var column in the dataframe. If `None`, tries to use
-        `adata.var.index.name`.
-    obs_keys
-        The names of the obs columns to include in the dataframe.
-    var_key
-        The names of the var columns to include in the dataframe.
-        
-    Returns
-    -------
-    A long form :class:`~pandas.DataFrame`.
-    
-    """
-
-    if obs_name is None:
-        obs_name = adata.obs.index.name
-        if obs_name is None:
-            raise ValueError('`obs_name` was not set and `adata.obs.index.name` is `None`!')
-    if var_name is None:
-        var_name = adata.var.index.name
-        if var_name is None:
-            raise ValueError('`var_name` was not set and `adata.var.index.name` is `None`!')
-
-    X = scipy.sparse.coo_matrix(adata.X)
-
-    data = pd.DataFrame({
-        obs_name: adata.obs.index[X.row],
-        var_name: adata.var.index[X.col],
-        'X': X.data,
-    })
-
-    if obs_keys is not None:
-        for obs_key in obs_keys:
-            data[obs_key] = pd.Series(adata.obs[obs_key].to_numpy()[X.row], index=data.index, dtype=adata.obs[obs_key].dtype)
-    if var_keys is not None:
-        for var_key in var_keys:
-            data[var_key] = pd.Series(adata.var[var_key].to_numpy()[X.col], index=data.index, dtype=adata.var[var_key].dtype)
-
-    return data
 
 #@njit(fastmath=True)
 def _map_types(cht_indptr, cht_indices, cht_data, point_hashes, dtype):
@@ -217,7 +42,7 @@ def _map_types(cht_indptr, cht_indices, cht_data, point_hashes, dtype):
     
     return point_types
 
-def map_hash_annotation(
+def _map_hash_annotation(
     data,
     abcdata,
     annotation_key,
@@ -270,7 +95,7 @@ def map_hash_annotation(
     bin_hashes = bin_hashes.astype(point_hashes.dtype) # use the identical categorical type to be certain that the .cat.codes are compatible
     
     # get bin*annotation anndata with number of annotated entitites in .X
-    adata = dataframe2anndata(abcdata, obs_key=bin_hashes, var_key=annotation_key, count_key=count_key) # the hash .cat.codes ~ rows in adata are ordered by construction
+    adata = utils.dataframe2anndata(abcdata, obs_key=bin_hashes, var_key=annotation_key, count_key=count_key) # the hash .cat.codes ~ rows in adata are ordered by construction
 
     point_hashes = point_hashes.sort_values() # ordered hashes are assumed in the numba part; sorting conserves mapping of entity to hash via the index
 
@@ -644,8 +469,12 @@ def affinity(
 ):
 
     """\
-    Calculates an affinity from a distance matrix according to
+    Calculates an affinity from a distance matrix.
+
+    The affinity is calculated according to
+
         `aff(i,j) = exp(-dist(i,j)**2 / (2 * sigma**2))`
+
     where sigma gives the half width of the Gaussian weight. This can be used
     e.g. for spectral clustering.
     
@@ -674,7 +503,7 @@ def affinity(
 
     if isinstance(adata, ad.AnnData):
         if distance_key is None:
-            raise ValueError('`affinity_key` is required if `adata` is an `anndata.AnnData`!')
+            raise ValueError('`affinity_key` is required if `adata` is an `AnnData`!')
         affinity = adata.obsp[distance_key]
     else:
         affinity = adata
@@ -775,7 +604,7 @@ def spectral_clustering(
         spatial PCA direction) of more than `max_aspect_ratio`. Ignored if
         `adata` is the affinity matrix.
     verbose
-        Level of verbosity, with `0` (not output), `1` (some output), ...
+        Level of verbosity, with `0` (no output), `1` (some output), ...
         
     Returns
     -------
@@ -871,7 +700,6 @@ def spectral_clustering(
         components = new_components
 
         components_sizes = components.value_counts()
-        #components_sizes = components_sizes[components_sizes > 10]
 
         remaining_points = (~components.isna()).sum()
         remaining_clusters = len(components_sizes)
@@ -924,8 +752,6 @@ def spectral_clustering(
             if c_size > max_size:
                 subclustering = True
                 
-            #print('\nnumber criteria', c_size, subclustering, end=' ')
-                
             if subclustering is None and positions is not None:
                 _positions = positions[_selection]
                 _X = _positions - np.mean(_positions, axis=0)
@@ -951,13 +777,10 @@ def spectral_clustering(
                     last_message = 'pos'
                 
             if subclustering == False:
-            #if subclustering is None or not subclustering:
                 # This is already a good cluster
 
                 cluster.loc[_selection.to_numpy()] = cluster_i
                 cluster_i += 1
-                
-                #print(cluster.value_counts())
                 
             elif subclustering is None and dim is None:
                 # We need an estimate of the dimension before we go on with this size cluster, save that for later
@@ -990,7 +813,6 @@ def spectral_clustering(
 
                         left_mid_right = pd.cut(coords,bins=[_min,mid-0.5*boundary_layer_width,mid+0.5*boundary_layer_width,_max], labels=['left','mid','right'])
                         vc = pd.Series(left_mid_right).value_counts()
-                        #print(pd.Series(left_mid_right).value_counts())
 
                         n_points = len(coords)
                         merged = np.arange(n_points,dtype=utils.min_dtype(n_points+2))
@@ -999,8 +821,8 @@ def spectral_clustering(
 
                         dummies, cats = sparse_dummies(merged)
                         dummies = dummies.T.tocsr().astype(np.float64)
-                        d_aff = utils.math.gemmT(dummies, aff, sparse_result=True)
-                        d_aff_d = utils.math.gemmT(d_aff, dummies, sparse_result=True)
+                        d_aff = _math.gemmT(dummies, aff, sparse_result=True)
+                        d_aff_d = _math.gemmT(d_aff, dummies, sparse_result=True)
 
                         # allow for extra clusters in the boundary layer for two reasons:
                         # - it is set up already, so additional custers should be relatively cheap
@@ -1017,9 +839,6 @@ def spectral_clustering(
                         split = perform_clustering(n_clusters=sol_n_clusters,affinity=d_aff_d)
 
                         labels = pd.Series(split,index=cats)[merged].to_numpy()
-                        
-                        #print(pd.Series(labels).value_counts())
-                        #print(coords.groupby(labels).mean())
                         
                         positon_splitted = True
 
@@ -1079,8 +898,6 @@ def spectral_clustering(
                     # reject the new clusters and add the current cluster to the finished clusters
                     cluster.loc[_selection.to_numpy()] = cluster_i
                     cluster_i += 1
-                    
-                    #print(cluster.value_counts())
         
         if verbose > 1:
             if sum(surface_criterion_stats.values()) > 0:
@@ -1136,7 +953,6 @@ def spectral_clustering(
         return cluster
     else:
         adata.obs[result_key] = cluster
-        #adata.uns[result_key+'_dim_data'] = dim_data
         return adata
 
 @njit(fastmath=True,cache=True)
@@ -1207,7 +1023,7 @@ def distribute_molecules(
         `.var.index` (i.e. the gene names) to. If `None`, tries to guess a
         reasonable name.
     verbose
-        Level of verbosity, with `0` (not output), `1` (some output), ...
+        Level of verbosity, with `0` (no output), `1` (some output), ...
     seed
         The seed for the randomness.
         

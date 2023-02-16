@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import scipy.spatial
 from scipy.sparse import issparse
-from . import math
+from . import _math
 from . import _utils
 from numba import njit, prange
 import numba
@@ -62,7 +62,7 @@ def bin(
         Array-like of column keys which contain the position of the points.
     bin_keys
         The names of the columns to contain the bin assignment. Has to be of
-        the same length as `position_keys`. If `None, a dataframe of bin
+        the same length as `position_keys`. If `None`, a dataframe of bin
         assignments is returned.
     shift
         An array-like of the same length as `position_keys`, giving the
@@ -225,21 +225,21 @@ def kl_distance(A, B, parallel=True):
     B, B_data = data_copy(B)
     
     # make rows of A and B probability distributions
-    math.row_scale(A, 1/math.get_sum(A, axis=1))
-    math.row_scale(B, 1/math.get_sum(B, axis=1))
+    _math.row_scale(A, 1/_math.get_sum(A, axis=1))
+    _math.row_scale(B, 1/_math.get_sum(B, axis=1))
     
     # KL_ct = sum_g A_cg log(A_cg/B_tg) = sum_g A_cg log(A_cg) - sum_g A_cg log(B_tg)
     if issparse(B):
         B.data = np.log(B.data)
     else:
         B = np.log(B)
-    ABT = math.gemmT(A,B, parallel=parallel)
+    ABT = _math.gemmT(A,B, parallel=parallel)
     if issparse(A):
         A.data *= np.log(A.data)
     else:
         _A0 = A != 0
         A[_A0] *= np.log(A[_A0])
-    AA = math.get_sum(A, axis=1)
+    AA = _math.get_sum(A, axis=1)
     
     # restore original data, if sparse
     restore_data(A, A_data)
@@ -253,13 +253,13 @@ def naive_projection(A, B, parallel=True):
     
     # as scaling and product commute, scale at the end to save memory and computation
     
-    Asum = math.get_sum(A, axis=1)
-    Bsum = math.get_sum(B, axis=1)
+    Asum = _math.get_sum(A, axis=1)
+    Bsum = _math.get_sum(B, axis=1)
     
-    ABT = math.gemmT(A,B, parallel=parallel)
+    ABT = _math.gemmT(A,B, parallel=parallel)
     
-    math.row_scale(ABT, 1/Asum)
-    math.col_scale(ABT, 1/Bsum)
+    _math.row_scale(ABT, 1/Asum)
+    _math.col_scale(ABT, 1/Bsum)
     
     return ABT
 
@@ -272,47 +272,47 @@ def naive_projection_distance(A, B, parallel=True):
 
 def normalized_weighted_scalar_product(A, B, parallel=True):
     # normalize as probabilities
-    Anorm = math.get_sum(A,axis=1)
-    Bnorm = math.get_sum(B,axis=1)
+    Anorm = _math.get_sum(A,axis=1)
+    Bnorm = _math.get_sum(B,axis=1)
 
     A = A.copy()
     B = B.copy()
 
-    math.row_scale(A, 1/Anorm)
-    math.row_scale(B, 1/Bnorm)
+    _math.row_scale(A, 1/Anorm)
+    _math.row_scale(B, 1/Bnorm)
 
     # get "mean bulk expression"
-    Bmean = math.get_sum(B,axis=0) / B.shape[0]
+    Bmean = _math.get_sum(B,axis=0) / B.shape[0]
     mean = Bmean
 
     # scale one of them to get Acg * Btg / Mg
     if B.shape[0] <= A.shape[0]:
-        math.col_scale(B, 1/mean)
+        _math.col_scale(B, 1/mean)
     else:
-        math.col_scale(A, 1/mean)
+        _math.col_scale(A, 1/mean)
 
     # get overlap
-    ABT = math.gemmT(A,B, parallel=parallel)
+    ABT = _math.gemmT(A,B, parallel=parallel)
 
     # normalize as probabilities
-    ABTnorm = math.get_sum(ABT,axis=1)
-    math.row_scale(ABT, 1/ABTnorm)
+    ABTnorm = _math.get_sum(ABT,axis=1)
+    _math.row_scale(ABT, 1/ABTnorm)
 
     return ABT
 
 def weighted_projection(A, B, parallel=True):
     # normalize as probabilities
-    Anorm = math.get_sum(A,axis=1)
-    Bnorm = math.get_sum(B,axis=1)
+    Anorm = _math.get_sum(A,axis=1)
+    Bnorm = _math.get_sum(B,axis=1)
 
     A = A.copy()
     B = B.copy()
 
-    math.row_scale(A, 1/Anorm)
-    math.row_scale(B, 1/Bnorm)
+    _math.row_scale(A, 1/Anorm)
+    _math.row_scale(B, 1/Bnorm)
 
     # get "mean bulk expression"
-    Bmean = math.get_sum(B,axis=0) / B.shape[0]
+    Bmean = _math.get_sum(B,axis=0) / B.shape[0]
     mean = Bmean
 
     _mean = 1/mean
@@ -334,17 +334,17 @@ def weighted_projection(A, B, parallel=True):
         restore_data(B, B_data)
     else:
         Bnorm = np.sqrt((B**2) @ _mean)
-    math.row_scale(A, 1/Anorm)
-    math.row_scale(B, 1/Bnorm)
+    _math.row_scale(A, 1/Anorm)
+    _math.row_scale(B, 1/Bnorm)
 
     # scale one of them to get Acg * Btg / Mg
     if B.shape[0] <= A.shape[0]:
-        math.col_scale(B, _mean)
+        _math.col_scale(B, _mean)
     else:
-        math.col_scale(A, _mean)
+        _math.col_scale(A, _mean)
 
     # get overlap
-    ABT = math.gemmT(A,B, parallel=parallel)
+    ABT = _math.gemmT(A,B, parallel=parallel)
 
     return ABT
 
@@ -363,10 +363,10 @@ def cosine_projection(A, B, parallel=True):
     Anorm = get_norm(A)
     Bnorm = get_norm(B)
     
-    ABT = math.gemmT(A, B, parallel=parallel)
+    ABT = _math.gemmT(A, B, parallel=parallel)
 
-    math.row_scale(ABT, 1/Anorm)
-    math.col_scale(ABT, 1/Bnorm)
+    _math.row_scale(ABT, 1/Anorm)
+    _math.col_scale(ABT, 1/Bnorm)
     
     return ABT
 
@@ -380,21 +380,21 @@ def cosine_distance(A, B, parallel=True):
 
 def bhattacharyya_coefficient(A, B, parallel=True):
     # normalize as probabilities
-    Anorm = math.get_sum(A,axis=1)
-    Bnorm = math.get_sum(B,axis=1)
+    Anorm = _math.get_sum(A,axis=1)
+    Bnorm = _math.get_sum(B,axis=1)
     
     A = A.copy()
     B = B.copy()
     
-    math.row_scale(A, 1/Anorm)
-    math.row_scale(B, 1/Bnorm)
+    _math.row_scale(A, 1/Anorm)
+    _math.row_scale(B, 1/Bnorm)
     
     # transform to probability amplitudes
     A = np.sqrt(A)
     B = np.sqrt(B)
 
     # get overlap
-    ABT = math.gemmT(A,B, parallel=parallel)
+    ABT = _math.gemmT(A,B, parallel=parallel)
     
     return ABT
 
@@ -445,7 +445,7 @@ def euclidean_distance(A, B, parallel=True):
     Anorm = get_sqnorm(A)
     Bnorm = get_sqnorm(B)
     
-    ABT = math.gemmT(A,B, parallel=parallel)
+    ABT = _math.gemmT(A,B, parallel=parallel)
     
     return np.sqrt(np.maximum(Anorm[:,None]+Bnorm[None,:] - 2 * ABT,0))
 
@@ -459,8 +459,8 @@ def cdist(
     """\
     Calclulate a dense pairwise distance matrix of sparse and dense inputs. For
     some metrics ('euclidean', 'cosine'), this is considerably faster than
-    `scipy.spatial.distance.cdist`. For basically all other metrics this falls
-    back to `scipy.spatial.distance.cdist`. Special distances are:
+    :func:`scipy.spatial.distance.cdist`. For basically all other metrics this
+    falls back to :func:`scipy.spatial.distance.cdist`. Special distances are:
     
     - 'bc': 1 - Bhattacharyya coefficient, a cosine similarity equivalent for
       the Bhattacharyya coefficient, which is the overlap of two probability
@@ -501,7 +501,7 @@ def cdist(
     if isinstance(B,pd.DataFrame):
         B = B.to_numpy()
     
-    A,B = math.cast_down_common(A,B)
+    A,B = _math.cast_down_common(A,B)
     
     if metric == 'kl':
         return kl_distance(A, B, parallel=parallel)
@@ -581,7 +581,7 @@ def projection(
     if isinstance(B,pd.DataFrame):
         B = B.to_numpy()
     
-    A,B = math.cast_down_common(A,B)
+    A,B = _math.cast_down_common(A,B)
     
     if metric == 'cosine':
         projection_function = cosine_projection
@@ -926,8 +926,10 @@ def dense_distance_matrix(
 ):
     """\
     Calclulate a dense pairwise euclidean distance matrix of dense inputs.
-    Compared to `tc.tl.cdist` this has a few extra optimizations for 1D-3D
+    Compared to :func:`tacco.tools.cdist` this has a few extra optimizations for 1D-3D
     data - and only works for dense inputs.
+
+    For a sparse version, see :func:`~tacco.utils.sparse_distance_matrix`.
     
     Parameters
     ----------
@@ -956,7 +958,7 @@ def dense_distance_matrix(
     if isinstance(B,pd.DataFrame):
         B = B.to_numpy()
     
-    A,B = math.cast_down_common(A,B)
+    A,B = _math.cast_down_common(A,B)
     
     if parallel:
         return _cdist_euclidean_parallel(A,B)
@@ -1327,6 +1329,8 @@ def sparse_distance_matrix(
     """\
     Calclulate a sparse pairwise distance matrix of dense inputs. Only
     euclidean metric is supported.
+
+    For a dense version, see :func:`~tacco.utils.dense_distance_matrix`.
     
     Parameters
     ----------
@@ -1338,8 +1342,8 @@ def sparse_distance_matrix(
     method
         A string indicating the method to use. Available are:
         
-        - 'scipy': Use :func:`~scipy.spatial.cKDTree.sparse_distance_matrix`.
-          This is most efficient for not too much points and relatively small
+        - 'scipy': Use :func:`scipy.spatial.cKDTree.sparse_distance_matrix`.
+          This is most efficient for not too many points and relatively small
           `max_distance`.
         - 'numba': Use a custom `numba` based implementation, which is much
           faster for larger `max_distance` and datasets.

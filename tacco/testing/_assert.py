@@ -3,10 +3,17 @@ import pandas as pd
 import anndata as ad
 import scipy.sparse
 import pandas.testing
-from pandas.testing import assert_series_equal, assert_index_equal
+
+def assert_series_equal(left, right, **kwargs):
+    """Assert equality of :class:`~pandas.Series` - thin wrapper around :func:`pandas.testing.assert_series_equal`"""
+    pandas.testing.assert_series_equal(left, right, **kwargs)
+
+def assert_index_equal(left, right, **kwargs):
+    """Assert equality of :class:`~pandas.Index` - thin wrapper around :func:`pandas.testing.assert_index_equal`"""
+    pandas.testing.assert_index_equal(left, right, **kwargs)
 
 def assert_frame_equal(left, right, **kwargs):
-    """Assert equality of dataframes, which handles cornercases different than :func:`~pandas.testing.assert_frame_equal`"""
+    """Assert equality of dataframes, which handles cornercases different than :func:`pandas.testing.assert_frame_equal`"""
     if right is None:
         assert(left is None)
         return
@@ -72,7 +79,7 @@ def assert_dense_equal(left, right, rtol=1e-05, atol=1e-08):
     assert(np.allclose(left, right, rtol=rtol, atol=atol, equal_nan=True))
 
 def assert_adata_equal(left, right, rtol=1e-05, atol=1e-08):
-    """Assert equality of :class:`~anndata.AnnData`s"""
+    """Assert equality of :class:`~anndata.AnnData` instances"""
     if right is None:
         assert(left is None)
         return

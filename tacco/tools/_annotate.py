@@ -10,8 +10,9 @@ from sklearn.cluster import MiniBatchKMeans
 
 from .. import get
 from .. import preprocessing
+from ..utils._utils import _infer_annotation_key, _get_unique_keys
 from .. import utils
-from ._points import dataframe2anndata, anndata2dataframe, map_hash_annotation, distance_matrix, affinity, spectral_clustering
+from ._points import _map_hash_annotation, distance_matrix, affinity, spectral_clustering
 from ._split import split_observations
 from . import _helper as helper
 
@@ -539,15 +540,13 @@ def annotate(
     Parameters
     ----------
     adata
-        An :class:`~anndata.AnnData` including expression data in `.X` and
-        profiles in `.varm` and/or annotation in `.obs` or `.obsm`.
+        An :class:`~anndata.AnnData` including expression data in `.X`.
     reference
-        Reference data to get the annotation definition from. See e.g. 
-        :func:`~tacco.preprocessing.create_reference` for options to create it.
+        Reference data to get the annotation definition from.
     annotation_key
-        The `.obs`, `.obsm`, and/or `.varm` key where the annotation and
-        profiles are stored in the `reference`. If `None`, it is inferred from
-        `reference`, if possible.
+        The `.obs` and/or `.varm` key where the annotation and/or profiles are
+        stored in the `reference`. If `None`, it is inferred from `reference`,
+        if possible.
     result_key
         The `.obsm` key of `adata` where to store the resulting annotation. If
         `None`, do not write to `adata` and return the annotation as
@@ -576,11 +575,11 @@ def annotate(
         - 'svm', implemented by :func:`~tacco.tools.annotate_svm`
 
     bisections
-        If larger than 0, runs a boosted stronger annotator using a basis
-        annotator by iteratively running the basis annotator and removing a
-        reconstructed fraction of the counts. The parameter gives the number of
-        recursive bisections of the annotation. If `None`, defaults to method
-        dependent values.
+        If larger than 0, runs a boosted annotator using a basis annotator by
+        iteratively running the basis annotator and removing a reconstructed
+        fraction of the counts. The parameter gives the number of recursive
+        bisections of the annotation. If `None`, defaults to method dependent
+        values.
     bisection_divisor
         Number of parts for bisection: First, `bisections` times a fraction of
         1/`bisection_divisor` of the unassigned counts of every observation is
@@ -678,7 +677,7 @@ def annotate(
         and `.varm` keys. This makes only sense if `return_reference` is
         `True`.
     verbose
-        Level of verbosity, with `0` (not output), `1` (some output), ...
+        Level of verbosity, with `0` (no output), `1` (some output), ...
     **kw_args
         Additional keyword arguments are forwarded to the annotation method.
         See the functions mentioned in the documentation of the parameter
@@ -697,9 +696,9 @@ def annotate(
     if reference is None:
         raise ValueError('"reference" cannot be None!')
         
-    annotation_key = preprocessing.infer_annotation_key(reference, annotation_key)
+    annotation_key = _infer_annotation_key(reference, annotation_key)
         
-    gene_keys = preprocessing.get_unique_keys(annotation_key, gene_keys)
+    gene_keys = _get_unique_keys(annotation_key, gene_keys)
         
     if skip_checks:
         tdata = adata
@@ -886,12 +885,11 @@ def annotate_single_molecules(
         A :class:`~pandas.DataFrame` with columns containing spatial
         coordinates and molecule species annotation.
     reference
-        Reference data to get the annotation definition from. See e.g. 
-        :func:`~tacco.preprocessing.create_reference` for options to create it.
+        Reference data to get the annotation definition from.
     annotation_key
-        The `.obs`, `.obsm`, and/or `.varm` key where the annotation and
-        profiles are stored in the `reference`. If `None`, it is inferred from
-        `reference`, if possible.
+        The `.obs` and/or `.varm` key where the annotation and/or profiles are
+        stored in the `reference`. If `None`, it is inferred from `reference`,
+        if possible.
     result_key
         The key of `molecules` where to store the resulting annotation. If
         `None`, do not write to `molecules` and return the annotation as
@@ -910,10 +908,10 @@ def annotate_single_molecules(
         Larger values give a better majority vote for the molecule annotation.
         But computing time scales with `n_shifts**dimension`.
     verbose
-        Level of verbosity, with `0` (not output), `1` (some output), ...
+        Level of verbosity, with `0` (no output), `1` (some output), ...
     **kw_args
         Additional keyword arguments are forwarded to
-        :func:`~tacco.tools.annotate` annotation method.
+        :func:`~tacco.tools.annotate`.
         
     Returns
     -------
@@ -923,7 +921,7 @@ def annotate_single_molecules(
     
     """
         
-    annotation_key = preprocessing.infer_annotation_key(reference, annotation_key)
+    annotation_key = _infer_annotation_key(reference, annotation_key)
     
     if bin_size is None:
         bin_size = _estimate_bin_size(molecules[position_keys])
@@ -945,7 +943,7 @@ def annotate_single_molecules(
 
         bingene = pd.DataFrame({'bin':hashes,'gene':molecules[gene_key]})
 
-        rdata = dataframe2anndata(bingene, obs_key='bin', var_key='gene')
+        rdata = utils.dataframe2anndata(bingene, obs_key='bin', var_key='gene')
         
         # annotate bins and get the reference, because the annotation profiles are needed for bead splitting and might have been generated in annotate()
         result, _reference = annotate(adata=rdata, reference=reference, annotation_key=annotation_key, result_key='anno', return_reference=True, verbose=verbose, **kw_args);
@@ -958,7 +956,7 @@ def annotate_single_molecules(
         del rdata # clean up
         gc.collect() # anndata copies are not well garbage collected and accumulate in memory
 
-        ldata = anndata2dataframe(adata=sdata, obs_name='split', obs_keys=['bin', 'anno']);
+        ldata = utils.anndata2dataframe(adata=sdata, obs_name='split', obs_keys=['bin', 'anno']);
         del sdata # clean up
         gc.collect() # anndata copies are not well garbage collected and accumulate in memory
 
@@ -971,7 +969,7 @@ def annotate_single_molecules(
 
         bingene = bingene[bingene['bingene'].isin(ldata['bingene'])].copy()
     
-        anno = map_hash_annotation(bingene, abcdata=ldata, annotation_key='anno', hash_key='bingene', count_key='X')
+        anno = _map_hash_annotation(bingene, abcdata=ldata, annotation_key='anno', hash_key='bingene', count_key='X')
         
         shift_annos[str(shift)] = anno
     
@@ -1001,7 +999,6 @@ def segment(
     max_distance=None,
     annotation_key=None,
     annotation_distance=None,
-    annotation_distance_scale=None,
     distance_kw_args={},
     gene_key=None,
     verbose=1,
@@ -1071,7 +1068,7 @@ def segment(
         This is used iff the annotation distance is to be calculated with a
         metric specified by a string via `annotation_distance`.
     verbose
-        Level of verbosity, with `0` (not output), `1` (some output), ...
+        Level of verbosity, with `0` (no output), `1` (some output), ...
     **kw_args
         Additional keyword arguments are forwarded to
         :func:`~tacco.tools.spectral_clustering`.
@@ -1090,7 +1087,7 @@ def segment(
     if annotation_key is not None and isinstance(annotation_distance, str) and gene_key is None:
         raise ValueError(f'`annotation_key` is not `None`, a metric is supplied for `annotation_distance` "{annotation_distance}", but `gene_key` is `None`, so nothing is available to calculate the distance on!')
     
-    fdata = dataframe2anndata(molecules, obs_key=None, var_key=gene_key)
+    fdata = utils.dataframe2anndata(molecules, obs_key=None, var_key=gene_key)
     distance_key = 'distance'
     distance_matrix(
         adata=fdata,

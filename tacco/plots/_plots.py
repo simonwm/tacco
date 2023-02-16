@@ -598,7 +598,7 @@ def mix_base_colors(weights, base_colors_rgb, mode='xyv'):
     Parameters
     ----------
     weights
-        An weight tensor with last dimension `n_base` describing mixtures of
+        A weight tensor with last dimension `n_base` describing mixtures of
         `n_base` colors; this can be a :class:`~numpy.ndarray` or a
         :class:`~pandas.DataFrame`.
     base_colors_rgb
@@ -678,13 +678,13 @@ def _get_adatas(adata):
         adatas[''] = adata
     elif isinstance(adata, pd.DataFrame):
         adatas = pd.Series(index=[''],dtype=object)
-        adatas[''] = tools.dataframe2anndata(adata, None, None)
+        adatas[''] = utils.dataframe2anndata(adata, None, None)
     elif isinstance(adata, dict):
         #adatas = pd.Series(adata) # it could be so simple - but it does not work for adatas...
         adatas = pd.Series(index=adata.keys(),dtype=object)
         for k,v in adata.items():
             if isinstance(v, pd.DataFrame):
-                v = tools.dataframe2anndata(v, None, None)
+                v = utils.dataframe2anndata(v, None, None)
             adatas[k] = v
     else:
         adatas = adata
@@ -826,12 +826,16 @@ def subplots(
         Number of plots in vertical/y direction
     axsize
         Size of a single axis in the plot
-    hspace, vspace
-        Relative horizontal and vertical spacing between plots
-    x_padding, y_padding
-        Absolute horizontal and vertical spacing between plots; this setting
-        overrides `hspace` and `vspace`; if `None`, use the value from `hspace`
-        `vspace`; if `None`, use the value from `vspace`
+    hspace
+        Relative vertical spacing between plots
+    wspace
+        Relative horizontal spacing between plots
+    x_padding
+        Absolute horizontal spacing between plots; this setting overrides
+        `wspace`; if `None`, use the value from `wspace`
+    y_padding
+        Absolute vertical spacing between plots; this setting overrides
+        `hspace`; if `None`, use the value from `hspace`
     title
         Sets the figure suptitle
     sharex
@@ -907,7 +911,7 @@ def subplots(
     
     return fig, axs
 
-def _add_legend_or_colorbars(fig, axs, colors, cmap=None, min_max=None):
+def _add_legend_or_colorbars(fig, axs, colors, cmap=None, min_max=None, scale_legend=1.0):
     
     if cmap is None:
         axs[0,-1].legend(handles=[mpatches.Patch(color=color, label=ind) for (ind, color) in colors.items() ],
@@ -915,10 +919,10 @@ def _add_legend_or_colorbars(fig, axs, colors, cmap=None, min_max=None):
         
     elif cmap is not None:
         rel_dpi_factor = matplotlib.rcParams['figure.dpi'] / 72
-        height_pxl = 200 * rel_dpi_factor
-        width_pxl = 15 * rel_dpi_factor
-        offset_top_pxl = 0 * rel_dpi_factor
-        offset_left_pxl = 10 * rel_dpi_factor
+        height_pxl = 200 * rel_dpi_factor * scale_legend
+        width_pxl = 15 * rel_dpi_factor * scale_legend
+        offset_top_pxl = 0 * rel_dpi_factor * scale_legend
+        offset_left_pxl = 10 * rel_dpi_factor * scale_legend
 
         for irow in range(axs.shape[0]):
             for jcol in range(axs.shape[1]):
@@ -956,6 +960,7 @@ def scatter(
     title=None,
     render=True,
     rasterized=True,
+    background_color=None,
     grid=False,
     noticks=False,
     axes_labels=None,
@@ -1021,7 +1026,7 @@ def scatter(
         A string or tuple specifying where the count matrix is stored, e.g.
         `'X'`, `('raw','X')`, `('raw','obsm','my_counts_key')`,
         `('layer','my_counts_key')`, ... For details see
-        :func:`~tc.get.counts`.
+        :func:`~tacco.get.counts`.
     compositional
         Whether the annotation is to be interpreted as compositional data or as
         arbitrary numbers. Compositional data is normalized to sum to 1 per
@@ -1031,15 +1036,15 @@ def scatter(
     normalize
         Whether to shift the data to non-negative values and normalize them by
         their maximum.
+    point_size
+        The size of the points in the plot. Like in matplotlib, this is a
+        measure of point area and provided in units of "squared points"
+        corresponding to (1/72)^2 inch^2 = (25.4/72)^2 mm^2.
     cmap
         A string/colormap to override the `colors` with. Makes sense mostly for
         numeric data.
     cmap_vmin_vmax
         A tuple giving the range of values for the colormap.
-    point_size
-        The size of the points in the plot. Like in matplotlib, this is a
-        measure of point area and provided in units of "squared points"
-        corresponding to (1/72)^2 inch^2 = (25.4/72)^2 mm^2.
     legend
         Whether to plot a legend
     on_data_legend
@@ -1070,6 +1075,8 @@ def scatter(
         This parameter provides experimental support for plotting pie charts
         per dot via ´rasterized=="pie"´ and ´render==False´. This is much
         slower, so only usable for very few points.
+    background_color
+        The background color to draw the points on.
     grid
         Whether to draw a grid
     noticks
@@ -1129,7 +1136,16 @@ def scatter(
         sizex = maxx-minx
         sizey = maxy-miny
         
-        if len(axsize.shape) == 0: # if it is a single scalar value, use that as a a global scale
+        if ax is not None: # If `ax` is given, use it. This also ensures that axs is always defined below
+            if isinstance(ax, matplotlib.axes.Axes):
+                axs = np.array([[ax]])
+            else:
+                axs = ax
+            if axs.shape != (n_y,n_x):
+                raise ValueError(f'The `ax` argument got the wrong shape of axes: needed is {(n_y,n_x)!r} supplied was {axs.shape!r}!')
+            axsize = axs[0,0].get_window_extent().transformed(axs[0,0].get_figure().dpi_scale_trans.inverted()).size
+            
+        elif len(axsize.shape) == 0: # if it is a single scalar value, use that as a global scale
             # this also implies that all axes have to have a common scaling
             if not (sharex or sharey):
                 share_scaling = True
@@ -1172,15 +1188,6 @@ def scatter(
             else: # axsize[1] is None
                 axsize[1] = axsize[0] * aspect_ratio
         
-        elif ax is not None:
-            if isinstance(ax, matplotlib.axes.Axes):
-                axs = np.array([[ax]])
-            else:
-                axs = ax
-            if axs.shape != (n_y,n_x):
-                raise ValueError(f'The `ax` argument got the wrong shape of axes: needed is {(n_y,n_x)!r} supplied was {axs.shape!r}!')
-            axsize = axs[0,0].get_window_extent().transformed(axs[0,0].get_figure().dpi_scale_trans.inverted()).size
-        
         if share_scaling:
             scale_0 = (axsize[0]-2*margin) / maxsizex
             scale_1 = (axsize[1]-2*margin) / maxsizey
@@ -1202,6 +1209,9 @@ def scatter(
         ax = axs[:,(i_sample*n_methods*n_cols):((i_sample+1)*n_methods*n_cols)]
         _min_max = None if cmap is None else min_max[:,(i_sample*n_methods*n_cols):((i_sample+1)*n_methods*n_cols)]
         spatial_distribution_plot(sub['data'], coords[sample], colors, axs=ax, n_cols=n_cols, joint=joint, normalize=normalize, point_size=point_size, cmap=cmap, cmap_vmin_vmax=cmap_vmin_vmax, out_min_max=_min_max, scale=scale, grid=grid, margin=margin, render=render, rasterized=rasterized, noticks=noticks, axes_labels=axes_labels, on_data_legend=on_data_legend)
+        if background_color is not None:
+            for _ax in ax.flatten():
+                _ax.set_facecolor(background_color)
     
     if share_scaling:
     
@@ -1258,90 +1268,6 @@ def scatter(
     
     return fig
 
-def scatter_matrix(
-    adata,
-    key,
-    position_key=('x','y'),
-    colors=None,
-    show_only=None,
-    axsize=(5,5),
-    method_labels=None,
-    counts_location=None,
-    compositional=True,
-):
-    
-    """\
-    Matrix of scatter plots of annotation.
-    
-    Parameters
-    ----------
-    adata
-        An :class:`~anndata.AnnData` including annotation in `.obs` and/or
-        `.obsm`. The :class:`~anndata.AnnData` instance can be replaced also by
-        a :class:`~pandas.DataFrame`, which is then treated like the `.obs` of
-        an :class:`~anndata.AnnData`.
-        This function does only support a single `adata`!
-    key
-        A `.obs`/`.obsm` annotation key.
-        This function does only support a single `key`!
-    position_key
-        The `.obsm` key or array-like of `.obs` keys with the position space
-        coordinates.
-    colors
-        A mapping of annotation values to colors. If `None`, default colors are
-        used.
-    show_only
-        A subset of annotation values to restrict the plotting to.
-    axsize
-        Tuple of width and size of a single axis.
-    method_labels
-        A mapping from the strings in `keys` to (shorter) names to show in the
-        plot.
-    counts_location
-        A string or tuple specifying where the count matrix is stored, e.g.
-        `'X'`, `('raw','X')`, `('raw','obsm','my_counts_key')`,
-        `('layer','my_counts_key')`, ... For details see
-        :func:`~tc.get.counts`.
-    compositional
-        Whether the annotation is to be interpreted as compositional data or as
-        arbitrary numbers. Compositional data is shifted to non-negative values
-        and normalized to 1.
-        
-    Returns
-    -------
-    A :class:`~matplotlib.figure.Figure`.
-    
-    """
-    
-    typing_data, adatas, methods, types, colors, coords = _validate_scatter_args(adata, position_key, key, colors, show_only, method_labels=method_labels, counts_location=counts_location, compositional=compositional)
-    
-    n_samples, n_types = len(adatas), len(types)
-    
-    if n_samples != 1:
-        raise Exception('Exactly one AnnData object is expected for the scatter_matrix plot!')
-    methods = methods.iloc[0]
-    if len(methods) != 1:
-        raise Exception('Exactly one obsm key is expected for the scatter_matrix plot!')
-    adata = adatas.iloc[0]
-    coords = list(coords.values())[0]
-    method = methods[0]
-    
-    n_x = n_types
-    n_y = n_types
-    
-    sample_name = typing_data.index[0]
-    if sample_name == '':
-        sample_name = None
-    fig, axs = subplots(n_x,n_y,axsize=axsize, title=sample_name)
-
-    for i, type_i in enumerate(types):
-        for j, type_j in enumerate(types):
-            #print(type_i, type_j)
-            sub, types_ij, colors_ij = _filter_types(typing_data['data'], types, colors, ([type_i] if i==j else [type_i, type_j]))
-            sub = pd.Series(sub.to_numpy(), index=[type_i if i==j else (type_i+' + '+type_j)])
-            spatial_distribution_plot(sub, coords, colors_ij, axs=axs[i:(i+1),j:(j+1)], n_cols=1, joint=True, normalize=compositional)
-    
-    return fig
 
 def get_cellsize(adata, key='OTT', reference_adata=None, reference_key='OTT', pfn_key=None, counts_location=None):
     if isinstance(key, pd.DataFrame):
@@ -1477,7 +1403,7 @@ def cellsize(
     counts_location
         A string or tuple specifying where the count matrix is stored, e.g. `'X'`,
         `('raw','X')`, `('raw','obsm','my_counts_key')`, `('layer','my_counts_key')`,
-        ... For details see :func: `~tc.get.counts`.
+        ... For details see :func:`~tacco.get.counts`.
         
     Returns
     -------
@@ -1612,7 +1538,7 @@ def frequency_bar(
         A string or tuple specifying where the count matrix is stored, e.g.
         `'X'`, `('raw','X')`, `('raw','obsm','my_counts_key')`,
         `('layer','my_counts_key')`, ... For details see
-        :func:`~tc.get.counts`.
+        :func:`~tacco.get.counts`.
     ax
         The :class:`~matplotlib.axes.Axes` to plot on. If `None`, creates a
         fresh figure for plotting.
@@ -1645,144 +1571,6 @@ def frequency_bar(
     
     _composition_bar(norm_tf, colors, horizontal=horizontal, ax=ax)
 
-    return fig
-
-def frequency_line(
-    adata,
-    keys,
-    colors=None,
-    show_only=None,
-    axsize=None,
-    basis_adata=None,
-    basis_keys=None,
-    groups=None,
-    reads=False,
-    method_labels=None,
-    counts_location=None,
-    ax=None,
-):
-
-    """\
-    Line plots of the total frequency of annotation in the whole dataset against
-    some reference dataset.
-    
-    Parameters
-    ----------
-    adata
-        An :class:`~anndata.AnnData` including annotation in `.obs` and/or
-        `.obsm`. Can also be a mapping of labels to :class:`~anndata.AnnData`
-        to specify multiple datasets. The :class:`~anndata.AnnData` instances
-        can be replaced also by :class:`~pandas.DataFrame`, which are then
-        treated like the `.obs` of an :class:`~anndata.AnnData`.
-    keys
-        The `.obs`/`.obsm` annotation keys to compare. Can be a single string,
-        or a list of strings, or a mapping of the labels of `adata` to strings
-        or lists of strings.
-    colors
-        A mapping of annotation values to colors. If `None`, default colors are
-        used.
-    show_only
-        A subset of annotation values to restrict the plotting to.
-    axsize
-        Tuple of width and size of a single axis.
-    basis_adata
-        like `adata`, but for reference data.
-    basis_keys
-        like `adata`, but for reference data.
-    groups
-        A list of lists of `keys` to connect with a line, while others get a
-        dot. If `None`, reasonable subsets are determined automatically.
-    reads
-        Whether to work with read or cell count fractions.
-    method_labels
-        A mapping from the strings in `keys` and `basis_keys` to (shorter)
-        names to show in the plot.
-    counts_location
-        A string or tuple specifying where the count matrix is stored, e.g.
-        `'X'`, `('raw','X')`, `('raw','obsm','my_counts_key')`,
-        `('layer','my_counts_key')`, ... For details see
-        :func:`~tc.get.counts`.
-    ax
-        The :class:`~matplotlib.axes.Axes` to plot on. If `None`, creates a
-        fresh figure for plotting.
-        
-    Returns
-    -------
-    The :class:`~matplotlib.figure.Figure` containing the plot.
-    
-    """
-
-    original_colors = colors
-    typing_data, adatas, methods, types, colors = _validate_frequency_args(adata, keys, colors, show_only, basis_adata, basis_keys, reads, method_labels=method_labels, counts_location=counts_location)
-        
-    n_solutions = len(typing_data)
-    
-    if ax is None:
-        if axsize is None:
-            axsize=(0.4*n_solutions,8)
-        fig, axs = subplots(axsize=axsize)
-        ax = axs[0,0]
-    else:
-        fig = ax.figure
-    
-    if groups is None:
-        groups = [ df.index for s,df in typing_data.groupby('sample')] # lines within variants for a sample might make sense
-        if np.all([ len(g) == 1 for g in groups]): # if that does not leave any lines, connect everything except basis
-            # and to know what is basis and what not (and to be sure not to do something in collision with the _validate* methods) validate the non basis data again
-            _typing_data, _adatas, _methods, _types, _colors = _validate_args(adata, keys, original_colors, show_only, reads, method_labels=method_labels, counts_location=counts_location)
-            basis_samples = ~np.array([s in _adatas for s in typing_data['sample']])
-            groups = basis_samples * typing_data.index.to_numpy() + (~basis_samples) * (typing_data.index.to_numpy()*0+'rest')
-            groups = [ df.index for s,df in typing_data.groupby(groups)]
-    
-    
-    type_freqs = pd.DataFrame({ method: data.sum(axis=0) for method, data in typing_data['data'].items() })
-    
-    norm_tf = (type_freqs/type_freqs.sum(axis=0)).T
-    norm_tf = norm_tf.fillna(0)
-    
-    fig = None
-    if ax is None:
-        fig, ax = plt.subplots(figsize=(1*(n_solutions/3+3),8))
-    x = np.arange(norm_tf.shape[0])
-    
-    dots = None # keep full legacy api for selecting data for points or lines internally
-    if dots is None:
-        dots = []
-        
-    if groups is None:
-        groups = [norm_tf.index]
-    
-    is_line = ~norm_tf.index.isin(dots)
-    for group in groups:
-        in_group = norm_tf.index.isin(group)
-        
-        if (in_group & is_line).sum() == 1:
-            is_line[:] = False
-        
-        norm_tf_line = norm_tf.loc[in_group & is_line]
-        x_line = x[in_group & is_line]
-        for t in colors.index:
-            ax.plot(x_line, norm_tf_line[t], color=colors[t])
-
-        norm_tf_dots = norm_tf.loc[in_group & ~is_line]
-        x_dots = x[in_group & ~is_line]
-        for t in colors.index:
-            ax.scatter(x_dots, norm_tf_dots[t], color=colors[t])
-
-    ax.set_ylabel('cell type fraction')
-    ax.set_yscale('log')
-    #ax.set_ylim([None, 1])
-    ax.set_xticks(x)
-    
-    xticklabels = norm_tf.index
-    ax.set_xticklabels(xticklabels, rotation=30,va='top',ha='right')
-    ax.grid(True)
-    ax.legend(handles=[mpatches.Patch(color=color, label=ind) for (ind, color) in colors.items() ],
-        bbox_to_anchor=(1, 1), loc='upper left', ncol=1)
-
-    if fig is not None:
-        fig.tight_layout()
-    
     return fig
 
 def frequency(
@@ -1834,7 +1622,7 @@ def frequency(
         A string or tuple specifying where the count matrix is stored, e.g.
         `'X'`, `('raw','X')`, `('raw','obsm','my_counts_key')`,
         `('layer','my_counts_key')`, ... For details see
-        :func:`~tc.get.counts`.
+        :func:`~tacco.get.counts`.
         
     Returns
     -------
@@ -1913,7 +1701,7 @@ def comparison(
     counts_location
         A string or tuple specifying where the count matrix is stored, e.g. `'X'`,
         `('raw','X')`, `('raw','obsm','my_counts_key')`, `('layer','my_counts_key')`,
-        ... For details see :func: `~tc.get.counts`.
+        ... For details see :func:`~tacco.get.counts`.
     point_size
         The size of the points in the plot.
     joint
@@ -2004,274 +1792,6 @@ def comparison(
     return fig
 
 
-def dr_split(
-    adata,
-    keys,
-    dr='UMAP',
-    colors=None,
-    show_only=None,
-    axsize=(5,5),
-    basis_adata=None,
-    basis_keys=None,
-    reads=False,
-    method_labels=None,
-    counts_location=None,
-    min_counts=10,
-    n_jobs=None,
-    point_size=0.5,
-):
-
-    """\
-    Dimensionality reduction plots (UMAP or tSNE) of the data splitted using different annotations, e.g. of
-    different annotation methods or of methods and a ground truth.
-    
-    Parameters
-    ----------
-    adata
-        An :class:`~anndata.AnnData` including annotation in `.obs` and/or `.obsm`.
-        Can also be a mapping of labels to :class:`~anndata.AnnData` to specify
-        multiple datasets.
-    keys
-        The `.obs`/`.obsm` annotation keys to compare. Can be a single string, or a
-        list of strings, or a mapping of the labels of `adata` to strings or lists
-        of strings.
-    dr
-        String of dimensionality reduction to use, either 'UMAP' or 'tSNE'
-    colors
-        A mapping of annotation values to colors. If `None`, default colors are used.
-    show_only
-        A subset of annotation values to restrict the plotting to.
-    axsize
-        Tuple of width and size of a single axis.
-    basis_adata
-        like `adata`, but for reference data. Used to get reference profiles for the
-        bead splitting.
-    basis_keys
-        like `adata`, but for reference data. Used to get reference profiles for the
-        bead splitting.
-    reads
-        Whether to work with read or cell count fractions.
-    method_labels
-        A mapping from the strings in `keys` and `basis_keys` to (shorter) names
-        to show in the plot.
-    counts_location
-        A string or tuple specifying where the count matrix is stored, e.g. `'X'`,
-        `('raw','X')`, `('raw','obsm','my_counts_key')`, `('layer','my_counts_key')`,
-        ... For details see :func: `~tc.get.counts`.
-    min_counts
-        The minimum number of counts a splitted bead must have to be retained.
-    n_jobs
-        The number of parallel jobs for bead splitting, umapping etc. to use.
-        If `None`, use all available cores.
-    point_size
-        The size of the points in the plot.
-        
-    Returns
-    -------
-    A :class:`~matplotlib.figure.Figure`.
-    
-    """
-
-    if n_jobs is None: # parallelization over samples/methods within a single reference
-        n_jobs = utils.cpu_count()
-    
-    typing_data, adatas, methods, types, colors, basis_typing_data, basis_adatas, basis_methods = _validate_cross_args(adata, keys, colors, show_only, basis_adata, basis_keys, reads=reads, method_labels=method_labels, counts_location=counts_location)
-    n_solutions, n_samples, n_types = len(typing_data), len(adatas), len(types)
-    n_solutions_basis, n_samples_basis = len(basis_typing_data), len(basis_adatas)
-    
-    col_names = list(typing_data.index)
-    # check whether unsplit and ground truth plots make sense
-    if len(adatas) == 1:
-        have_split = typing_data.loc[typing_data.index[0], 'data'].columns.isin(adatas.iloc[0].layers).all()
-
-        if have_split:
-            col_names = [-1, *col_names]
-    
-    n_x = len(col_names)
-    n_y = n_solutions_basis + 1 # the first row will be the unsplit plots
-    
-    fig, axs = subplots(n_x,n_y,axsize=axsize)
-    for ax in axs.flatten():
-        ax.grid(False)
-        ax.axes.xaxis.set_ticks([])
-        ax.axes.yaxis.set_ticks([])
-    
-    # create split dimensionality reductions
-    n_inner_jobs = 1#max(n_jobs // len(typing_data.index), 1) # inner level of paralellism (for the split job) if there is less work than there are workers
-
-    dr_kwargs = {'hvg': False, 'scale': True, 'inplace': True}
-
-    if dr == 'UMAP':
-        dr_func = lambda mdata: utils.umap_single_cell_data(mdata, **dr_kwargs)
-        dr_data = 'X_umap'
-    elif dr == 'tSNE':
-        dr_func = lambda mdata: utils.tsne_single_cell_data(mdata, **dr_kwargs)
-        dr_data = 'X_tsne'
-    else:
-        print('Dimensionality reduction should be UMAP or tSNE')
-        return
-
-    for i,basis_name in enumerate(basis_typing_data.index):
-        i = i + 1
-        basis_sample, basis_method = basis_typing_data.loc[basis_name,['sample', 'method']]
-
-        type_profiles = utils.get_average_profiles(basis_method, basis_adatas[basis_sample])
-        def process_single(j,name):
-            if name == -1:
-                mdata = utils.split.merge_layers(adatas.iloc[0], type_profiles.columns, merge_annotation_name='split_type', bead_annotation_name='bc', min_reads=min_counts)
-                if adatas.index[0] == '':
-                    label = 'ground truth'
-                else:
-                    label = f'{adatas.index[0]}: ground truth'
-                typing = pd.Series({label: pd.get_dummies(mdata.obs['split_type'])})
-            else:
-                sample, type_freqs = typing_data.loc[name,['sample', 'data']]
-                if sample == '':
-                    label = f'{name} ({basis_name})'
-                else:
-                    label = f'{sample}: {name} ({basis_name})'
-
-                sdata = utils.split.split_beads(adatas[sample], type_freqs, type_profiles, scaling_jobs=n_inner_jobs)
-                mdata = utils.split.merge_layers(sdata, type_profiles.columns, merge_annotation_name='split_type', bead_annotation_name='bc', min_reads=min_counts)
-                
-                del sdata # clean up
-                gc.collect() # anndata copies are not well garbage collected and accumulate in memory
-                
-                typing = pd.Series({label: pd.get_dummies(mdata.obs['split_type'])})
-            
-            # This step takes very long, therefore do it parallel.
-            dr_func(mdata)
-
-            coords = pd.DataFrame({'x':mdata.obsm[dr_data][:,0],'y':mdata.obsm[dr_data][:,1]}, index=mdata.obs.index)
-            
-            del mdata # clean up
-            gc.collect() # anndata copies are not well garbage collected and accumulate in memory
-            
-            return j, typing, coords
-        
-        results = joblib.Parallel(n_jobs=n_jobs)(
-            joblib.delayed(process_single)(j,name)
-            for j,name in enumerate(col_names)
-        )
-        for j, typing, coords in results:
-            #print(typing.iloc[0])
-            spatial_distribution_plot(typing, coords, colors, axs=axs[i:(i+1),j:(j+1)], n_cols=1, joint=True, normalize=False, point_size=point_size)
-    
-    # create the unsplit umaps once
-    for key,adata in adatas.items():
-        adatas[key] = adata.copy()
-        dr_func(adatas[key])
-    
-    # plot unsplit umaps
-    def process_single(j,name):
-        if name == -1:
-            label = ''
-            typing = pd.Series({label: pd.DataFrame(columns=type_profiles.columns)})
-            coords = pd.DataFrame(columns=['x','y'])
-        else:
-            sample, type_freqs = typing_data.loc[name,['sample', 'data']]
-            mdata = adatas[sample]
-            if sample == '':
-                label = f'{name} (unsplitted)'
-            else:
-                label = f'{sample}: {name} (unsplitted)'
-            type_freqs = type_freqs / type_freqs.sum(axis=1).to_numpy()[:,None]
-            typing = pd.Series({label: type_freqs})
-
-            coords = pd.DataFrame({'x':mdata.obsm[dr_data][:,0],'y':mdata.obsm[dr_data][:,1]}, index=mdata.obs.index)
-
-        return j, typing, coords
-    
-    results = joblib.Parallel(n_jobs=n_jobs)(
-        joblib.delayed(process_single)(j,name)
-        for j,name in enumerate(col_names)
-    )
-    i = 0
-    for j, typing, coords in results:
-        spatial_distribution_plot(typing, coords, colors, axs=axs[i:(i+1),j:(j+1)], n_cols=1, joint=True, normalize=False, point_size=point_size)
-            
-    return fig
-
-
-def umap_split(
-    adata,
-    keys,
-    colors=None,
-    show_only=None,
-    axsize=(5,5),
-    basis_adata=None,
-    basis_keys=None,
-    reads=False,
-    method_labels=None,
-    counts_location=None,
-    min_counts=10,
-    n_jobs=None,
-    point_size=0.5,
-):
-    """
-    UMAP plot of the data splitted using different annotations, e.g. of
-    different annotation methods or of methods and a ground truth.
-    
-    Parameters
-    ----------
-    adata
-        An :class:`~anndata.AnnData` including annotation in `.obs` and/or `.obsm`.
-        Can also be a mapping of labels to :class:`~anndata.AnnData` to specify
-        multiple datasets.
-    keys
-        The `.obs`/`.obsm` annotation keys to compare. Can be a single string, or a
-        list of strings, or a mapping of the labels of `adata` to strings or lists
-        of strings.
-    colors
-        A mapping of annotation values to colors. If `None`, default colors are used.
-    show_only
-        A subset of annotation values to restrict the plotting to.
-    axsize
-        Tuple of width and size of a single axis.
-    basis_adata
-        like `adata`, but for reference data. Used to get reference profiles for the
-        bead splitting.
-    basis_keys
-        like `adata`, but for reference data. Used to get reference profiles for the
-        bead splitting.
-    reads
-        Whether to work with read or cell count fractions.
-    method_labels
-        A mapping from the strings in `keys` and `basis_keys` to (shorter) names
-        to show in the plot.
-    counts_location
-        A string or tuple specifying where the count matrix is stored, e.g. `'X'`,
-        `('raw','X')`, `('raw','obsm','my_counts_key')`, `('layer','my_counts_key')`,
-        ... For details see :func: `~tc.get.counts`.
-    min_counts
-        The minimum number of counts a splitted bead must have to be retained.
-    n_jobs
-        The number of parallel jobs for bead splitting, umapping etc. to use.
-        If `None`, use all available cores.
-    point_size
-        The size of the points in the plot.
-        
-    Returns
-    -------
-    A :class:`~matplotlib.figure.Figure`.
-    
-    """
-
-    return dr_split(adata=adata,
-    keys=keys,
-    dr='UMAP',
-    colors=colors,
-    show_only=show_only,
-    axsize=axsize,
-    basis_adata=basis_adata,
-    basis_keys=basis_keys,
-    reads=reads,
-    method_labels=method_labels,
-    counts_location=counts_location,
-    min_counts=min_counts,
-    n_jobs=n_jobs,
-    point_size=point_size)
-
 def compositions(
     adata,
     value_key,
@@ -2293,7 +1813,7 @@ def compositions(
 ):
 
     """\
-    Plot compositions of groups. In contrast to :func:`~tc.pl.contribution`, compositions
+    Plot compositions of groups. In contrast to :func:`~tacco.plots.contribution`, compositions
     have to add up to one.
     
     Parameters
@@ -2461,7 +1981,7 @@ def _prep_contributions(
         - 'percent': like 'sum' scaled by 100 (yields percentages)
         - 'gmean': normalize values by their geometric mean (yields
           contributions which make more sense for enrichments than fractions,
-          due to zero-sum issue; see :func:`~tc.tl.enrichments`)
+          due to zero-sum issue; see :func:`~tacco.tools.enrichments`)
         - 'clr': "Center logratio transform"; like 'gmean' with additional log
           transform; makes the distribution more normal and better suited for t
           tests
@@ -2543,9 +2063,8 @@ def contribution(
 ):
 
     """\
-    Plot contribution to groups. In contrast to :func:`~tc.pl.composition`,
-    contributions dont have to add up to one, making errors bars etc. more
-    understandable.
+    Plot contribution to groups. In contrast to :func:`~tacco.plots.composition`,
+    contributions dont have to add up to one.
     
     Parameters
     ----------
@@ -2604,7 +2123,7 @@ def contribution(
         - 'percent': like 'sum' scaled by 100 (yields percentages)
         - 'gmean': normalize values by their geometric mean (yields
           contributions which make more sense for enrichments than fractions,
-          due to zero-sum issue; see :func:`~tc.tl.enrichments`)
+          due to zero-sum issue; see :func:`~tacco.tools.enrichments`)
         - 'clr': "Center logratio transform"; like 'gmean' with additional log
           transform; makes the distribution more normal and better suited for t
           tests
@@ -2821,7 +2340,7 @@ def heatmap(
         - 'percent': like 'sum' scaled by 100 (yields percentages)
         - 'gmean': normalize values by their geometric mean (yields
           contributions which make more sense for enrichments than fractions,
-          due to zero-sum issue; see :func:`~tc.tl.enrichments`)
+          due to zero-sum issue; see :func:`~tacco.tools.enrichments`)
         - 'clr': "Center logratio transform"; like 'gmean' with additional log
           transform; makes the distribution more normal and better suited for t
           tests
@@ -3227,7 +2746,7 @@ def sigmap(
         - 'percent': like 'sum' scaled by 100 (yields percentages)
         - 'gmean': normalize values by their geometric mean (yields
           contributions which make more sense for enrichments than fractions,
-          due to zero-sum issue; see :func:`~tc.tl.enrichments`)
+          due to zero-sum issue; see :func:`~tacco.tools.enrichments`)
         - 'clr': "Center logratio transform"; like 'gmean' with additional log
           transform; makes the distribution more normal and better suited for t
           tests
@@ -3332,6 +2851,8 @@ def significances(
     value_order=None,
     group_order=None,
     axsize=None,
+    ax = None,
+    scale_legend=1.0
 ):
 
     """\
@@ -3368,6 +2889,11 @@ def significances(
     axsize
         Tuple of width and size of a single axis. If `None`, use
         automatic values.
+    ax
+        The :class:`~matplotlib.axes.Axes` to plot on. If `None`, creates a
+        fresh figure for plotting. Incompatible with dendrogram plotting.
+    scale_legend
+        Set to scale height and width of legend.  
         
     Returns
     -------
@@ -3420,13 +2946,13 @@ def significances(
                      [1.0,  enriched_color[2], enriched_color[2]]]}
     cmap = LinearSegmentedColormap('sigmap', segmentdata=cdict, N=256)
 
-    fig = heatmap(enr.T, None, None, cmap=cmap, cmap_vmin_vmax=(-max_log,max_log), annotation=ann, colorbar=False, value_cluster=value_cluster, group_cluster=group_cluster, value_order=value_order, group_order=group_order, axsize=axsize);
+    fig = heatmap(enr.T, None, None, cmap=cmap, cmap_vmin_vmax=(-max_log,max_log), annotation=ann, colorbar=False, value_cluster=value_cluster, group_cluster=group_cluster, value_order=value_order, group_order=group_order, axsize=axsize, ax=ax);
 
     rel_dpi_factor = matplotlib.rcParams['figure.dpi'] / 72
-    height_pxl = 200 * rel_dpi_factor
-    width_pxl = 15 * rel_dpi_factor
-    offset_top_pxl = 0 * rel_dpi_factor
-    offset_left_pxl = 20 * rel_dpi_factor
+    height_pxl = 200 * rel_dpi_factor * scale_legend
+    width_pxl = 15 * rel_dpi_factor * scale_legend
+    offset_top_pxl = 0 * rel_dpi_factor * scale_legend
+    offset_left_pxl = 30 * rel_dpi_factor * scale_legend
 
     ax = fig.axes[0]
     left,bottom = fig.transFigure.inverted().transform(ax.transAxes.transform((1,1))+np.array([offset_left_pxl,-offset_top_pxl-height_pxl]))
@@ -3436,9 +2962,9 @@ def significances(
     cb = fig.colorbar(ScalarMappable(norm=norm, cmap=cmap), cax=cax)
     cb.set_ticks([-max_log,-min_log,min_log,max_log])
     cb.set_ticklabels([pmin,pmax,pmax,pmin])
-    cb.ax.annotate('enriched', xy=(0, 1), xycoords='axes fraction', xytext=(-3, -5), textcoords='offset pixels', horizontalalignment='right', verticalalignment='top', rotation=90)
-    cb.ax.annotate('insignificant', xy=(0, 0.5), xycoords='axes fraction', xytext=(-3, 5), textcoords='offset pixels', horizontalalignment='right', verticalalignment='center', rotation=90)
-    cb.ax.annotate('depleted', xy=(0, 0), xycoords='axes fraction', xytext=(-3, 5), textcoords='offset pixels', horizontalalignment='right', verticalalignment='bottom', rotation=90)
+    cb.ax.annotate('enriched', xy=(0, 1), xycoords='axes fraction', xytext=(-3, -5), textcoords='offset pixels', horizontalalignment='right', verticalalignment='top', rotation=90, fontsize=10*scale_legend)
+    cb.ax.annotate('insignificant', xy=(0, 0.5), xycoords='axes fraction', xytext=(-3, 5), textcoords='offset pixels', horizontalalignment='right', verticalalignment='center', rotation=90, fontsize=10*scale_legend)
+    cb.ax.annotate('depleted', xy=(0, 0), xycoords='axes fraction', xytext=(-3, 5), textcoords='offset pixels', horizontalalignment='right', verticalalignment='bottom', rotation=90, fontsize=10*scale_legend)
 
     return fig
 
@@ -3453,21 +2979,11 @@ def _get_co_occurrence(adata, analysis_key, show_only, show_only_center, colors,
 
     if score_key in adata.uns[analysis_key]:
         mean_scores = adata.uns[analysis_key][score_key]
-        p_values = None
-        if score_key == 'log_occ':
-            p_val_key = [k for k in adata.uns[analysis_key].keys() if k.startswith('p_')][0]
-            p_values = adata.uns[analysis_key][p_val_key]
         if score_key.startswith('log'):
             if log_base is not None:
                 mean_scores = mean_scores / np.log(log_base)
     else:
-        if 'comparisons' not in adata.uns[analysis_key] or score_key not in adata.uns[analysis_key]['comparisons']:
-            raise ValueError(f'The comparison {score_key!r} was not found! Make sure to run tc.tl.co_occurrence_comparison first.')
-        p_val_key = [k for k in adata.uns[analysis_key]['comparisons'][score_key].keys() if k.startswith('p_')][0]
-        mean_scores = adata.uns[analysis_key]['comparisons'][score_key]['rel_occ']
-        p_values = adata.uns[analysis_key]['comparisons'][score_key][p_val_key]
-        if log_base is not None:
-            mean_scores = mean_scores / np.log(log_base)
+        raise ValueError(f'The score_key {score_key!r} was not found!')
     
     if mean_scores is None:
         raise ValueError(f'The score {score_key!r} in `adata.uns[{analysis_key}]` is None!')
@@ -3484,8 +3000,6 @@ def _get_co_occurrence(adata, analysis_key, show_only, show_only_center, colors,
             raise ValueError(f'The `show_only` categories {[s for s in show_only if s not in annotation]!r} are not available in the data!')
         annotation = annotation[select]
         mean_scores = mean_scores[select,:,:]
-        if p_values is not None:
-            p_values = p_values[select,:,:]
 
     if show_only_center is not None:
         if isinstance(show_only_center, str):
@@ -3495,12 +3009,10 @@ def _get_co_occurrence(adata, analysis_key, show_only, show_only_center, colors,
             raise ValueError(f'The `show_only_center` categories {[s for s in show_only_center if s not in center]!r} are not available in the data!')
         center = center[select]
         mean_scores = mean_scores[:,select,:]
-        if p_values is not None:
-            p_values = p_values[:,select,:]
 
     colors, types = _get_colors(colors, pd.Series(annotation))
     
-    return mean_scores, p_values, intervals, annotation, center, colors, types
+    return mean_scores, intervals, annotation, center, colors, types
 
 def _get_cooc_expression_label(score_key,log_base):
     if score_key == 'occ':
@@ -3546,10 +3058,11 @@ def co_occurrence(
     legend=True,
     grid=True,
     merged=False,
+    ax=None
 ):
 
     """\
-    Plot co-occurrence as determined by :func:`~tc.tl.co_occurrence`.
+    Plot co-occurrence as determined by :func:`~tacco.tools.co_occurrence`.
     
     Parameters
     ----------
@@ -3606,6 +3119,9 @@ def co_occurrence(
         Whether to merge the plots for all :class:`~anndata.AnnData` instances
         into a single row of plots. This makes only sense if more instances are
         provided in `adata`.
+    ax
+        The :class:`~matplotlib.axes.Axes` to plot on. If `None`, creates a
+        fresh figure for plotting. Incompatible with dendrogram plotting.
         
     Returns
     -------
@@ -3620,7 +3136,7 @@ def co_occurrence(
     
     for adata_i, (adata_name, adata) in enumerate(adatas.items()):
 
-        mean_scores, p_values, intervals, annotation, center, colors, types = _get_co_occurrence(adata, analysis_key, show_only, show_only_center, colors, score_key, log_base)
+        mean_scores, intervals, annotation, center, colors, types = _get_co_occurrence(adata, analysis_key, show_only, show_only_center, colors, score_key, log_base)
         
         if merged:
             
@@ -3628,8 +3144,21 @@ def co_occurrence(
                 raise ValueError(f'`merged==True` is ony possible with up to {len(linestyles)} andatas!')
             
             
-            if fig is None:
-                fig, axs = subplots(len(center), 1, axsize=axsize, hspace=hspace, wspace=wspace, sharex=sharex, sharey=sharey)
+            #if fig is None:
+            #    fig, axs = subplots(len(center), 1, axsize=axsize, hspace=hspace, wspace=wspace, sharex=sharex, sharey=sharey)
+
+            if ax is not None:
+                        if isinstance(ax, matplotlib.axes.Axes):
+                            axs = np.array([[ax]])
+                        else:
+                            axs = ax
+                        if axs.shape != (len(center), 1):
+                            raise ValueError(f'The `ax` argument got the wrong shape of axes: needed is {(len(center), 1)!r} supplied was {axs.shape!r}!')
+                        axsize = axs[0,0].get_window_extent().transformed(axs[0,0].get_figure().dpi_scale_trans.inverted()).size
+                        fig = axs[0,0].get_figure()
+            else:
+                fig, axs = subplots(len(center), 1, axsize=axsize, hspace=hspace, wspace=wspace, sharex=sharex, sharey=sharey, )
+
 
             for ir, nr in enumerate(center):
                 x = (intervals[1:] + intervals[:-1]) / 2
@@ -3650,8 +3179,20 @@ def co_occurrence(
 
         else:
             
-            if fig is None:
-                fig, axs = subplots(len(center), len(adatas), axsize=axsize, hspace=hspace, wspace=wspace, sharex=sharex, sharey=sharey)
+            #if fig is None:
+            #    fig, axs = subplots(len(center), len(adatas), axsize=axsize, hspace=hspace, wspace=wspace, sharex=sharex, sharey=sharey)
+
+            if ax is not None:
+                if isinstance(ax, matplotlib.axes.Axes):
+                    axs = np.array([[ax]])
+                else:
+                    axs = ax
+                if axs.shape != (len(center), len(adatas)):
+                    raise ValueError(f'The `ax` argument got the wrong shape of axes: needed is {(len(center), len(adatas))!r} supplied was {axs.shape!r}!')
+                axsize = axs[0,0].get_window_extent().transformed(axs[0,0].get_figure().dpi_scale_trans.inverted()).size
+                fig = axs[0,0].get_figure()
+            else:
+                fig, axs = subplots(len(center), len(adatas), axsize=axsize, hspace=hspace, wspace=wspace, sharex=sharex, sharey=sharey, )
 
             for ir, nr in enumerate(center):
                 x = (intervals[1:] + intervals[:-1]) / 2
@@ -3702,18 +3243,17 @@ def co_occurrence_matrix(
     y_padding=2.0,
     value_cluster=False,
     group_cluster=False,
-    annotate_values=False,
     restrict_intervals=None,
     p_corr='fdr_bh',
     cmap='bwr',
     cmap_vmin_vmax=None,
     legend=True,
+    ax = None,
+    scale_legend=1.0
 ):
     """\
-    Plot co-occurrence as determined by :func:`~tc.tl.co_occurrence` or
-    :func:`~tc.tl.co_occurrence_matrix` as a matrix. Can also plot comparisons
-    between the co-occurrence in different datasets after calling
-    :func:`~tc.tl.co_occurrence_comparison`.
+    Plot co-occurrence as determined by :func:`~tacco.tools.co_occurrence` or
+    :func:`~tacco.tools.co_occurrence_matrix` as a matrix.
     
     Parameters
     ----------
@@ -3724,9 +3264,8 @@ def co_occurrence_matrix(
     analysis_key
         The `.uns` key with the co-occurence analysis result.
     score_key
-        The `.uns[analysis_key]` key of the score to use or the
-        `.uns[analysis_key]['comparisons']` sub-key specifying the comparison
-        to plot. Available keys `.uns[analysis_key]` include:
+        The `.uns[analysis_key]` key of the score to use. Available keys
+        `.uns[analysis_key]` include:
         
         - 'occ': co-occurrence
         - 'log_occ': logarithm of the co-occurrence
@@ -3745,8 +3284,8 @@ def co_occurrence_matrix(
         - 'log_relative_distance_distribution': log of
           'relative_distance_distribution'
     log_base
-        The base of the logarithm to use for plotting if `score_key` is
-        'log_occ' or a comparison key. If `None`, use the natural logarithm.
+        The base of the logarithm to use for plotting if `score_key` is a log
+        quantity. If `None`, use the natural logarithm.
     colors
         The mapping of value names to colors. If `None`, a set of
         standard colors is used.
@@ -3768,13 +3307,6 @@ def co_occurrence_matrix(
         Whether to cluster and reorder the values.
     group_cluster
         Whether to cluster and reorder the groups.
-    annotate_values
-        Whether to annotate the matrix with the plotted values. If set to
-        'significances', the annotation also contains the significances of the
-        values being greater or less than 0, which means significantly
-        different from random neighbourship. 'significances' is only
-        implemented for the cases when `score_key` is 'log_occ' or a comparison
-        key.
     restrict_intervals
         A list-like containing the indices of the intervals to plot. If `None`,
         all intervals are included.
@@ -3784,6 +3316,11 @@ def co_occurrence_matrix(
         A tuple giving the range of values for the colormap.
     legend
         Whether to include the legend
+    scale_legend
+        Set to scale height and width of legend.
+    ax
+        The :class:`~matplotlib.axes.Axes` to plot on. If `None`, creates a
+        fresh figure for plotting. Incompatible with dendrogram plotting.
         
     Returns
     -------
@@ -3794,11 +3331,23 @@ def co_occurrence_matrix(
     adatas = _get_adatas(adata)
     
     min_max = None
-    
+
+    if ax is not None:
+        if isinstance(ax, matplotlib.axes.Axes):
+            axs = np.array([[ax]])
+        else:
+            axs = ax
+        if axs.shape != (len(restrict_intervals), len(adatas)):
+            raise ValueError(f'The `ax` argument got the wrong shape of axes: needed is {(len(restrict_intervals), len(adatas))!r} supplied was {axs.shape!r}!')
+        axsize = axs[0,0].get_window_extent().transformed(axs[0,0].get_figure().dpi_scale_trans.inverted()).size
+        fig = axs[0,0].get_figure()
+    else:
+        fig, axs = subplots(len(restrict_intervals), len(adatas), axsize=axsize, hspace=hspace, wspace=wspace, x_padding=x_padding, y_padding=y_padding, )
+
     # first pass through the data to get global min/max of the values for colormap
     for adata_i, (adata_name, adata) in enumerate(adatas.items()):
 
-        mean_scores, p_values, intervals, annotation, center, colors, types = _get_co_occurrence(adata, analysis_key, show_only, show_only_center, colors, score_key=score_key, log_base=log_base)
+        mean_scores, intervals, annotation, center, colors, types = _get_co_occurrence(adata, analysis_key, show_only, show_only_center, colors, score_key=score_key, log_base=log_base)
         
         if min_max is None:
             if restrict_intervals is None:
@@ -3816,16 +3365,12 @@ def co_occurrence_matrix(
         min_max[:,:,:] = np.array(cmap_vmin_vmax)
     
     if axsize is None:
-        if annotate_values == False:
-            axsize = (0.2*len(center),0.2*len(annotation))
-        else:
-            axsize = (0.8*len(center),0.3*len(annotation))
-    fig, axs = subplots(len(restrict_intervals), len(adatas), axsize=axsize, hspace=hspace, wspace=wspace, x_padding=x_padding, y_padding=y_padding, )
+        axsize = (0.2*len(center),0.2*len(annotation))
     
     # second pass for actual plotting
     for adata_i, (adata_name, adata) in enumerate(adatas.items()):
 
-        mean_scores, p_values, intervals, annotation, center, colors, types = _get_co_occurrence(adata, analysis_key, show_only, show_only_center, colors, score_key=score_key, log_base=log_base)
+        mean_scores, intervals, annotation, center, colors, types = _get_co_occurrence(adata, analysis_key, show_only, show_only_center, colors, score_key=score_key, log_base=log_base)
         
         data = mean_scores[:,:,restrict_intervals]
         
@@ -3838,22 +3383,16 @@ def co_occurrence_matrix(
 
             data = pd.DataFrame(data, index=annotation, columns=center).T
 
-            annarg = 'value' if annotate_values != False else None
-            if annotate_values == 'significances' and p_values is not None:
-                pvals = pd.DataFrame(p_values[...,_ii], index=annotation, columns=center).T
-                anstr = _asterisks_from_pvals(pvals)
-                annarg = ('value', anstr)
-
             heatmap(
                 data,
-                value_key=None, group_key=None, annotation=annarg,
+                value_key=None, group_key=None,
                 colors=colors,
                 value_cluster=value_cluster, group_cluster=group_cluster,
                 ax=ax,
                 cmap=cmap,
                 cmap_center=None,#(0 if log else None),
                 cmap_vmin_vmax=min_max[adata_i,_ii],
-                group_labels_rotation=(90 if annotate_values == False else 30),
+                group_labels_rotation=90,
                 colorbar=False,
             );
 
@@ -3869,7 +3408,7 @@ def co_occurrence_matrix(
             ax.set_xlabel(anno_center_title)
 
     if legend:
-        _add_legend_or_colorbars(fig, axs, colors, cmap=cmap, min_max=min_max)
+        _add_legend_or_colorbars(fig, axs, colors, cmap=cmap, min_max=min_max, scale_legend=scale_legend)
     
     return fig
 
@@ -4208,10 +3747,10 @@ def annotation_coordinate(
         calculating the annotation density). If `None`, use `1` per
         observation, which makes sense if the annotation is categorical or
         fractional annotations which should sum to `1`.
-    max_distance
+    max_coordinate
         The maximum coordinate to use. If `None` or `np.inf`, uses the maximum
         coordinate in the data.
-    delta_distance
+    delta_coordinate
         The width in coordinate for coordinate discretization. If `None`, takes
         `max_coordinate/100`.
     axsize
@@ -4223,7 +3762,7 @@ def annotation_coordinate(
         Whether to plot the different annotations on different scales on
         separate stacked plots or on the same scale in a single plot.
     verbose
-        Level of verbosity, with `0` (not output), `1` (some output), ...
+        Level of verbosity, with `0` (no output), `1` (some output), ...
         
     Returns
     -------

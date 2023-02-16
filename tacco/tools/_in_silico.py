@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from numpy.random import Generator, PCG64
 from scipy.spatial import distance_matrix
-from scipy.sparse import csc_matrix
+from scipy.sparse import csc_matrix, issparse
 from scipy import integrate
 from numba import njit
 
@@ -131,6 +131,11 @@ def mix_in_silico(
     topic_key
         An `.obsm` key with continuous information to propagate through to the
         mixed data, e.g. transciptional topics.
+    n_samples
+        The number of measurement points ("beads") which are put randomly in
+        space. Note that depending on `min_counts` and the mixing parameters
+        the number of returned measurement points is somewhat smaller than this
+        value.
     bead_shape
         The shape to use for determining the contributions of cells to "beads".
         Can also be a list of shapes to save setup time wrt. isolated calls.
@@ -223,9 +228,13 @@ def mix_in_silico(
         if platform_log10_mean is not None:
             utils.col_scale(sample_X, rescaling_factors)
         if round:
-            np.around(sample_X.data, decimals=0, out=sample_X.data)
-        sample_X.eliminate_zeros()
-        sample_data = ad.AnnData(X=sample_X, obs=sampling, var=adata.var.copy())
+            if issparse(sample_X):
+                np.around(sample_X.data, decimals=0, out=sample_X.data)
+            else:
+                np.around(sample_X, decimals=0, out=sample_X)
+        if issparse(sample_X):
+            sample_X.eliminate_zeros()
+        sample_data = ad.AnnData(X=sample_X, obs=sampling, var=adata.var.copy(), dtype=sample_X.dtype)
         if platform_log10_mean is not None:
             sample_data.var['platform_effect'] = rescaling_factors
         

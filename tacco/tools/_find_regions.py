@@ -47,7 +47,7 @@ def find_regions(
     ----------
     adata
         An :class:`~anndata.AnnData` including expression data in `.X` and
-         profiles in `.varm` and/or annotation in `.obs` or `.obsm`.
+        profiles in `.varm` and/or annotation in `.obs` or `.obsm`.
     key_added
         The `.obs` key where the resulting regions are written to. It is also
         used to determine where new neighbour and connectivity results should
@@ -66,15 +66,15 @@ def find_regions(
         The `.obsp` key where the precomputed expression connectivity can be
         found. If `None`, a new connectivity is computed with
         :func:`~scanpy.pp.neighbors` and default parameters and then saved
-        under "nn_"+`key_added`+"_annotation".
+        under "nn_<key_added>_annotation".
     annotation_key
         The `.obsm` key containing data to use instead of expression. If
         `None`, use expression data.
     position_connectivity
         The `.obsp` key where the precomputed position connectivity can be
         found. If `None`, a new connectivity is computed with
-        :func:`~scanpy.pp.neighbors` and default parameters and then saved
-        under "nn_"+`key_added`+"_position".
+        :func:`scanpy.pp.neighbors` and default parameters and then saved
+        under "nn_<key_added>_position".
     position_key
         The `.obsm` key or array-like of `.obs` keys with the position space
         coordinates
@@ -177,21 +177,6 @@ def find_regions(
     sc.tl.leiden(adata, resolution=resolution, random_state=42, key_added=key_added, adjacency=adjacency)
     
     return adata
-#    
-#    fig,axs = tacco.plots.subplots(len(tnames),1,wspace=0.4,hspace=0.25)
-#    cluster_counts = adata.obs[leiden].value_counts()
-#    min_cluster_size = 500
-#    for it, (tname, state) in enumerate(zip(tnames, states)):
-#        _adata = adata
-#        _adata = _adata[_adata.obs['sample'] == tname]
-#        __adata = _adata[_adata.obs[leiden].isin(cluster_counts[cluster_counts > min_cluster_size].index)].copy()
-#        sc.pl.scatter(__adata, 'x', 'y', leiden, ax=axs[0,it],show=False)
-#        axs[0,it].set_title(
-#            '%s (%s)\ncluster_res %.2f position:topic %.2f:%.2f\nplotting %d of %d beads in %d of %d clusters'%
-#            (tname, state, leiden_res,pos_weight,1-pos_weight,len(__adata.obs.index),len(_adata.obs.index),len(__adata.obs[leiden].unique()),len(cluster_counts))
-#        )
-#
-#    fig.savefig(name + '.png')
 
 def fill_regions(
     adata,
@@ -202,7 +187,7 @@ def fill_regions(
 
     """\
     Fills the region annotation of not annotated observation (i.e. na values)
-    by with the annotation of the spatially closest annotated observation.
+    with the annotation of the spatially closest annotated observation.
     
     Parameters
     ----------

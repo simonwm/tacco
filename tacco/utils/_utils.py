@@ -19,8 +19,32 @@ import tempfile
 from numba import njit, prange
 from ..get._counts import _get_counts_location
 from .. import get
-from . import dist
-from . import math
+from . import _dist
+from . import _math
+
+def _infer_annotation_key(adata, annotation_key=None):
+    ''' Return annotation key, if supplied or unique. '''
+    if annotation_key is not None:
+        return annotation_key
+    if adata is None:
+        raise ValueError('adata cannot be none it no annotation key is specified!')
+    
+    keys = set(adata.varm.keys()) | set(adata.obsm.keys()) | set(adata.obs.columns)
+    if len(keys) == 1:
+        return next(iter(keys))
+    elif len(keys) > 1:
+        raise ValueError('adata has more than a unique annotation key, so it has to be specified explicitly!')
+    else:
+        raise ValueError('adata has no annotation keys!')
+        
+def _get_unique_keys(annotation_key, other_keys):
+    ''' Get unique keys. '''
+    if other_keys is None:
+        return annotation_key
+    elif isinstance(other_keys, str):
+        return {annotation_key, other_keys}
+    else:
+        return {annotation_key, *other_keys}
 
 def cpu_count():
 
@@ -105,7 +129,7 @@ def solve_OT(
     conservation.
     The algorithm used for solving the problem is the generalized
     Sinkhorn-Knopp matrix scaling algorithm from in [Chizat16]_. The python
-    implementation is based on [Flamary2021]_.
+    implementation is based on [Flamary21]_.
     
     Parameters
     ----------
@@ -209,12 +233,12 @@ def solve_OT(
             if err < stopThr:
                 break
 
-    math.row_scale(K, u)
-    math.col_scale(K, v)
+    _math.row_scale(K, u)
+    _math.col_scale(K, v)
     
     return K
 
-def run_OT(type_cell_dist, type_prior=None, cell_prior=None, epsilon=5e-3, lamb=None, inplace=False):
+def _run_OT(type_cell_dist, type_prior=None, cell_prior=None, epsilon=5e-3, lamb=None, inplace=False):
 
     # check sanity of arguments
     if type_prior is not None and type_prior.isna().any():
@@ -255,27 +279,37 @@ def run_OT(type_cell_dist, type_prior=None, cell_prior=None, epsilon=5e-3, lamb=
 
     return C
 
-def run_nnls(tdata, reference, type_key, n_pca=None, zero_center=False):
-    tdata = tdata.copy()
-    reference = reference.copy()
-    
-    tX, rX, pca_offset, pca_trafo = transfer_pca(tdata, reference, n_pca, zero_center=zero_center)
-    
-    # create average type profiles on un-lognormalized data and use them to get the marginal distributions of celltypes via nnls
-    average_profiles = { l: np.array(rX[reference.obs.index.isin(df.index)].mean(axis=0)).flatten() for l, df in reference.obs.groupby(type_key) }
-    average_profiles = pd.DataFrame(average_profiles)#, index=reference.var_names)
-    #print(average_profiles
-    
-    cell_type = parallel_nnls(average_profiles, tX)
-    
-    cell_type = pd.DataFrame(cell_type, columns=average_profiles.columns.copy(), index=tdata.obs.index.copy())
-    
-    del tdata, reference # clean up the copies.
-    gc.collect() # anndata copies are not well garbage collected and accumulate in memory
-    
-    return cell_type
+def scale_counts(
+    adata,
+    rescaling_factors,
+    counts_location=None,
+    round=False,
+):
 
-def scale_counts(adata, rescaling_factors, counts_location=None, round=False):
+    """\
+    Scales the count matrix in an :class:`~anndata.AnnData` in various locations
+    inplace.
+    
+    Parameters
+    ----------
+    adata
+        The :class:`~anndata.AnnData` with the counts to scale
+    rescaling_factors
+        The gene-wise rescaling factors
+    counts_location
+        A string or tuple specifying where the count matrix is stored, e.g.
+        `'X'`, `('raw','X')`, `('raw','obsm','my_counts_key')`,
+        `('layer','my_counts_key')`, ... For details see
+        :func:`~tacco.get.counts`.
+    round
+        Whether to round the result to integer values
+        
+    Returns
+    -------
+    `None`. This is an inplace operation.
+        
+    """
+
     if adata.is_view:
         raise ValueError(f'Got a view of an anndata.AnnData as an argument to scale inplace! This does not (reliably) work, supply a copy.')
         
@@ -283,15 +317,15 @@ def scale_counts(adata, rescaling_factors, counts_location=None, round=False):
     
     # scale the counts right where they are
     if counts_location[0] == 'X':
-        math.col_scale(adata.X, rescaling_factors, round=round)
+        _math.col_scale(adata.X, rescaling_factors, round=round)
     elif counts_location[0] == 'layer':
-        math.col_scale(adata.layers[counts_location[1]], rescaling_factors, round=round)
+        _math.col_scale(adata.layers[counts_location[1]], rescaling_factors, round=round)
     elif counts_location[0] == 'obsm':
-        math.col_scale(adata.obsm[counts_location[1]], rescaling_factors, round=round)
+        _math.col_scale(adata.obsm[counts_location[1]], rescaling_factors, round=round)
     elif counts_location[0] == 'varm':
-        math.col_scale(adata.varm[counts_location[1]], rescaling_factors, round=round)
+        _math.col_scale(adata.varm[counts_location[1]], rescaling_factors, round=round)
     elif counts_location[0] == 'uns':
-        math.col_scale(adata.uns[counts_location[1]], rescaling_factors, round=round)
+        _math.col_scale(adata.uns[counts_location[1]], rescaling_factors, round=round)
     elif counts_location[0] == 'raw':
         scale_counts(adata.raw.to_adata(), rescaling_factors, counts_location=counts_location[1:], round=round)
     else:
@@ -332,29 +366,64 @@ def find_unused_key(
             counter += 1
     return new_key
         
-def get_average_profiles(type_key, reference, rX=None, pca_offset=None, pca_trafo=None, std=False, normalize=True, cell_weights=False, buffer=True):
+def get_average_profiles(
+    type_key,
+    reference,
+    rX=None,
+    pca_offset=None,
+    pca_trafo=None,
+    normalize=True,
+    cell_weights=False,
+    buffer=True,
+):
+    """\
+    Get average profiles for a certain annotation from a reference
+    :class:`~anndata.Anndata`. If these profiles are not available as a
+    `varm` entry already, they are created.
+    
+    Parameters
+    ----------
+    type_key
+        The annotation key for which average profiles should be returned. This
+        can be a `.obs` or `.varm` key. Can also be a :class:`~pandas.Series`
+        contining a categorical annotation which is not available in `.obs`.
+    reference
+        The :class:`~anndata.Anndata` from which the average profiles should be
+        retrieved.
+    rX
+        An expression matrix to use instead of the one provided in `.X`.
+    pca_offset
+        An offset to subtract from the mean_profiles; mostly interesting for
+        working in pca space
+    pca_trafo
+        A linear transformation to apply to the mean profiles; mostly
+        interesting for working in pca space
+    normalize
+        Whether to normalize profiles to sum to 1 over genes for every profile
+    cell_weights
+        Whether to weight every cell equally instead of every read
+    buffer
+        Whether to save the average profiles in `.varm`
+        
+    Returns
+    -------
+    The mean profiles in a :class:`~pandas.DataFrame`.
+        
+    """
+
     new_key = None
     if isinstance(type_key, pd.Series):
         new_key = find_unused_key(reference.obs)
         reference.obs[new_key] = type_key
         type_key = new_key
-    elif isinstance(type_key, pd.DataFrame):
-        new_key = find_unused_key(reference.obsm)
-        reference.obsm[new_key] = type_key
-        type_key = new_key
 
     found_key = []
-    
-    if std and pca_trafo is not None:
-        raise ValueError('`pca_trafo` is not implemented for the standard deviation!')
     
     normalization = None
     
     if type_key in reference.varm:
         found_key.append('varm')
         if len(found_key) == 1: # only use this hit, if there was no better hit before
-            if std:
-                raise ValueError('If profiles are given explicitely, their standard deviation is not available!')
             mean_profiles = reference.varm[type_key].fillna(0)
 
             normalization = mean_profiles.sum(axis = 0).to_numpy()
@@ -371,51 +440,17 @@ def get_average_profiles(type_key, reference, rX=None, pca_offset=None, pca_traf
 
             if cell_weights: # weight every cell equally instead of every read
                 rX = rX.copy()
-                math.row_scale(rX, 1/np.array(reference.X.sum(axis=1)).flatten())
+                _math.row_scale(rX, 1/np.array(reference.X.sum(axis=1)).flatten())
             
-            mean_profiles, std_profiles = {}, {}
+            mean_profiles = {}
             for l, df in reference.obs.groupby(type_key):
                 rX_l = rX[reference.obs.index.isin(df.index)]
-                if std:
-                    if scipy.sparse.issparse(rX):
-                        mean_profiles[l], std_profiles[l] = mean_variance_axis(rX_l, axis=0)
-                        std_profiles[l] = np.sqrt(std_profiles[l])
-                    else:
-                        mean_profiles[l], std_profiles[l] = rX_l.mean(axis=0), rX_l.std(axis=0)
-                else:
-                    mean_profiles[l] = np.array(rX_l.mean(axis=0)).flatten()
+                mean_profiles[l] = np.array(rX_l.mean(axis=0)).flatten()
             mean_profiles = pd.DataFrame(mean_profiles)
-            if std:
-                std_profiles = pd.DataFrame(std_profiles)
 
-    if type_key in reference.obsm:
-        found_key.append('obsm')
-        if len(found_key) == 1: # only use this hit, if there was no better hit before
-            if std:
-                raise ValueError('If type annotation is given as soft clusters, the standard deviation of their profiles is not available!')
-            _type_annotation = reference.obsm[type_key]
-            print('OP....',end='...')
-            start = time.time()
-            type_gene_dist = pd.DataFrame(dist.cdist(_type_annotation.T, reference.X.T, metric='cosine'), index=_type_annotation.columns, columns=reference.var.index) # normalization is irrelevant for the cosine distance
-            _type_annotation *= (np.array(reference.X.sum(axis=1)).flatten() / _type_annotation.sum(axis=1).to_numpy())[:,None] # normalize cell-type matrix to read counts per cell
-            type_prior = _type_annotation.sum(axis=0) # reads per type
-            gene_prior = pd.Series(np.array(reference.X.sum(axis=0)).flatten(),index=reference.var.index) # reads per gene
-            mean_profiles = run_OT(type_cell_dist=type_gene_dist, type_prior=type_prior, cell_prior=gene_prior, epsilon=5e-3)
-            print('time',time.time() - start)
-            #print('nnls..',end='...')
-            #start = time.time()
-            #mean_profiles = parallel_nnls(_type_annotation.to_numpy(),rX.T)
-            #print('time',time.time() - start)
-            mean_profiles = pd.DataFrame(mean_profiles,columns=_type_annotation.columns)
-    
     if new_key is not None:
-        if new_key in reference.obs:
-            del reference.obs[new_key]
-        else:
-            del reference.obsm[new_key]
+        del reference.obs[new_key]
 
-    #if len(found_key) > 1:
-    #    print('Found the key "%s" in several places %s! Used the one in \'%s\' for average profiles.' % (type_key, found_key, found_key[0]))
     if len(found_key) < 1:
         raise ValueError('The key "%s" is not found in the reference!' % (type_key))
 
@@ -424,74 +459,169 @@ def get_average_profiles(type_key, reference, rX=None, pca_offset=None, pca_traf
         if normalization is None: # some paths might need other normalization...
             normalization = mean_profiles.sum(axis = 0).to_numpy()
         mean_profiles /= normalization
-        if std:
-            std_profiles /= normalization
     # recover the gene index if it makes sense 
     if len(mean_profiles.index) == len(reference.var.index):
         mean_profiles.set_index(reference.var.index, inplace=True)
-        if std:
-            std_profiles.set_index(reference.var.index, inplace=True)
     if buffer and 'varm' not in found_key:
         reference.varm[type_key] = mean_profiles
-    #print(f'mean_profiles {mean_profiles} at the end')
-    if std:
-        return mean_profiles, std_profiles
-    else:
-        return mean_profiles
+    
+    return mean_profiles
 
-def preprocess_single_cell_data(tdata, hvg=True, scale=True, pca=True, inplace=False,min_cells=10, min_genes=10):
-    print('SCprep', end='...')
-    start = time.time()
+def preprocess_single_cell_data(
+    adata,
+    hvg=True,
+    scale=True,
+    pca=True,
+    inplace=False,
+    min_cells=10,
+    min_genes=10,
+    verbose=1,
+):
+    """\
+    Preprocess single cell data in a standardized way from bare counts as
+    input.
+    
+    Parameters
+    ----------
+    adata
+        The :class:`~anndat.AnnData` to process
+    hvg
+        Whether the dat should be subset to highly variable genes
+    scale
+        Whether the data should be scaled
+    pca
+        Whether the pcas should be calculated
+    inplace
+        Whether the input :class:`~anndat.AnnData` instance should be changed to
+        contain the processed data
+    min_cells
+        The minimum number of cells a gene must have to be not filtered out
+    min_genes
+        The minimum number of genes a cell must have to be not filtered out
+    verbose
+        Level of verbosity, with `0` (no output), `1` (some output), ...
+        
+    Returns
+    -------
+    The processed :class:`~anndat.AnnData`
+        
+    """
+
+    if verbose>0:
+        print('SCprep', end='...')
+        start = time.time()
     if not inplace:
-        tdata = tdata.copy()
-    if pd.api.types.is_integer_dtype(tdata.X):
+        adata = adata.copy()
+    if pd.api.types.is_integer_dtype(adata.X.dtype):
         if inplace:
             raise ValueError(f'The integer valued data cannot be normalized inplace! Specify `inplace=False`.')
         else:
-            tdata.X = tdata.X.astype(float)
-    tdata.obs['log10counts'] = np.log(np.array(tdata.X.sum(axis=1)).flatten()) / np.log(10)
+            adata.X = adata.X.astype(float)
+    adata.obs['log10counts'] = np.log(np.array(adata.X.sum(axis=1)).flatten()) / np.log(10)
     if min_cells is not None:
-        sc.pp.filter_genes(tdata, min_cells=min_cells)
+        sc.pp.filter_genes(adata, min_cells=min_cells)
     if min_genes is not None:
-        sc.pp.filter_cells(tdata, min_genes=min_genes)
-    sc.pp.normalize_per_cell(tdata, counts_per_cell_after=1e4)
-    math.log1p(tdata)
+        sc.pp.filter_cells(adata, min_genes=min_genes)
+    sc.pp.normalize_per_cell(adata, counts_per_cell_after=1e4)
+    _math.log1p(adata)
     if hvg:
-        n_bins = min(tdata.shape[0], 20) # catch edge case with less than default n_bins samples
-        sc.pp.highly_variable_genes(tdata, subset=True, n_bins=n_bins)
+        n_bins = min(adata.shape[0], 20) # catch edge case with less than default n_bins samples
+        sc.pp.highly_variable_genes(adata, subset=True, n_bins=n_bins)
     if scale:
-        sc.pp.scale(tdata)
+        sc.pp.scale(adata)
     if pca:
-        sc.pp.pca(tdata, random_state=42)
-    print('time', time.time() - start)
-    return tdata
+        sc.pp.pca(adata, random_state=42)
+    if verbose>0:
+        print('time', time.time() - start)
+    return adata
 
-def umap_single_cell_data(tdata, inplace=False, **kwargs):
-    print('SCumap', end='...')
-    start = time.time()
+def umap_single_cell_data(
+    adata,
+    inplace=False,
+    verbose=1,
+    **kwargs,
+):
+    """\
+    Preprocess single cell data in a standardized way from bare counts as
+    input and include the generation of a umap embedding.
+    
+    Parameters
+    ----------
+    adata
+        The :class:`~anndat.AnnData` to process
+    inplace
+        Whether the input :class:`~anndat.AnnData` instance should be changed to
+        contain the processed data
+    verbose
+        Level of verbosity, with `0` (no output), `1` (some output), ...
+    kwargs
+        Extra keyword arguments are forwarded to
+        :func:`~tacco.utils.preprocess_single_cell_data`
+        
+    Returns
+    -------
+    The processed :class:`~anndat.AnnData`
+        
+    """
+
+    if verbose>0:
+        print('SCumap', end='...')
+        start = time.time()
     if not inplace:
-        tdata = tdata.copy()
-    tdata = preprocess_single_cell_data(tdata, inplace=True, **kwargs)
-    sc.pp.neighbors(tdata, random_state=42)
-    #sc.tl.leiden(tdata, random_state=42)
-    sc.tl.umap(tdata, random_state=42)
-    print('time', time.time() - start)
-    return tdata
+        adata = adata.copy()
+        if pd.api.types.is_integer_dtype(adata.X.dtype):
+            adata.X = adata.X.astype(float) # follow inplace=True requirements of preprocess_single_cell_data
+    adata = preprocess_single_cell_data(adata, inplace=True, verbose=max(0,verbose-1), **kwargs)
+    sc.pp.neighbors(adata, random_state=42)
+    sc.tl.umap(adata, random_state=42)
+    if verbose>0:
+        print('time', time.time() - start)
+    return adata
 
-def tsne_single_cell_data(tdata, inplace=False, **kwargs):
-    print('SCtsne', end='...')
-    start = time.time()
+def tsne_single_cell_data(
+    adata,
+    inplace=False,
+    verbose=1,
+    **kwargs,
+):
+    """\
+    Preprocess single cell data in a standardized way from bare counts as
+    input and include the generation of a tsne embedding.
+    
+    Parameters
+    ----------
+    adata
+        The :class:`~anndat.AnnData` to process
+    inplace
+        Whether the input :class:`~anndat.AnnData` instance should be changed to
+        contain the processed data
+    verbose
+        Level of verbosity, with `0` (no output), `1` (some output), ...
+    kwargs
+        Extra keyword arguments are forwarded to
+        :func:`~tacco.utils.preprocess_single_cell_data`
+        
+    Returns
+    -------
+    The processed :class:`~anndat.AnnData`
+        
+    """
+
+    if verbose>0:
+        print('SCtsne', end='...')
+        start = time.time()
     if not inplace:
-        tdata = tdata.copy()
-    tdata = preprocess_single_cell_data(tdata, inplace=True, **kwargs)
-    # sc.pp.neighbors(tdata, random_state=42)
-    #sc.tl.leiden(tdata, random_state=42)
-    sc.tl.tsne(tdata, random_state=42)
-    print('time', time.time() - start)
-    return tdata
+        adata = adata.copy()
+        if pd.api.types.is_integer_dtype(adata.X.dtype):
+            adata.X = adata.X.astype(float) # follow inplace=True requirements of preprocess_single_cell_data
+    adata = preprocess_single_cell_data(adata, inplace=True, verbose=max(0,verbose-1), **kwargs)
+    sc.tl.tsne(adata, random_state=42)
+    if verbose>0:
+        print('time', time.time() - start)
+    return adata
 
 
-def transfer_pca(tdata, reference, n_pca=100, zero_center=True):
+def _transfer_pca(tdata, reference, n_pca=100, zero_center=True):
     tX = tdata.X
     offset = None
     if zero_center:
@@ -560,103 +690,10 @@ def generate_mixture_profiles(
     
     # get mixture profiles
     _mixtures = mixtures.copy()
-    math.row_scale(_mixtures,1/_mixtures.sum(axis=1).A.flatten())
-    mixture_profiles = math.gemmT(_mixtures, average_profiles)
+    _math.row_scale(_mixtures,1/_mixtures.sum(axis=1).A.flatten())
+    mixture_profiles = _math.gemmT(_mixtures, average_profiles)
     
     return mixture_profiles, mixtures
-
-def generate_random_mixture_profiles(
-    average_profiles,
-    n_levels=10,
-    profiles_per_mixture=4,
-):
-
-    """\
-    Creates random mixture profiles with some structure to have a deterministic
-    minimum of coverage of annotation fractions per profile.
-    
-    Parameters
-    ----------
-    average_profiles
-        A 2d :class:`~numpy.ndarray` with features in the rows and profiles in
-        the columns
-    n_levels
-        The number of mixture levels: Let N be the number of profiles. Then the
-        first N mixtures will be pure profiles, the next N mixtures will have
-        (n_levels-1)/n_levels weight of the 'main' profiles, the next N
-        mixtures will have (n_levels-2)/n_levels, ...
-    profiles_per_mixture
-        How many profiles should contribute to a mixture. This parameter has to
-        be at least 2 and cannot be larger than the number of profiles. If it
-        is larger than 2, then the type assignment is done recursively using
-        until `profiles_per_mixture-1` types contribute and the rest is given
-        to the `profiles_per_mixture`th type.
-        
-    Returns
-    -------
-    A tuple consisting of a :class:`~numpy.ndarray` containing the mixture\
-    profiles and a sparse matrix giving the mixtures.
-        
-    """
-    
-    if not isinstance(average_profiles, np.ndarray):
-        raise ValueError('`average_profiles` has to be a numpy array!')
-    n_genes, n_profiles = average_profiles.shape
-    if n_levels < 1:
-        raise ValueError(f'`n_levels` {n_levels} is smaller than 1!')
-    n_mixtures = n_levels * n_profiles
-    if profiles_per_mixture < 2:
-        raise ValueError(f'`profiles_per_mixture` {profiles_per_mixture} is smaller than 2!')
-    if profiles_per_mixture > n_profiles:
-        raise ValueError(f'`profiles_per_mixture` {profiles_per_mixture} is larger than the number of profiles {n_profiles}!')
-    
-    # generate sparsity and weight pattern for mixture matrix
-    rg = Generator(PCG64(42))#seed=_seed))
-    rows = np.array([np.arange(n_mixtures) for _ in range(profiles_per_mixture)]).T.flatten()
-    # this cols construction guarantees that every annotation gets its high combination + some random number of others
-    cols = np.array([rg.choice(n_profiles-1,size=profiles_per_mixture-1,replace=False) for _ in range(n_mixtures)])
-    col0 = np.arange(n_mixtures)
-    cols += col0[:,None] + 1
-    cols = np.concatenate([col0[:,None],cols],axis=1)
-    cols = np.mod(cols, n_profiles).flatten()
-    data = rg.random(size=(n_mixtures,profiles_per_mixture-1),dtype=average_profiles.dtype)
-    #if n_levels > 1:
-    #    points = 0.5*(1+np.polynomial.chebyshev.chebpts1(n_levels-1))
-    for i in range(n_levels):
-    #    val = 1 if i == 0 else points[i-1]
-        val = 1 - i/n_levels
-        data[(n_profiles*i):(n_profiles*(i+1)),0] = val
-    data = np.concatenate([data,np.full((n_mixtures,1),1/n_mixtures,dtype=average_profiles.dtype)],axis=1)
-    remainder = data[:,-1]
-    for i in range(profiles_per_mixture - 1):
-        data[:,i] *= remainder
-        remainder -= data[:,i]
-    data = data.flatten()
-    mixtures = scipy.sparse.coo_matrix((data, (rows, cols)), shape=(n_mixtures, n_profiles)).tocsr()
-    
-    # get mixture profiles
-    _mixtures = mixtures.copy()
-    math.row_scale(_mixtures,1/_mixtures.sum(axis=1).A.flatten())
-    mixture_profiles = math.gemmT(_mixtures, average_profiles)
-    
-    return mixture_profiles, mixtures
-
-def pure_profile_split(type_key, reference, min_reads=0, split_type_key=None):
-    from ..tools._split import split_observations, merge_observations
-    if type_key not in reference.obsm:
-        return type_key, reference
-    
-    cell_type = reference.obsm[type_key]
-    
-    type_profiles_guess = get_average_profiles(type_key, reference, normalize=False)
-    type_profiles_guess = pd.DataFrame(type_profiles_guess, index=reference.var.index, columns=cell_type.columns)
-    
-    sdata = split_observations(reference, cell_type, type_profiles_guess)
-    if split_type_key is None:
-        split_type_key = 'split_' + type_key
-    mdata = merge_observations(sdata, type_profiles_guess.columns, merge_annotation_name=split_type_key, bead_annotation_name='bc', min_reads=min_reads)
-
-    return split_type_key, mdata
 
 def flat_inverse_mapping(
     condensed_mapping,
@@ -828,14 +865,47 @@ def merge_colors(
     
     return pd.Series(result)
 
-def write_adata_x_var_obs(adata, filename, compression='gzip'):
+def write_adata_x_var_obs(
+    adata,
+    filename,
+    compression='gzip',
+    **kwargs,
+):
+
+    """\
+    Write only `.X`, `.obs`, and `.var` to an `.h5ad` file.
+
+    In many cases, only this "essential" information is required in other
+    tools, which makes it more practicable to read it with custom hdf5 code in
+    non-python environments.
+    
+    Parameters
+    ----------
+    adata
+        An :class:`~anndata.AnnData` to export
+    filename
+        The name of the file to write the essential information from the
+        :class:`~anndata.AnnData` to
+    compression
+        Forwarded to :func:`anndata.AnnData.write`; note that the default here
+        is using compression.
+    kwargs
+        Extra keyword arguments are forwarded to :func:`anndata.AnnData.write`.
+        
+    Returns
+    -------
+    `None`.
+        
+    """
+    
+
     adata = ad.AnnData(adata.X, var=adata.var, obs=adata.obs)
     adata.obs = adata.obs.copy()
     adata.var = adata.var.copy()
     if scipy.sparse.issparse(adata.X): # fix edge case as in https://github.com/theislab/anndata2ri/issues/18
         if not adata.X.has_sorted_indices:
             adata.X.sort_indices()
-    adata.write(filename, compression='gzip')
+    adata.write(filename, compression=compression, **kwargs)
 
 def complete_choice(
     a,
@@ -844,7 +914,7 @@ def complete_choice(
 ):
 
     """\
-    Similar to :func:`~numpy.random.choice` with `replace=False`, but with
+    Similar to :func:`numpy.random.choice` with `replace=False`, but with
     special behaviour for `size>a.shape[0]`. The input array is shuffled and
     concatenated as often as necessary to give `size` choices. This makes the
     multiple choices appear as equally as possible.
@@ -1010,10 +1080,10 @@ def heapsort3(
     Parameters
     ----------
     arr
-        A 1d :class:`~nump.ndarray` with the values to sort
+        A 1d :class:`~numpy.ndarray` with the values to sort
     co1, co2
-        Two 1d :class:`~nump.ndarray`s of the same length as `arr` with should
-        be reordered along with `arr`.
+        Two 1d :class:`~numpy.ndarray` instances of the same length as `arr`
+        with should be reordered along with `arr`.
         
     Returns
     -------
@@ -1375,7 +1445,7 @@ def AnnData_query(self, expr, **kw_args):
 
 sc.AnnData.query = AnnData_query
 
-def anndata2R_header():
+def _anndata2R_header():
     """\
     Returns a string to be used as part of an R script in order to be able to
     natively read basic information (X, var, obs) from h5ad files in R.

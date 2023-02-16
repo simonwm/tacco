@@ -6,7 +6,7 @@ import pandas as pd
 from numpy.random import Generator, PCG64
 import joblib
 from ._utils import cpu_count
-from . import math
+from . import _math
 import time
 import gc
 
@@ -36,18 +36,18 @@ def matrix_scaling(x,u,v, min_iter=3, max_iter=100, delta=1e-3, check_iter=1):
                 _a = a.copy()
         
         if issparse(a):
-            math.sparse_result_gemmT(x, b, a, parallel=False, inplace=True)
-            math.divide(u_data,a.data,out=a.data, parallel=False)
+            _math.sparse_result_gemmT(x, b, a, parallel=False, inplace=True)
+            _math.divide(u_data,a.data,out=a.data, parallel=False)
             temp2 = (a.tocsr().T)@x # tocsr is not necessary but marginally faster than directly using the coo format in the matrix multiplication
         else:
             temp1 = x@(b.T)
-            math.divide(u, temp1, out=a, parallel=False)
+            _math.divide(u, temp1, out=a, parallel=False)
             temp2 = (a.T)@x
             
         if i >= min_iter:
             _b = b.copy()
         
-        math.divide(v, temp2, out=b, parallel=False)
+        _math.divide(v, temp2, out=b, parallel=False)
         
         # The convergence criterion is in principle defined per problem, i.e. per bead.
         # We nevertheless run the algorithm for the whole batch for simplicity until every bead converges.
@@ -281,7 +281,7 @@ def split_beads(tdata, bead_type_map, type_profiles, min_counts=None, seed=42, d
     bead_type_map = bead_type_map / bead_type_map.sum(axis=1).to_numpy()[:,None]
     
     if min_counts is not None and min_counts > 0:
-        bead_type_counts = bead_type_map.to_numpy() * math.get_sum(tdata.X, axis=1)[:,None]
+        bead_type_counts = bead_type_map.to_numpy() * _math.get_sum(tdata.X, axis=1)[:,None]
         keep_mask = (bead_type_counts >= min_counts) | (bead_type_counts == bead_type_counts.max(axis=1)[:,None]) # keep the highest contribution and all others which meet the threshold
         bead_type_map = bead_type_map * keep_mask
         bead_type_map = bead_type_map / bead_type_map.sum(axis=1).to_numpy()[:,None]
@@ -372,9 +372,9 @@ def merge_layers(tdata, layer_names, merge_annotation_name='layers', bead_annota
     data = ad.AnnData(X,obs=obs,var=tdata.var,varm=tdata.varm)
     keep = None
     if min_reads is None:
-        keep = math.get_sum(data.X, axis=1) > 0
+        keep = _math.get_sum(data.X, axis=1) > 0
     elif min_reads > 0:
-        keep = math.get_sum(data.X, axis=1) >= min_reads
+        keep = _math.get_sum(data.X, axis=1) >= min_reads
     if keep is not None:
         data = data[keep].copy()
         gc.collect() # anndata copies are not well garbage collected and accumulate in memory
@@ -397,7 +397,7 @@ def merge_beads(mdata, merge_annotation_name='layers', bead_annotation_name='bc'
         X = X.tocsr()
     else:
         joined_dummies = coo_matrix((np.ones(len(mdata.obs.index),dtype=X.dtype),(joined_cat.cat.codes,np.arange(len(mdata.obs.index)))))
-        X = math.gemmT(joined_dummies, mdata.X.T)
+        X = _math.gemmT(joined_dummies, mdata.X.T)
     
     # recover (some version of) all the observable annotation we had before.
     # if it is not consistent between the different contributions for merge_annotation_name and bead_annotation, the first one will be picked

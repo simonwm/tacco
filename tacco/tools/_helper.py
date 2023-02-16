@@ -10,6 +10,7 @@ import time
 import gc
 from .. import get
 from .. import utils
+from ..utils._utils import _transfer_pca, _infer_annotation_key
 from .. import preprocessing
 
 def normalize_result_format(type_fractions, types=None):
@@ -44,13 +45,9 @@ def normalize_result_format(type_fractions, types=None):
 
 def log_normalize(adata, target_sum=1e4, scale=False, type_key=None):
     sc.pp.normalize_total(adata, target_sum=target_sum)
-    #sums = np.array(adata.X.sum(axis=1)).flatten()
-    #factors = target_sum / sums
-    #math.row_scale(adata.X, factors)
-    #sc.pp.log1p(adata)
     utils.log1p(adata)
     if scale:
-        sc.pp.scale(adata)#, max_value=10)
+        sc.pp.scale(adata)
     if type_key is not None and type_key in adata.varm:
         adata.varm[type_key] *= (target_sum / adata.varm[type_key].sum(axis=0).to_numpy())
         adata.varm[type_key] = np.log1p(adata.varm[type_key])
@@ -82,7 +79,7 @@ def prep_distance(tdata, reference, type_key, n_pca=None, zero_center=False, log
         tdata = log_normalize(tdata, scale=scale, type_key=type_key)
         reference = log_normalize(reference, scale=scale, type_key=type_key)
     
-    tX, rX, pca_offset, pca_trafo = utils.transfer_pca(tdata, reference, n_pca, zero_center=zero_center)
+    tX, rX, pca_offset, pca_trafo = _transfer_pca(tdata, reference, n_pca, zero_center=zero_center)
     
     if min_distance:
         # find min distances from one cell to every distinct other cell
@@ -119,7 +116,7 @@ def prep_priors_nnls(tdata, reference, type_key, n_pca=None, zero_center=True, r
     
     tdata, reference = tdata.copy(), reference.copy() # dont touch the originals
     
-    tX, rX, pca_offset, pca_trafo = utils.transfer_pca(tdata, reference, n_pca, zero_center=zero_center)
+    tX, rX, pca_offset, pca_trafo = _transfer_pca(tdata, reference, n_pca, zero_center=zero_center)
 
     pseudo_bulk = np.array(tX.sum(axis=0)).flatten()
     
@@ -166,7 +163,7 @@ def validate_annotation_args(adata, reference, annotation_key, counts_location, 
     if reference is None:
         raise ValueError('"reference" cannot be None!')
         
-    annotation_key = preprocessing.infer_annotation_key(reference, annotation_key)
+    annotation_key = _infer_annotation_key(reference, annotation_key)
     
     tdata = get.counts(adata, counts_location=counts_location, annotation=True, copy=False)
     reference = get.counts(reference, counts_location=counts_location, annotation=annotation_key, copy=False)

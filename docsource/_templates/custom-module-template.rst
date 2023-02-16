@@ -10,7 +10,7 @@
       :toctree:
       :template: custom-module-template.rst
       :recursive:
-   {% for item in modules %}
+   {% for item in modules if 'tacco.eval' not in item %}
       {{ item }}
    {%- endfor %}
    {% endif %}

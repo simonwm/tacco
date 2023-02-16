@@ -129,12 +129,12 @@ def run_goa_analysis(
         A single list of gene symbols or a dict-like of gene lists.
     goeaobj
         A :class:`~goatools.goea.go_enrichment_ns:GOEnrichmentStudyNS` like the
-        one returned by :func:`~tc.tl.setup_goa_analysis`. If `None`, uses the
-        instance buffered by the last call to :func:`~tc.tl.setup_goa_analysis`.
+        one returned by :func:`~tacco.tools.setup_goa_analysis`. If `None`, uses the
+        instance buffered by the last call to :func:`~tacco.tools.setup_goa_analysis`.
     symbol2geneID
         a :class:`~pandas.Series` mapping gene symbols to gene ids. If `None`,
         uses the instance buffered by the last call to
-        :func:`~tc.tl.setup_goa_analysis`.
+        :func:`~tacco.tools.setup_goa_analysis`.
         
     Returns
     -------

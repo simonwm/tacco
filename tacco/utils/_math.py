@@ -99,7 +99,7 @@ def sparse_result_gemmT(
         A 2d numpy array with the same second dimension as `A`.
     sparse_out
         A `scipy.sparse` matrix to contain the result and to provide the
-         sparsity structure of the result.
+        sparsity structure of the result.
     parallel
         Whether to work on multiple cores.
     inplace

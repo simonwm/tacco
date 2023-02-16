@@ -6,10 +6,39 @@ from scipy.sparse import issparse
 
 from .. import get
 from .. import utils
-from . _create_reference import infer_annotation_key
+from ..utils._utils import _infer_annotation_key
 
-def check_counts_validity(X, delta=1e-4, head=1000, raise_exception=True):
-    """ Checks whether matrix looks like it is a unnormalized uncentered count matrix """
+def check_counts_validity(
+    X,
+    delta=1e-4,
+    head=1000,
+    raise_exception=True,
+):
+    """\
+    Checks whether matrix looks like it is a unnormalized uncentered count
+    matrix
+    
+    Parameters
+    ----------
+    X
+        Dense or sparse counts matrix.
+    delta
+        The maximum absolute deviation from integer numbers to tolerate.
+    head
+        The number of sored values of the count matrix to check for dviation
+        from integer numbers.
+    raise_exception
+        Whether to raise an exception for invalid counts or just silently
+        return `False`.
+        
+    Returns
+    -------
+    Returns whether the count matrix is valid, except when it is not and\
+    `raise_exception` is `True`.
+    
+    """
+    
+
     if X is None:
         if raise_exception:
             raise ValueError('The counts cannot be None!')
@@ -53,7 +82,9 @@ def filter(
 
     """\
     Filter one or more :class:`~anndata.AnnData` to satisfy simple quality
-    criteria.
+    criteria. In contrast to :func:`scanpy.pp.filter_cells` and
+    :func:`scanpy.pp.filter_genes` this function iterates the filters until
+    convergence.
     
     Parameters
     ----------
@@ -170,7 +201,7 @@ def filter_reference_genes(
 
     """\
     Filter :class:`~anndata.AnnData` to include only genes which pass a set of
-    quality criteria.
+    quality and relevance criteria.
     
     Parameters
     ----------
@@ -206,7 +237,7 @@ def filter_reference_genes(
     
     """
     
-    annotation_key = infer_annotation_key(adata, annotation_key)
+    annotation_key = _infer_annotation_key(adata, annotation_key)
     
     if annotation_key not in adata.varm:
         raise ValueError('There are no profiles found in `.varm[%s]`!' % annotation_key)
@@ -306,7 +337,7 @@ def filter_reference(
     
     """
     
-    annotation_key = infer_annotation_key(adata, annotation_key)
+    annotation_key = _infer_annotation_key(adata, annotation_key)
     
     def _filter_anno(anno_loc):
 
@@ -395,7 +426,7 @@ def filter_profiles(
     """\
     Filter :class:`~anndata.AnnData` to include only genes where at least one
     profile is neither negative nor na.
-    Identical to :func:`~tc.pp.filter_reference(..., mode='profiles')`.
+    Identical to :func:`~tacco.preprocessing.filter_reference` with `mode='profiles'`.
     
     Parameters
     ----------
@@ -405,7 +436,7 @@ def filter_profiles(
         The `.varm` key where the annotation is stored.
     **kw_args
         Additional keyword arguments forwarded to
-        :func:`~tc.pp.filter_reference(..., mode='profiles')`.
+        :func:`~tacco.preprocessing.filter_reference(..., mode='profiles')`.
         
     Returns
     -------
@@ -425,7 +456,7 @@ def filter_annotation(
     """\
     Filter :class:`~anndata.AnnData` to include only cells where at least one
     annotation is neither negative nor na.
-    Identical to :func:`~tc.pp.filter_reference(..., mode='annotation')`.
+    Identical to :func:`~tacco.preprocessing.filter_reference` with `mode='annotation'`.
     
     Parameters
     ----------
@@ -435,7 +466,7 @@ def filter_annotation(
         The `.obsm` key where the annotation is stored.
     **kw_args
         Additional keyword arguments forwarded to
-        :func:`~tc.pp.filter_reference(..., mode='annotation')`.
+        :func:`~tacco.preprocessing.filter_reference(..., mode='annotation')`.
         
     Returns
     -------

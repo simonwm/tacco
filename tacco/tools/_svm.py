@@ -85,15 +85,17 @@ def annotate_svm(
     """\
     Annotates an :class:`~anndata.AnnData` using reference data by an SVM
     [Abdelaal19]_.
+
+    This is the direct interface to this annotation method. In practice using
+    the general wrapper :func:`~tacco.tools.annotate` is recommended due to its
+    higher flexibility.
     
     Parameters
     ----------
     adata
-        An :class:`~anndata.AnnData` including expression data in `.X` and
-        annotation in `.obs`.
+        An :class:`~anndata.AnnData` including expression data in `.X`.
     reference
-        Reference data to get the annotation definition from. See e.g. 
-        :func:`~tc.pp.create_reference` for options to create it.
+        Reference data to get the annotation definition from.
     annotation_key
         The `.obs` key where the annotation is stored in the `reference`. If
         `None`, it is inferred from `reference`, if possible.
@@ -101,7 +103,7 @@ def annotate_svm(
         A string or tuple specifying where the count matrix is stored, e.g.
         `'X'`, `('raw','X')`, `('raw','obsm','my_counts_key')`,
         `('layer','my_counts_key')`, ... For details see
-        :func:`~tc.get.counts`.
+        :func:`~tacco.get.counts`.
     mode
         Selects what svm should be used. Possible values are "classification"
         to use :class:`~sklearn.svm.LinearSVC` and "regression" to use
@@ -111,7 +113,7 @@ def annotate_svm(
         Available are:
         
         - 'sqrt': Use the squareroot of `.X`; equivalent to using probability
-                  amplitudes, i.e. Bhattacharyya projections
+          amplitudes, i.e. Bhattacharyya projections
         - 'log1p': Use log1p-transformed data
         - None: Dont transform the data
     seed
