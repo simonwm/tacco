@@ -1,5 +1,44 @@
 [build-system]
-requires = ["setuptools", "wheel", "setuptools_scm>=6.2"]
+requires = ["setuptools<=60", "wheel", "setuptools_scm>=6.2"] #for next release: could be relaxed, maybe to >61
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "tacco"
+readme = "README.md"
+license = {file = "LICENCE.txt"}
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dynamic = ["version"]
+
+dependencies = [
+  "requests",
+  "importlib; python_version == '2.6'",
+  "joblib",
+  "numba>=0.51.2",
+  "numpy",
+  "matplotlib!=3.7",
+  "seaborn",
+  "sparse_dot_mkl>=0.7.3",
+  "scanpy>=1.7.0",
+  "statsmodels",
+  "anndata",
+  "pandas>=1.1.0",
+  "scipy>=1.6.0",
+  "mkl",
+  "mkl_service",
+  "scikit_learn",
+  "threadpoolctl",
+  "pyamg"
+]
+
+[project.urls]
+documentation = "https://simonwm.github.io/tacco/index.html"
+
 [tool.setuptools_scm]
+local_scheme = "no-local-version"
+
+[tool.setuptools.dynamic]
+version = {attr = "tacco.VERSION"}
