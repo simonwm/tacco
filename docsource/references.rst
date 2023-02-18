@@ -29,9 +29,9 @@ References
    *GOATOOLS: A Python library for Gene Ontology analyses*,
    `Scientific Reports <https://www.nature.com/articles/s41598-018-28948-z>`__.
 
-.. [Mages23] Mages *et al.* (2022),
-   *TACCO: Unified annotation transfer and decomposition of cell identities for single-cell and spatial omics*,
-   `BioRxiv <https://doi.org/10.1101/2022.10.02.508471>`__.
+.. [Mages23] Mages *et al.* (2023),
+   *TACCO unifies annotation transfer and decomposition of cell identities for single-cell and spatial omics*,
+   `Nature Biotechnology <https://doi.org/10.1038/s41587-023-01657-3>`__.
 
 .. [Nitzan19] Nitzan *et al.* (2019),
    *Gene expression cartography*,

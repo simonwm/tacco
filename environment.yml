@@ -22,8 +22,5 @@ dependencies:
   - scikit-learn
   - threadpoolctl
   - pyamg
-  - pip # for pip installing tacco
-  - git # for pip installing tacco from github
-  - pip:
-     - git+https://github.com/simonwm/tacco.git
+  - tacco
 
