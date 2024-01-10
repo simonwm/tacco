@@ -18,8 +18,8 @@ raw_url = f'https://raw.githubusercontent.com/{repo}/{branch}/notebooks'
 with urllib.request.urlopen(repo_url) as f:
     response = f.read().decode('utf-8')
 
-pieces = response.split('.ipynb">')[1:]
-basenames = [p.split('.ipynb</a>')[0] for p in pieces]
+pieces = response.split('"notebooks/')[1:]
+basenames = [p.split('.ipynb"')[0] for p in pieces]
 
 # download all notebooks
 

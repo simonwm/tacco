@@ -25,7 +25,7 @@ Documentation
 -------------
 .. include documentation updates here
 
-- Add example `#8 https://github.com/simonwm/tacco/issues/8`__
+- Add example `#8 <https://github.com/simonwm/tacco/issues/8>`__
 
 Miscellaneous
 -------------

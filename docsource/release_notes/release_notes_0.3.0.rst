@@ -42,7 +42,7 @@ Documentation
 
 - Add release notes
 
-- Add visium example to address `#8 https://github.com/simonwm/tacco/issues/8`__
+- Add visium example to address `#8 <https://github.com/simonwm/tacco/issues/8>`__
 
 Miscellaneous
 -------------
