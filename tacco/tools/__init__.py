@@ -21,3 +21,4 @@ from ._RCTD import annotate_RCTD
 from ._wot import annotate_wot
 from ._SingleR import annotate_SingleR
 from ._goa import setup_goa_analysis, run_goa_analysis
+from ._orthology import setup_orthology_converter, run_orthology_converter

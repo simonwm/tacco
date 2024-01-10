@@ -9,6 +9,17 @@ import pickle
 import numpy as np
 import pandas as pd
 
+TIME_PATH = None
+BENCHMARKING_AVAILABLE = False
+
+if os.path.exists('/usr/bin/time'): 
+    TIME_PATH = '/usr/bin/time'
+    BENCHMARKING_AVAILABLE = True
+elif os.path.exists(sys.exec_prefix + '/bin/time'):
+    TIME_PATH = sys.exec_prefix + '/bin/time'
+    BENCHMARKING_AVAILABLE = True
+
+
 def _set_up_benchmark_working_directory(
     working_directory,
 ):
@@ -90,7 +101,7 @@ def benchmark_shell(
     
     # run the command
     proc = subprocess.Popen(
-        ['/usr/bin/time','-f','wall_clock_time_seconds %e\nmax_memory_used_kbytes %M\nexit_status %x',command,*command_args,],
+        [TIME_PATH,'-f','wall_clock_time_seconds %e\nmax_memory_used_kbytes %M\nexit_status %x',command,*command_args,],
         cwd=working_directory,
         stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
@@ -214,6 +225,9 @@ def benchmark_annotate(
     reading data under the key "benchmark_time_s".
     
     """
+
+    if not BENCHMARKING_AVAILABLE:
+        raise Exception('No /usr/bin/time or conda-forge time executable found. If on macOS or linux install conda-forge time in your current conda env to run benchmarks')
     
     if working_directory is not None and 'annotation_key' not in kw_args:
         print('`working_directory` is set, but `annotation_key` is not. This frequently is a mistake.\nIf you are certain that it it not, you can deactivate this message by explicitly setting `annotation_key` to `None`.')

@@ -1285,6 +1285,8 @@ def spatial_split(
     """\
     Splits a dataset into spatial patches balancing the number of observations
     per split.
+    NOTE: This function is deprecated. New code should use the updated
+    :func:`~split_spatial_samples`.
     
     Parameters
     ----------
@@ -1317,6 +1319,9 @@ def spatial_split(
     sample annotation written to `adata.obs[result_key]`.
     
     """
+    
+    import warnings
+    warnings.warn(f'The function tacco.utils.spatial_split is deprecated. New code should use tacco.utils.split_spatial_samples.', DeprecationWarning)
     
     if isinstance(adata, sc.AnnData):
         adata_obs = adata.obs
@@ -1353,6 +1358,237 @@ def spatial_split(
         sample_column = new_sample_column
     
     result = sample_column
+    if result_key is not None:
+        adata_obs[result_key] = result
+        result = adata
+    
+    return result
+
+def get_first_principal_axis(
+    points,
+):
+    """\
+    Get the first principal axis of a set of points.
+    
+    Parameters
+    ----------
+    points
+        A :class:`~numpy.ndarray` or :class:`~pandas.DataFrame` with shape
+        N_points by N_dimensions.
+        
+    Returns
+    -------
+    A :class:`~numpy.ndarray` of shape N_dimensions containg the first\
+    principal axis (l2 normalized).
+    
+    """
+    
+    X = points - np.mean(points, axis=0)
+    U,sizes,directions = scipy.linalg.svd(X, full_matrices=False, compute_uv=True, check_finite=False)
+    # sizes are already sorted in non-increasing order
+    largest_dir = directions[0]
+    
+    return largest_dir
+
+def get_balanced_separated_intervals(
+    points,
+    n_intervals,
+    minimum_separation,
+    check_splits=True,
+):
+    """\
+    Find the approximations of intervals with equal number of points in each
+    interval which keep a specified minimum separation between them.
+    
+    Parameters
+    ----------
+    points
+        A :class:`~numpy.ndarray` with shape N_points.
+    n_intervals
+        The number of intervals to distribute the points into.
+    minimum_separation
+        The minimum separation between the intervals.
+    check_splits
+        Whether to warn about unusual split properties
+        
+    Returns
+    -------
+    A :class:`~numpy.ndarray` of shape N_points containg integers giving either\
+    the index of the interval the point was put into or -1 for points falling\
+    into the separations between the intervals.
+    
+    """
+    
+    if len(points) < n_intervals:
+        
+        # if there are not enough points to begin with, all are assigned to the separations between the intervals...
+        interval = np.array([-1]*len(points))
+        
+    else:
+        
+        # we implement only a heuristic - which should be good enough for most practical purposes
+        # this only approxmates equal numbers for points per interval in the limit of homogeneous point distribution and samples much larger than the minimum_Separation*n_intervals
+        # it leads to unequal numbers of points per interval in general, with additional assymmetry for more than two intervals
+
+        # start with the simpler problem of finding even splits without minimum separation requirement
+        points = np.asarray(points)
+
+        sorting_indices = np.argsort(points)
+        sorted_points = points[sorting_indices]
+        reodering_indices = np.argsort(sorting_indices)
+
+        cut_ids = np.round(np.arange(1,n_intervals)*len(points)/n_intervals).astype(int)
+        cuts_left, cuts_right = sorted_points[cut_ids-1], sorted_points[cut_ids]
+        cuts = 0.5 * (cuts_left + cuts_right) # split between two points - maybe the distance between them is already large enough...
+
+        interval = (sorted_points[:,None] > cuts).sum(axis=1)
+
+        # then remove the points near the cuts symmetrically for each cut
+        dropped = np.any((sorted_points[:,None] > cuts - minimum_separation/2) & (sorted_points[:,None] < cuts + minimum_separation/2),axis=1)
+
+        interval[dropped] = -1
+        
+        interval = interval[reodering_indices]
+    
+    if check_splits:
+        # check some stats about the split
+        stats = pd.Series(interval).value_counts()
+        normed_stats = stats / stats.sum()
+        if len(normed_stats) <= 1:
+            print(f'WARNING: All points are assigned to the separations! Maybe minimum_separation or n_intervals is too large, or the number of points to small?')
+        else:
+            if normed_stats.iloc[-1] > 0.5:
+                print(f'WARNING: The fraction of points assigned to the separations is very high ({normed_stats.iloc[-1]})! Maybe minimum_separation or n_intervals is too large?')
+            if len(stats) < n_intervals + 1:
+                print(f'WARNING: At least one interval did not get any points assigned! Maybe minimum_separation or n_intervals is too large?')
+
+    return interval
+
+def split_spatial_samples(
+    adata,
+    buffer_thickness,
+    position_key=('x','y'),
+    split_direction=None,
+    split_scheme=2,
+    sample_key=None,
+    result_key=None,
+    check_splits=True,
+):
+    """\
+    Splits a dataset into separated spatial patches. The patches are selected
+    to have approximately equal amounts of observations per patch. Between the
+    patches a buffer layer of specified thickness is discarded to reduce the
+    correlations between the patches. Therefore the thickness should be chosen
+    to accomodate the largest relevant correlation length.
+    
+    Parameters
+    ----------
+    adata
+        An :class:`~anndata.AnnData` with annotation in `.obs` (and `.obsm`).
+        Can also be a :class:`~pandas.DataFrame` which is then used in place of
+        `.obs`.
+    buffer_thickness
+        The thickness of the buffer layer to discard between the spatial
+        patches. The units are the same as thosed used in the specification of
+        the position information. This should be chosen carefully, as the
+        remaining correlation between the spatial patches depends on it. 
+    position_key
+        The `.obsm` key or array-like of `.obs` keys with the position space
+        coordinates.
+    split_direction
+        The direction(s) to use for the spatial splits. Use e.g. ('y','x') for
+        two splits with the first in 'y' and the second in 'x' direction, or
+        'z' to always split along the 'z' direction. Use `None` instead of the
+        name of a coordinate direction to automatically determine the direction
+        as a flavor of direction with largest extent (first principal axis).
+    split_scheme
+        The specification of the strategy used for defining spatial splits. In
+        the simplest case this is just an integer specifying the number of
+        patches per split. It can also be a tuple to specify a different number
+        of patches per split.
+    sample_key
+        The `.obs` key with categorical sample information: every sample is
+        split separately. Can also be a :class:`~pandas.Series` containing the
+        sample information. If `None`, assume a single sample.
+    result_key
+        The `.obs` key to write the split sample annotation to. If `None`,
+        returns the split sample annotation as :class:`~pandas.Series`.
+    check_splits
+        Whether to warn about unusual split properties
+        
+    Returns
+    -------
+    Depending on `result_key` returns either a :class:`~pandas.Series`\
+    containing the split sample annotation or the input `adata` with the split\
+    sample annotation written to `adata.obs[result_key]`.
+    
+    """
+    
+    if isinstance(adata, ad.AnnData):
+        adata_obs = adata.obs
+    else:
+        adata_obs = adata
+    
+    if sample_key is None:
+        sample_column = pd.Series(np.full(shape=adata_obs.shape[0],fill_value=''),index=adata_obs.index)
+    elif isinstance(sample_key, pd.Series):
+        sample_column = sample_key.reindex(index=adata_obs.index)
+    elif sample_key in adata_obs:
+        if not hasattr(adata_obs[sample_key], 'cat'):
+            raise ValueError(f'`adata.obs[sample_key]` has to be categorical, but `adata.obs["{sample_key}"]` is not!')
+        sample_column = adata_obs[sample_key]
+    else:
+        raise ValueError(f'The `sample_key` argument is {sample_key!r} but has to be either a key of `adata.obs["{sample_key}"]`, a `pandas.Series` or `None`!')
+    
+    positions = get.positions(adata, position_key)
+    
+    # divide spatial samples spatially into subsamples: keeps all the correlation structure
+    ndim = positions.shape[1]
+
+    # get consensus split plan from direction and scheme
+    split_direction_array = np.array(split_direction) # use array for checking dimensionality - but cast to lists to preserve None values...
+    split_scheme_array = np.array(split_scheme)
+    if (len(split_direction_array.shape) == 0) and (len(split_scheme_array.shape) == 0):
+        split_direction = [split_direction]
+        split_scheme = [split_scheme]
+    elif (len(split_direction_array.shape) == 0) and (len(split_scheme_array.shape) == 1):
+        split_direction = [split_direction] * len(split_scheme)
+    elif (len(split_direction_array.shape) == 1) and (len(split_scheme_array.shape) == 0):
+        split_scheme = [split_scheme] * len(split_direction)
+    elif (len(split_direction_array.shape) == 1) and (len(split_scheme_array.shape) == 1):
+        if len(split_direction) != len(split_scheme):
+            raise ValueError(f'The length of "split_direction" ({len(split_direction)}) does not fit to the length of "split_scheme" ({len(split_scheme)})!')
+    else:
+        raise ValueError(f'The "split_direction" and "split_scheme" must be of shape 0 or 1!')
+
+    sample_column = sample_column.astype(str)
+    for direction,n_patches in zip(split_direction,split_scheme):
+        new_sample_column = sample_column.copy()
+        for sample, sub in positions.groupby(sample_column):
+            
+            # get direction vector
+            if direction is None:
+                direction_vector = get_first_principal_axis(sub)
+            else:
+                dir_loc = positions.columns.get_loc(direction)
+                if not isinstance(dir_loc, int):
+                    raise ValueError(f'The direction "{direction}" is neither `None` nor does it correspond to a unique coordinate direction!')
+                direction_vector = np.array([0.0]*len(positions.columns))
+                direction_vector[dir_loc] = 1.0
+            
+            # project positions on the direction_vector
+            projections = sub @ direction_vector
+            
+            # find optimal division into patches
+            patches = get_balanced_separated_intervals(projections, n_patches, buffer_thickness, check_splits=check_splits)
+            
+            new_values = new_sample_column.loc[sub.index] + '|' + patches.astype(str)
+            new_values.loc[patches == -1] = None
+            new_sample_column.loc[sub.index] = new_values
+            
+        sample_column = new_sample_column
+    
+    result = sample_column.astype('category')
     if result_key is not None:
         adata_obs[result_key] = result
         result = adata

@@ -7,6 +7,7 @@
    Home <self>
    Examples <examples>
    API reference <_autosummary/tacco>
+   Release Notes <release_notes>
    References <references>
 
 Welcome to the TACCO documentation!

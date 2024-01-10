@@ -70,26 +70,25 @@ def adata_reference_and_typing1():
     adata.obsm['annotation0']=pd.DataFrame(np.array([
         [0.5,0.5],
     ]),index=adata.obs.index,columns=pd.Index(reference.obs['type'].cat.categories,dtype=reference.obs['type'].dtype))
-    adata.obsm['annotation1']=pd.DataFrame(np.array([
+    adata.obsm['annotation1']=adata.obsm['annotation0']
+    adata.obsm['annotation2']=pd.DataFrame(np.array([
         [0.5,0.5],
     ]),index=adata.obs.index,columns=pd.Index(['0-0', '1-0']))
-    adata.obsm['annotation2']=adata.obsm['annotation1']
-    adata.obsm['annotation10']=adata.obsm['annotation1']
+    adata.obsm['annotation10']=adata.obsm['annotation2']
     adata.varm['profiles0']=pd.DataFrame(np.array([
         [1, 0 ],
         [0,2/3],
         [0,1/3],
     ]),index=adata.var.index,columns=pd.Index(reference.obs['type'].cat.categories.astype('category')))
-    adata.varm['profiles1']=pd.DataFrame(np.array([
+    adata.varm['profiles1']=adata.varm['profiles0']
+    adata.varm['profiles2']=pd.DataFrame(np.array([
         [1, 0 ],
         [0,2/3],
         [0,1/3],
-    ]),index=adata.var.index,columns=pd.Index(['0-0', '1-0']))
-    adata.varm['profiles2']=adata.varm['profiles1']
-    adata.varm['profiles10']=adata.varm['profiles1']
-    adata.uns['mapping1']=pd.Series([0,1],index=['0-0', '1-0']).astype('category')
-    adata.uns['mapping2']=adata.uns['mapping1']
-    adata.uns['mapping10']=adata.uns['mapping1']
+    ]),index=adata.var.index,columns=pd.Index(['0', '1']))
+    adata.varm['profiles10']=adata.varm['profiles2']
+    adata.uns['mapping2']=pd.Series([0,1],index=['0-0', '1-0']).astype('category')
+    adata.uns['mapping10']=adata.uns['mapping2']
     adata.uns['annotation_prior']=pd.Series(adata.obsm['type'].sum(axis=0).to_numpy(),index=adata.obsm['type'].columns)
     return ( adata, reference, )
 
@@ -154,20 +153,7 @@ def adata_reference_and_typing2():
         [0.5,0.5,0],
         [0.5,0.5,0],
     ]),index=adata.obs.index,columns=pd.Index(reference.obs['type'].cat.categories,dtype=reference.obs['type'].dtype))
-    adata.obsm['annotation1']=pd.DataFrame(np.array([
-        [1,0,0],
-        [1,0,0],
-        [1,0,0],
-        [0,1,0],
-        [0,1,0],
-        [0,1,0],
-        [0,0,1],
-        [0,0,1],
-        [0,0,1],
-        [0.5,0.5,0],
-        [0.5,0.5,0],
-        [0.5,0.5,0],
-    ]),index=adata.obs.index,columns=pd.Index(['0-0', '1-0', '2-0']))
+    adata.obsm['annotation1'] = adata.obsm['annotation0']    
     adata.obsm['annotation2']=pd.DataFrame(np.array([
         [1/2,1/2, 0 , 0 , 0 , 0 ],
         [1/2,1/2, 0 , 0 , 0 , 0 ],
@@ -210,20 +196,7 @@ def adata_reference_and_typing2():
         [ 0 , 0 ,1/4],
         [ 0 , 0 ,1/4],
     ],dtype=np.float32),index=adata.var.index,columns=pd.Index(reference.obs['type'].cat.categories.astype('category')))
-    adata.varm['profiles1']=pd.DataFrame(np.array([
-        [1/4, 0 , 0 ],
-        [1/4, 0 , 0 ],
-        [1/4, 0 , 0 ],
-        [1/4, 0 , 0 ],
-        [ 0 ,1/4, 0 ],
-        [ 0 ,1/4, 0 ],
-        [ 0 ,1/4, 0 ],
-        [ 0 ,1/4, 0 ],
-        [ 0 , 0 ,1/4],
-        [ 0 , 0 ,1/4],
-        [ 0 , 0 ,1/4],
-        [ 0 , 0 ,1/4],
-    ],dtype=np.float32),index=adata.var.index,columns=pd.Index(['0-0', '1-0', '2-0']))
+    adata.varm['profiles1']=adata.varm['profiles0']
     adata.varm['profiles2']=pd.DataFrame(np.array([
         [1/2, 0 , 0 , 0 , 0 , 0 ],
         [1/2, 0 , 0 , 0 , 0 , 0 ],
@@ -252,7 +225,6 @@ def adata_reference_and_typing2():
         [ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,1/1, 0 ],
         [ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,1/1],
     ],dtype=np.float32),index=adata.var.index,columns=pd.Index(['0-0', '0-1', '0-2', '0-3', '1-0', '1-1', '1-2', '1-3', '2-0', '2-1', '2-2', '2-3']))
-    adata.uns['mapping1']=pd.Series([0,1,2],index=['0-0', '1-0', '2-0']).astype('category')
     adata.uns['mapping2']=pd.Series([0,0,1,1,2,2],index=['0-0', '0-1', '1-0', '1-1', '2-0', '2-1']).astype('category')
     adata.uns['mapping10']=pd.Series([0,0,0,0,1,1,1,1,2,2,2,2],index=['0-0', '0-1', '0-2', '0-3', '1-0', '1-1', '1-2', '1-3', '2-0', '2-1', '2-2', '2-3']).astype('category')
     adata.uns['annotation_prior']=pd.Series(adata.obsm['type'].sum(axis=0).to_numpy(),index=adata.obsm['type'].columns)
@@ -350,7 +322,7 @@ def test_annotate_OT_multi_center(adata_reference_and_typing, dataset, multi_cen
         tc.testing.assert_index_equal(result_profiles.index, result_profiles.index, rtol=1e-14, atol=1e-14)
         tc.testing.assert_index_equal(result_profiles.columns, result_profiles.columns, rtol=1e-14, atol=1e-14)
         
-        if multi_center > 0:
+        if multi_center > 1:
             mapping = adata.uns[f'mapping{multi_center}']
             result_mapping = adata.uns[reconstruction_key]
             tc.testing.assert_series_equal(result_mapping, mapping, rtol=1e-14, atol=1e-14)
@@ -445,6 +417,7 @@ def test_annotate_NovoSpaRc(adata_reference_and_typing, dataset):
     tc.testing.assert_frame_equal(result, typing, rtol=1e-7, atol=3.4e-1) # exact marginal enforcement by optimal transport makes a better result impossible...
 
 @pytest.mark.parametrize('dataset', [0,1,2,])
+@pytest.mark.skipif(not tc.benchmarking._benchmarking.BENCHMARKING_AVAILABLE, reason='Benchmarking not available on this system')
 def test_benchmark_annotate(adata_reference_and_typing, dataset):
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']

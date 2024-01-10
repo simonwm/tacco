@@ -361,7 +361,7 @@ def get_contributions(
             except Exception as e:
                 raise ValueError('The supplied `normalization` is neither string nor a working callable!')
     
-    compositions = obs.groupby(grouping).apply(_normalize)
+    compositions = obs.groupby(grouping, group_keys=False).apply(_normalize)
     
     if len(compositions.index) == len(groups.index) and (compositions.index == groups.index).all():
         compositions.index = pd.MultiIndex.from_arrays([groups,pd.Series(groups.index,index=groups.index)])

@@ -121,7 +121,7 @@ def _scatter_frame(df, colors, ax_, id_=None, cmap=None, cmap_vmin_vmax=None, ou
         
         color_array = np.array([colors[c] for c in df.columns.difference(['x','y'])])
 
-        dpi = matplotlib.rcParams['figure.dpi']
+        dpi = ax_[0].get_figure().get_dpi()
         point_radius = np.sqrt(point_size / np.pi) / 2 * dpi
         
         # convert from pixel to axes units
@@ -317,7 +317,7 @@ def _render_frame(df, colors, ax_, id_=None, cmap=None, cmap_vmin_vmax=None, out
     n_types = len(typing.columns)
     weights = typing
     
-    dpi = matplotlib.rcParams['figure.dpi']
+    dpi = ax_[0].get_figure().get_dpi()
     
     if id_ is None:
         n_cols = len(colors)
@@ -811,6 +811,8 @@ def subplots(
     height_ratios=None,
     x_shifts=None,
     y_shifts=None,
+    dpi=None,
+    **kwargs,
 ):
     """\
     Creates a new figure with a grid of subplots.
@@ -857,6 +859,11 @@ def subplots(
     y_shifts
         The absolute shifts in position in vertical/y direction per row of
         subplots; if `None`, the rows are not shifted
+    dpi
+        The dpi setting to use for this figure
+    **kwargs
+        Extra keyword arguments are forwarded to
+        :func:`matplotlib.pyplot.subplots`
         
     Returns
     -------
@@ -894,7 +901,11 @@ def subplots(
         fig_height += title_space
         top = 1 - title_space / fig_height
     
-    fig, axs = plt.subplots(n_y,n_x,figsize=(fig_width,fig_height), squeeze=False, sharex=sharex, sharey=sharey, gridspec_kw={'wspace':effective_wspace,'hspace':effective_hspace,'left':0,'right':1,'top':top,'bottom':0,'width_ratios': width_ratios,'height_ratios': height_ratios})
+    if dpi is not None:
+        kwargs = {**kwargs}
+        kwargs['dpi'] = dpi
+    
+    fig, axs = plt.subplots(n_y,n_x,figsize=(fig_width,fig_height), squeeze=False, sharex=sharex, sharey=sharey, gridspec_kw={'wspace':effective_wspace,'hspace':effective_hspace,'left':0,'right':1,'top':top,'bottom':0,'width_ratios': width_ratios,'height_ratios': height_ratios}, **kwargs)
     
     if title is not None:
         fig.suptitle(title, fontsize=16, y=1)
@@ -918,7 +929,7 @@ def _add_legend_or_colorbars(fig, axs, colors, cmap=None, min_max=None, scale_le
             bbox_to_anchor=(1, 1), loc='upper left', ncol=1)
         
     elif cmap is not None:
-        rel_dpi_factor = matplotlib.rcParams['figure.dpi'] / 72
+        rel_dpi_factor = fig.get_dpi() / 72
         height_pxl = 200 * rel_dpi_factor * scale_legend
         width_pxl = 15 * rel_dpi_factor * scale_legend
         offset_top_pxl = 0 * rel_dpi_factor * scale_legend
@@ -2843,6 +2854,8 @@ def significances(
     p_key,
     value_key,
     group_key,
+    enrichment_key='enrichment',
+    enriched_label='enriched',
     pmax=0.05,
     pmin=1e-5,
     annotate_pvalues=True,
@@ -2861,13 +2874,24 @@ def significances(
     Parameters
     ----------
     significances
-        A :class:`~pandas.DataFrame` with p-values and their annotation..
+        A :class:`~pandas.DataFrame` with p-values and their annotation. If it
+        contains significances for enrichment and depletion, this direction has
+        to be specified with values "enriched" and something else (e.g.
+        "depleted" or "purified") in a column "enrichment" of the DataFrame.
+        See also the parameters `enrichment_key` and `enrichment_label`.
     p_key
         The key with the p-values.
     value_key
         The key with the values for which the enrichment was determined.
     group_key
         The key with the groups in which the enrichment was determined.
+    enrichment_key
+        The key with the direction of enrichment, i.e something like "enriched"
+        and "purified". See also parameter `enriched_label`. Default:
+        "enrichment".
+    enriched_label
+        The value under the key `enrichment_key` which indicates something like
+        enrichment. Default: "enriched".
     pmax
         The maximum p-value to show.
     pmin
@@ -2900,25 +2924,45 @@ def significances(
     A :class:`~matplotlib.figure.Figure`.
     
     """
-    
-    enr_e = pd.pivot(significances[significances['enrichment']=='enriched'], value_key, group_key, p_key)
-    enr_p = pd.pivot(significances[significances['enrichment']!='enriched'], value_key, group_key, p_key)
 
     small_value = 1e-300
     max_log = -np.log(pmin)
     min_log = -np.log(pmax)
     
-    enr_e = np.maximum(enr_e,small_value)
-    enr_p = np.maximum(enr_p,small_value)
-
-    enr_p = enr_p.reindex_like(enr_e)
-    enr = pd.DataFrame(np.where(enr_e < enr_p, -np.log(enr_e), np.log(enr_p)),index=enr_e.index,columns=enr_e.columns)
+    depleted_label = None
+    if enrichment_key is not None:
+        if enrichment_key not in significances:
+            raise ValueError(f'The column "{enrichment_key}" does not exist in the supplied dataframe! If this is intentional and you want to supress this error, supply "enrichment_key=None" as argument.')
+        unique_significance_labels = significances[enrichment_key].unique()
+        if len(unique_significance_labels) == 1:
+            enriched_label = unique_significance_labels[0]
+        else:
+            if len(unique_significance_labels) > 2 or enriched_label not in unique_significance_labels:
+                raise ValueError(f'The column "{enrichment_key}" is expected to have exactly 2 different values: "{enriched_label}" and something else, e.g. "depleted" or "purified"! The supplied column has the values {significances[enrichment_key].unique()}!')
+            depleted_label = unique_significance_labels[unique_significance_labels!=enriched_label][0]
     
-    if annotate_pvalues:
+    if depleted_label is not None:
+        enr_e = pd.pivot(significances[significances[enrichment_key]==enriched_label], index=value_key, columns=group_key, values=p_key)
+        enr_p = pd.pivot(significances[significances[enrichment_key]==depleted_label], index=value_key, columns=group_key, values=p_key)
+
+        enr_e = np.maximum(enr_e,small_value)
+        enr_p = np.maximum(enr_p,small_value)
+
+        enr_p = enr_p.reindex_like(enr_e)
+
+        enr = pd.DataFrame(np.where(enr_e < enr_p, -np.log(enr_e), np.log(enr_p)),index=enr_e.index,columns=enr_e.columns)
         ann = pd.DataFrame(np.where(enr_e < enr_p, enr_e, enr_p),index=enr_e.index,columns=enr_e.columns)
-        ann = pd.DataFrame(np.where(ann <= pmax, ann.applymap(lambda x: f'{x:.2}'), ''),index=enr_e.index,columns=enr_e.columns)
-        ann = ann.T
     else:
+        ann = pd.pivot(significances, index=value_key, columns=group_key, values=p_key)
+        enr = -np.log(ann)
+        
+    # avoid discrepancies between color and annotation by basing both color and annotation on cuts on the same values
+    enr = pd.DataFrame(np.where(ann > pmax, 0, enr),index=enr.index,columns=enr.columns)
+    ann = pd.DataFrame(np.where(ann > pmax, '', ann.applymap(lambda x: f'{x:.2}')),index=enr.index,columns=enr.columns)
+    
+    enr = enr.T
+    ann = ann.T
+    if not annotate_pvalues:
         ann = None
 
     # setup the plotting
@@ -2930,41 +2974,64 @@ def significances(
         np.array([[slightly_weight,1-slightly_weight,0.0],[0.0,1-slightly_weight,slightly_weight],]),
         np.array([list(enriched_color),list(null_color),list(depleted_color)])
     )
-    ct1 = 0.5 * (1 - min_log/max_log)
-    ct2 = 0.5 * (1 + min_log/max_log)
-    cdict = {'red': [[0.0,  depleted_color[0], depleted_color[0]],
-                     [ct1,  slightly_depleted_color[0], null_color[0]],
-                     [ct2,  null_color[0], slightly_enriched_color[0]],
-                     [1.0,  enriched_color[0], enriched_color[0]]],
-           'green': [[0.0,  depleted_color[1], depleted_color[1]],
-                     [ct1,  slightly_depleted_color[1], null_color[1]],
-                     [ct2,  null_color[1], slightly_enriched_color[1]],
-                     [1.0,  enriched_color[1], enriched_color[1]]],
-            'blue': [[0.0,  depleted_color[2], depleted_color[2]],
-                     [ct1,  slightly_depleted_color[2], null_color[2]],
-                     [ct2,  null_color[2], slightly_enriched_color[2]],
-                     [1.0,  enriched_color[2], enriched_color[2]]]}
-    cmap = LinearSegmentedColormap('sigmap', segmentdata=cdict, N=256)
+    
+    if depleted_label is None:
+        ct2 = min_log/max_log
+        cdict = {'red': [[0.0,  null_color[0], null_color[0]],
+                         [ct2,  null_color[0], slightly_enriched_color[0]],
+                         [1.0,  enriched_color[0], enriched_color[0]]],
+               'green': [[0.0,  null_color[1], null_color[1]],
+                         [ct2,  null_color[1], slightly_enriched_color[1]],
+                         [1.0,  enriched_color[1], enriched_color[1]]],
+                'blue': [[0.0,  null_color[2], null_color[2]],
+                         [ct2,  null_color[2], slightly_enriched_color[2]],
+                         [1.0,  enriched_color[2], enriched_color[2]]]}
+        cmap = LinearSegmentedColormap('sigmap', segmentdata=cdict, N=256)
+        
+        fig = heatmap(enr, None, None, cmap=cmap, cmap_vmin_vmax=(0.0,max_log), cmap_center=max_log/2, annotation=ann, colorbar=False, value_cluster=value_cluster, group_cluster=group_cluster, value_order=value_order, group_order=group_order, axsize=axsize, ax=ax);
+    
+    else:
+        ct1 = 0.5 * (1 - min_log/max_log)
+        ct2 = 0.5 * (1 + min_log/max_log)
+        cdict = {'red': [[0.0,  depleted_color[0], depleted_color[0]],
+                         [ct1,  slightly_depleted_color[0], null_color[0]],
+                         [ct2,  null_color[0], slightly_enriched_color[0]],
+                         [1.0,  enriched_color[0], enriched_color[0]]],
+               'green': [[0.0,  depleted_color[1], depleted_color[1]],
+                         [ct1,  slightly_depleted_color[1], null_color[1]],
+                         [ct2,  null_color[1], slightly_enriched_color[1]],
+                         [1.0,  enriched_color[1], enriched_color[1]]],
+                'blue': [[0.0,  depleted_color[2], depleted_color[2]],
+                         [ct1,  slightly_depleted_color[2], null_color[2]],
+                         [ct2,  null_color[2], slightly_enriched_color[2]],
+                         [1.0,  enriched_color[2], enriched_color[2]]]}
+        cmap = LinearSegmentedColormap('sigmap', segmentdata=cdict, N=256)
 
-    fig = heatmap(enr.T, None, None, cmap=cmap, cmap_vmin_vmax=(-max_log,max_log), annotation=ann, colorbar=False, value_cluster=value_cluster, group_cluster=group_cluster, value_order=value_order, group_order=group_order, axsize=axsize, ax=ax);
+        fig = heatmap(enr, None, None, cmap=cmap, cmap_vmin_vmax=(-max_log,max_log), cmap_center=0.0, annotation=ann, colorbar=False, value_cluster=value_cluster, group_cluster=group_cluster, value_order=value_order, group_order=group_order, axsize=axsize, ax=ax);
 
-    rel_dpi_factor = matplotlib.rcParams['figure.dpi'] / 72
+    rel_dpi_factor = fig.get_dpi() / 72
     height_pxl = 200 * rel_dpi_factor * scale_legend
     width_pxl = 15 * rel_dpi_factor * scale_legend
     offset_top_pxl = 0 * rel_dpi_factor * scale_legend
     offset_left_pxl = 30 * rel_dpi_factor * scale_legend
 
-    ax = fig.axes[0]
+    if ax is None:
+        ax = fig.axes[0]
     left,bottom = fig.transFigure.inverted().transform(ax.transAxes.transform((1,1))+np.array([offset_left_pxl,-offset_top_pxl-height_pxl]))
     width,height = fig.transFigure.inverted().transform(fig.transFigure.transform((0,0))+np.array([width_pxl,height_pxl]))
     cax = fig.add_axes((left, bottom, width, height))
-    norm = Normalize(vmin=-max_log, vmax=max_log)
+    norm = Normalize(vmin=(0.0 if depleted_label is None else -max_log), vmax=max_log)
     cb = fig.colorbar(ScalarMappable(norm=norm, cmap=cmap), cax=cax)
-    cb.set_ticks([-max_log,-min_log,min_log,max_log])
-    cb.set_ticklabels([pmin,pmax,pmax,pmin])
+    if depleted_label is None:
+        cb.set_ticks([min_log,max_log])
+        cb.set_ticklabels([pmax,pmin])
+    else:
+        cb.set_ticks([-max_log,-min_log,min_log,max_log])
+        cb.set_ticklabels([pmin,pmax,pmax,pmin])
     cb.ax.annotate('enriched', xy=(0, 1), xycoords='axes fraction', xytext=(-3, -5), textcoords='offset pixels', horizontalalignment='right', verticalalignment='top', rotation=90, fontsize=10*scale_legend)
-    cb.ax.annotate('insignificant', xy=(0, 0.5), xycoords='axes fraction', xytext=(-3, 5), textcoords='offset pixels', horizontalalignment='right', verticalalignment='center', rotation=90, fontsize=10*scale_legend)
-    cb.ax.annotate('depleted', xy=(0, 0), xycoords='axes fraction', xytext=(-3, 5), textcoords='offset pixels', horizontalalignment='right', verticalalignment='bottom', rotation=90, fontsize=10*scale_legend)
+    cb.ax.annotate('insignificant', xy=(0, (0.0 if depleted_label is None else 0.5)), xycoords='axes fraction', xytext=(-3, 5), textcoords='offset pixels', horizontalalignment='right', verticalalignment=('bottom' if depleted_label is None else 'center'), rotation=90, fontsize=10*scale_legend)
+    if depleted_label is not None:
+        cb.ax.annotate('depleted', xy=(0, 0), xycoords='axes fraction', xytext=(-3, 5), textcoords='offset pixels', horizontalalignment='right', verticalalignment='bottom', rotation=90, fontsize=10*scale_legend)
 
     return fig
 
@@ -3000,6 +3067,11 @@ def _get_co_occurrence(adata, analysis_key, show_only, show_only_center, colors,
             raise ValueError(f'The `show_only` categories {[s for s in show_only if s not in annotation]!r} are not available in the data!')
         annotation = annotation[select]
         mean_scores = mean_scores[select,:,:]
+        # check if the order is the same as in the show_only selection
+        permutation = np.argsort(annotation)[np.argsort(np.argsort(show_only))]
+        if not np.all(permutation == np.arange(len(permutation))):
+            annotation = annotation[permutation]
+            mean_scores = mean_scores[permutation,:,:]
 
     if show_only_center is not None:
         if isinstance(show_only_center, str):
@@ -3009,6 +3081,11 @@ def _get_co_occurrence(adata, analysis_key, show_only, show_only_center, colors,
             raise ValueError(f'The `show_only_center` categories {[s for s in show_only_center if s not in center]!r} are not available in the data!')
         center = center[select]
         mean_scores = mean_scores[:,select,:]
+        # check if the order is the same as in the show_only_center selection
+        permutation = np.argsort(center)[np.argsort(np.argsort(show_only_center))]
+        if not np.all(permutation == np.arange(len(permutation))):
+            center = center[permutation]
+            mean_scores = mean_scores[:,permutation,:]
 
     colors, types = _get_colors(colors, pd.Series(annotation))
     
@@ -3121,7 +3198,7 @@ def co_occurrence(
         provided in `adata`.
     ax
         The :class:`~matplotlib.axes.Axes` to plot on. If `None`, creates a
-        fresh figure for plotting. Incompatible with dendrogram plotting.
+        fresh figure for plotting.
         
     Returns
     -------
@@ -3144,20 +3221,18 @@ def co_occurrence(
                 raise ValueError(f'`merged==True` is ony possible with up to {len(linestyles)} andatas!')
             
             
-            #if fig is None:
-            #    fig, axs = subplots(len(center), 1, axsize=axsize, hspace=hspace, wspace=wspace, sharex=sharex, sharey=sharey)
-
-            if ax is not None:
-                        if isinstance(ax, matplotlib.axes.Axes):
-                            axs = np.array([[ax]])
-                        else:
-                            axs = ax
-                        if axs.shape != (len(center), 1):
-                            raise ValueError(f'The `ax` argument got the wrong shape of axes: needed is {(len(center), 1)!r} supplied was {axs.shape!r}!')
-                        axsize = axs[0,0].get_window_extent().transformed(axs[0,0].get_figure().dpi_scale_trans.inverted()).size
-                        fig = axs[0,0].get_figure()
-            else:
-                fig, axs = subplots(len(center), 1, axsize=axsize, hspace=hspace, wspace=wspace, sharex=sharex, sharey=sharey, )
+            if fig is None:
+                if ax is not None:
+                    if isinstance(ax, matplotlib.axes.Axes):
+                        axs = np.array([[ax]])
+                    else:
+                        axs = ax
+                    if axs.shape != (len(center), 1):
+                        raise ValueError(f'The `ax` argument got the wrong shape of axes: needed is {(len(center), 1)!r} supplied was {axs.shape!r}!')
+                    axsize = axs[0,0].get_window_extent().transformed(axs[0,0].get_figure().dpi_scale_trans.inverted()).size
+                    fig = axs[0,0].get_figure()
+                else:
+                    fig, axs = subplots(len(center), 1, axsize=axsize, hspace=hspace, wspace=wspace, sharex=sharex, sharey=sharey, )
 
 
             for ir, nr in enumerate(center):
@@ -3179,20 +3254,18 @@ def co_occurrence(
 
         else:
             
-            #if fig is None:
-            #    fig, axs = subplots(len(center), len(adatas), axsize=axsize, hspace=hspace, wspace=wspace, sharex=sharex, sharey=sharey)
-
-            if ax is not None:
-                if isinstance(ax, matplotlib.axes.Axes):
-                    axs = np.array([[ax]])
+            if fig is None:
+                if ax is not None:
+                    if isinstance(ax, matplotlib.axes.Axes):
+                        axs = np.array([[ax]])
+                    else:
+                        axs = ax
+                    if axs.shape != (len(center), len(adatas)):
+                        raise ValueError(f'The `ax` argument got the wrong shape of axes: needed is {(len(center), len(adatas))!r} supplied was {axs.shape!r}!')
+                    axsize = axs[0,0].get_window_extent().transformed(axs[0,0].get_figure().dpi_scale_trans.inverted()).size
+                    fig = axs[0,0].get_figure()
                 else:
-                    axs = ax
-                if axs.shape != (len(center), len(adatas)):
-                    raise ValueError(f'The `ax` argument got the wrong shape of axes: needed is {(len(center), len(adatas))!r} supplied was {axs.shape!r}!')
-                axsize = axs[0,0].get_window_extent().transformed(axs[0,0].get_figure().dpi_scale_trans.inverted()).size
-                fig = axs[0,0].get_figure()
-            else:
-                fig, axs = subplots(len(center), len(adatas), axsize=axsize, hspace=hspace, wspace=wspace, sharex=sharex, sharey=sharey, )
+                    fig, axs = subplots(len(center), len(adatas), axsize=axsize, hspace=hspace, wspace=wspace, sharex=sharex, sharey=sharey, )
 
             for ir, nr in enumerate(center):
                 x = (intervals[1:] + intervals[:-1]) / 2
@@ -3332,18 +3405,6 @@ def co_occurrence_matrix(
     
     min_max = None
 
-    if ax is not None:
-        if isinstance(ax, matplotlib.axes.Axes):
-            axs = np.array([[ax]])
-        else:
-            axs = ax
-        if axs.shape != (len(restrict_intervals), len(adatas)):
-            raise ValueError(f'The `ax` argument got the wrong shape of axes: needed is {(len(restrict_intervals), len(adatas))!r} supplied was {axs.shape!r}!')
-        axsize = axs[0,0].get_window_extent().transformed(axs[0,0].get_figure().dpi_scale_trans.inverted()).size
-        fig = axs[0,0].get_figure()
-    else:
-        fig, axs = subplots(len(restrict_intervals), len(adatas), axsize=axsize, hspace=hspace, wspace=wspace, x_padding=x_padding, y_padding=y_padding, )
-
     # first pass through the data to get global min/max of the values for colormap
     for adata_i, (adata_name, adata) in enumerate(adatas.items()):
 
@@ -3366,6 +3427,18 @@ def co_occurrence_matrix(
     
     if axsize is None:
         axsize = (0.2*len(center),0.2*len(annotation))
+
+    if ax is not None:
+        if isinstance(ax, matplotlib.axes.Axes):
+            axs = np.array([[ax]])
+        else:
+            axs = ax
+        if axs.shape != (len(adatas), len(restrict_intervals)):
+            raise ValueError(f'The `ax` argument got the wrong shape of axes: needed is {(len(adatas), len(restrict_intervals))!r} supplied was {axs.shape!r}!')
+        axsize = axs[0,0].get_window_extent().transformed(axs[0,0].get_figure().dpi_scale_trans.inverted()).size
+        fig = axs[0,0].get_figure()
+    else:
+        fig, axs = subplots(len(restrict_intervals), len(adatas), axsize=axsize, hspace=hspace, wspace=wspace, x_padding=x_padding, y_padding=y_padding, )
     
     # second pass for actual plotting
     for adata_i, (adata_name, adata) in enumerate(adatas.items()):
@@ -3603,7 +3676,7 @@ def annotated_heatmap(
     im = axs[1,1].imshow(data.T,aspect='auto',cmap=cmap, vmin=cmap_vmin_vmax[0], vmax=cmap_vmin_vmax[1])
     axs[1,1].set_xticks([])
     axs[1,1].set_yticks([])
-    rel_dpi_factor = matplotlib.rcParams['figure.dpi'] / 72
+    rel_dpi_factor = fig.get_dpi() / 72
     cax_width = 100 * rel_dpi_factor # color bar width in pixel
     cax_height = 10 * rel_dpi_factor # color bar height in pixel
     cax_offset = 10 * rel_dpi_factor # color bar y offset in pixel
@@ -3864,8 +3937,9 @@ def dotplot(
     log1p=True,
     marks=None,
     marks_colors=None,
+    swap_axes=True,
 ):
-    
+
     """\
     Dot plot of expression values.
     
@@ -3888,46 +3962,59 @@ def dotplot(
     marks_colors
         A mapping from the categories in `marks` to colors; if `None`, default
         colors are used.
+    swap_axes
+        If `False`, the x axis contains the genes and the y axis the groups.
+        Otherwise the axes are swapped.
         
     Returns
     -------
     A :class:`~matplotlib.figure.Figure`.
     
     """
-    
+
     if not pd.Index(genes).isin(adata.var.index).all():
         raise ValueError(f'The genes {pd.Index(genes).difference(adata.var.index)!r} are not available in `adata.var`!')
-        
+
     markers = genes[::-1]
-    
+
     if group_key not in adata.obs.columns:
         raise ValueError(f'The `group_key` {group_key!r} is not available in `adata.obs`!')
-    
+
     if hasattr(adata.obs[group_key], 'cat'):
         cluster = adata.obs[group_key].cat.categories
     else:
         cluster = adata.obs[group_key].unique()
-    
-    fig,axs = subplots(axsize=0.25*np.array([len(cluster),len(markers)]))
 
-    x = np.arange(len(cluster))  # the label locations
+    if swap_axes:
+        xticklabels = cluster
+        yticklabels = markers
+    else:
+        xticklabels = markers
+        yticklabels = cluster
+    
+    fig,axs = subplots(axsize=0.25*np.array([len(xticklabels),len(yticklabels)]))
+
+    x = np.arange(len(xticklabels))   # the label locations
+    y = np.arange(len(yticklabels))   # the label locations
+    if not swap_axes:
+        x = x[::-1]
+        y = y[::-1]
     axs[0,0].set_xticks(x)
-    axs[0,0].set_xticklabels(cluster, rotation=45, ha='right',)
-    y = np.arange(len(markers))  # the label locations
+    axs[0,0].set_xticklabels(xticklabels, rotation=45, ha='right',)
     axs[0,0].set_yticks(y)
-    axs[0,0].set_yticklabels(markers)
+    axs[0,0].set_yticklabels(yticklabels)
     axs[0,0].set_xlim((x.min()-0.5,x.max()+0.5))
     axs[0,0].set_ylim((y.min()-0.5,y.max()+0.5))
 
     axs[0,0].set_axisbelow(True)
     axs[0,0].grid(True)
-    
+
     marker_counts = adata[:,markers].to_df()
     if log1p:
         marker_counts = np.log1p(marker_counts)
     mean_exp = pd.DataFrame({c: marker_counts.loc[df.index].mean(axis=0) for c,df in adata.obs.groupby(group_key) })
     mean_pos = pd.DataFrame({c: (marker_counts.loc[df.index] != 0).mean(axis=0) for c,df in adata.obs.groupby(group_key) })
-    
+
     if marks is not None:
         marks = marks.reindex_like(mean_pos)
 
@@ -3935,7 +4022,7 @@ def dotplot(
     mean_pos_index_name = 'index' if mean_pos.index.name is None else mean_pos.index.name
     mean_exp = pd.melt(mean_exp, ignore_index=False).reset_index().rename(columns={mean_exp_index_name:'value','variable':'cluster','value':'mean_exp'})
     mean_pos = pd.melt(mean_pos, ignore_index=False).reset_index().rename(columns={mean_pos_index_name:'value','variable':'cluster','value':'mean_pos'})
-    
+
     if marks is not None:
         marks.index.name = None
         marks.columns.name = None
@@ -3945,21 +4032,27 @@ def dotplot(
             marks_colors = get_default_colors(marks['marks'].unique())
 
     all_df = pd.merge(mean_exp, mean_pos, on=['value', 'cluster'])
-    
+
     if marks is not None:
         all_df = pd.merge(all_df, marks, on=['value', 'cluster'], how='outer')
-        
-    all_df['x'] = all_df['cluster'].map(pd.Series(x,index=cluster))
-    all_df['y'] = all_df['value'].map(pd.Series(y,index=markers))
+        if all_df['marks'].isna().any():
+            raise ValueError(f'There were gene-group combinations without a match in "marks"!')
+
+    if swap_axes:
+        all_df['x'] = all_df['cluster'].map(pd.Series(x,index=xticklabels))
+        all_df['y'] = all_df['value'].map(pd.Series(y,index=yticklabels))
+    else:
+        all_df['x'] = all_df['value'].map(pd.Series(x,index=xticklabels))
+        all_df['y'] = all_df['cluster'].map(pd.Series(y,index=yticklabels))
 
     legend_items = []
-    
+
     mean_exp_min, mean_exp_max = all_df['mean_exp'].min(), all_df['mean_exp'].max()
     norm = Normalize(vmin=mean_exp_min, vmax=mean_exp_max)
     cmap='Reds'#LinearSegmentedColormap.from_list('mean_exp', [(0,(1, 1, 1)),(1,(1, g, b))])
     mapper = ScalarMappable(norm=norm, cmap=cmap)
     color = [ tuple(x) for x in mapper.to_rgba(all_df['mean_exp'].to_numpy()) ]
-    
+
     legend_items.append(mpatches.Patch(color='#0000', label='mean expression'))
     mean_exp_for_legend = np.linspace(mean_exp_min, mean_exp_max, 4)
     legend_items.extend([mpatches.Patch(color=color, label=f'{ind:.2f}') for color,ind in zip(mapper.to_rgba(mean_exp_for_legend),mean_exp_for_legend)])
@@ -3968,20 +4061,20 @@ def dotplot(
     def size_map(x):
         return (x/mean_pos_max * 14)**2
     size = size_map(all_df['mean_pos'])
-    
+
     legend_items.append(mpatches.Patch(color='#0000', label='fraction of expressing cells'))
     mean_pos_for_legend = np.linspace(mean_pos_min, mean_pos_max, 5)[1:]
     legend_items.extend([mlines.Line2D([], [], color='#aaa', linestyle='none', marker='o', markersize=np.sqrt(size_map(ind)), label=f'{ind:.2f}') for ind in mean_pos_for_legend])
 
     edgecolors = '#aaa' if marks is None else all_df['marks'].map(marks_colors)
-    
+
     if marks is not None:
         marks_name = marks_colors.name if hasattr(marks_colors, 'name') else ''
         legend_items.append(mpatches.Patch(color='#0000', label=marks_name))
         legend_items.extend([mlines.Line2D([], [], color='#aaa', linestyle='none', fillstyle='none', markeredgecolor=color, marker='o', markersize=np.sqrt(size_map(mean_pos_for_legend[-2])), label=f'{ind}') for ind,color in marks_colors.items()])
 
     axs[0,0].scatter(all_df['x'], all_df['y'], c=color, s=size, edgecolors=edgecolors)
-    
+
     axs[0,0].legend(handles=legend_items, bbox_to_anchor=(1, 1), loc='upper left', ncol=1)
-    
+
     return fig

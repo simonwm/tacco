@@ -52,7 +52,7 @@ def map_obs_obsm(
         map_obs_keys = [map_obs_keys]
     if isinstance(map_obsm_keys, bool):
         if map_obsm_keys:
-            map_obsm_keys = source_adata.obsm.keys
+            map_obsm_keys = source_adata.obsm.keys()
         else:
             map_obsm_keys = []
     elif isinstance(map_obsm_keys, str):

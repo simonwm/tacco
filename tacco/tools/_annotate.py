@@ -377,7 +377,7 @@ def multi_center_annotation_method(
         
         nonlocal annotation_method, multi_center, prepare_reconstruction
         
-        if multi_center is None or multi_center < 1:
+        if multi_center is None or multi_center <= 1:
             cell_type = annotation_method(adata, reference, annotation_key, annotation_prior, verbose)
             if prepare_reconstruction is not None:
                 prepare_reconstruction['annotation'] = cell_type.copy()
@@ -419,6 +419,7 @@ def multi_center_annotation_method(
                 random_state=42,
                 batch_size=100,
                 max_iter=100,
+                n_init=3, # avoid FutureWarning about changing the default n_init to 'auto'; possible speedup by using 'auto' - needs evaluation
             ).fit(X)
             
             for c in range(_multi_center):
@@ -459,6 +460,7 @@ def multi_center_annotation_method(
 def max_annotation_method(
     annotation_method,
     max_annotation,
+    prepare_reconstruction
     ):
 
     """\
@@ -474,6 +476,13 @@ def max_annotation_method(
         the maximum annotation, higher values assign the top annotations and
         distribute the remaining annotations equally on the top annotations.
         If `None` or smaller than `1`, no restrictions are imposed. 
+    prepare_reconstruction
+        This is an out-argument providing a dictionary to fill with the data
+        necessary for the reconstruction of "denoised" profiles. The necessary
+        data is a :class:`~pandas.DataFrame` containing the annotation on
+        sub-categories, another :class:`~pandas.DataFrame` containing the
+        profiles of the sub-categories, and a mapping of sub-categories to
+        their original categories.
         
     Returns
     -------
@@ -485,7 +494,7 @@ def max_annotation_method(
         
     def _method(adata, reference, annotation_key, annotation_prior, verbose):
         
-        nonlocal annotation_method, max_annotation
+        nonlocal annotation_method, max_annotation, prepare_reconstruction
         
         cell_type = annotation_method(adata, reference, annotation_key, annotation_prior, verbose)
         
@@ -495,6 +504,15 @@ def max_annotation_method(
             _cell_type[_cell_type<nth_largest_values_per_observation[:,None]] = 0
             _cell_type /= _cell_type.sum(axis=1)[:,None]
             cell_type = pd.DataFrame(_cell_type, index=cell_type.index, columns=cell_type.columns)
+            if prepare_reconstruction is not None:
+                sub_anno = prepare_reconstruction['annotation']
+                sub_map = prepare_reconstruction['mapping']
+                if sub_map is not None:
+                    sub_anno *= (cell_type != 0).reindex(columns=sub_anno.columns.map(sub_map)).to_numpy()
+                    sub_anno /= sub_anno.sum(axis=1).to_numpy()[:,None]
+                else:
+                    prepare_reconstruction['annotation'] = cell_type.copy()
+
 
         return cell_type
     
@@ -756,7 +774,7 @@ def annotate(
     if result_key is None and reconstruction_key is not None:
         raise ValueError(f'`result_key` is `None`, indicating that the `adata` will not be changed, but `reconstruction_key` is "{reconstruction_key}" and requires adata to be changed!')
     if result_key is not None and reconstruction_key is None:
-        if multi_center == 1 or multi_center is None:
+        if multi_center is None or multi_center <= 1:
             reconstruction_key = result_key
         else:
             reconstruction_key = f'{result_key}_mc{multi_center}'
@@ -791,7 +809,7 @@ def annotate(
             method_construction_info.append(f'+- platform normalization: platform_iterations={platform_iterations}, gene_keys={gene_keys}, normalize_to={normalize_to}')
     
     if max_annotation is not None:
-        _method = max_annotation_method(annotation_method=_method, max_annotation=max_annotation)
+        _method = max_annotation_method(annotation_method=_method, max_annotation=max_annotation, prepare_reconstruction=prepare_reconstruction)
         method_construction_info = ['   ' + i for i in method_construction_info]
         method_construction_info.append(f'+- maximum annotation: max_annotation={max_annotation}')
     
