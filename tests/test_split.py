@@ -15,13 +15,13 @@ def adata_and_split():
         [1,0,1,3],
         [0,1,1,4],
         [0,1,1,5], # extra count cannot be divided equally between all contributing types
-    ]))
+    ], dtype=np.float32))
     adata.varm['type']=pd.DataFrame(np.array([
         [1,0  ,0   ,],
         [0,0.5,0   ,],
         [0,0  ,0.25,],
         [0,0.5,0.75,],
-    ]),index=adata.var.index, columns=pd.Index([0,1,2],dtype='category'))
+    ], dtype=np.float32),index=adata.var.index, columns=pd.Index([0,1,2],dtype='category'))
     adata.obsm['type']=pd.DataFrame(np.array([
         [1  ,0  ,0  ],
         [0  ,1  ,0  ],
@@ -30,7 +30,7 @@ def adata_and_split():
         [1/5,0  ,4/5],
         [0  ,2/6,4/6],
         [0  ,2/6,4/6],
-    ]),index=adata.obs.index,columns=adata.varm['type'].columns)
+    ], dtype=np.float32),index=adata.obs.index,columns=adata.varm['type'].columns)
     adata.uns['type'] = pd.Series([3,3,4],index=pd.Index([0,1,2],dtype='category'),name='type2').astype('category')
     
     sdata = ad.AnnData(X=scipy.sparse.csr_matrix(np.array([ # part of all count placement is random due to regularization in the split - but only slightly
@@ -40,12 +40,12 @@ def adata_and_split():
         [0,1,0,1],
         [0,1,0,1],
         [0,1,0,1],
-        [0,1,0,1],
+        [0,1,0,2], # the placement of the extra count is random and frozen for fixed seed and floating point precision
         [0,0,1,3],
         [0,0,1,3],
         [0,0,1,3],
-        [0,0,1,4], # the placement of the extra count is random and frozen for fixed seed
-    ])))
+        [0,0,1,3],
+    ], dtype=np.float32)))
     sdata.obs=pd.DataFrame({
         'index': pd.Series([0,3,4,1,3,5,6,2,4,5,6,],index=sdata.obs.index).astype(str),
         'type':  pd.Series([0,0,0,1,1,1,1,2,2,2,2,],dtype='category',index=sdata.obs.index),
@@ -58,15 +58,15 @@ def adata_and_split():
         [1,1,0,1],
         [1,0,0,0],
         [0,1,0,1],
-        [0,1,0,1],
+        [0,1,0,2], # the placement of the extra count is random and frozen for fixed seed and floating point precision
         [0,0,1,3],
         [0,0,1,3],
         [0,0,1,3],
-        [0,0,1,4], # the placement of the extra count is random and frozen for fixed seed
-    ])))
+        [0,0,1,3],
+    ], dtype=np.float32)))
     sdata2.obs=pd.DataFrame({
         'index': pd.Series([0,1,3,4,5,6,2,4,5,6,],index=sdata2.obs.index).astype(str),
-        'type2':  pd.Series([3,3,3,3,3,3,4,4,4,4,],dtype='category',index=sdata2.obs.index),
+        'type2': pd.Series([3,3,3,3,3,3,4,4,4,4,],dtype='category',index=sdata2.obs.index),
     })
     sdata2.varm['type']=adata.varm['type']
     
@@ -82,7 +82,7 @@ def adata_and_split():
         [ 0 , 0 , 1 , 3 ],
         [ 0 , 0 , 1 , 3 ],
         [ 0 , 0 ,7/6,7/2],
-    ]))
+    ], dtype=np.float32))
     ddata.obs=pd.DataFrame({
         'index': pd.Series([0,3,4,1,3,5,6,2,4,5,6,],index=sdata.obs.index).astype(str),
         'type':  pd.Series([0,0,0,1,1,1,1,2,2,2,2,],dtype='category',index=sdata.obs.index),
@@ -100,7 +100,7 @@ def adata_and_split():
         [ 0 , 0 , 1 , 3 ],
         [ 0 , 0 , 1 , 3 ],
         [ 0 , 0 ,7/6,7/2],
-    ]))
+    ], dtype=np.float32))
     ddata2.obs=pd.DataFrame({
         'index': pd.Series([0,1,3,4,5,6,2,4,5,6,],index=ddata2.obs.index).astype(str),
         'type2':  pd.Series([3,3,3,3,3,3,4,4,4,4,],dtype='category',index=ddata2.obs.index),

@@ -22,7 +22,6 @@ def points_binsize_adata_counts_reference():
             [10,0,0],
             [0,20,10],
         ], dtype=np.int8),
-        dtype=np.int8,
         obs=pd.DataFrame({'type': pd.Series([0,1]).astype('category')}),
     )
     adata = ad.AnnData(scipy.sparse.csr_matrix([
@@ -33,7 +32,6 @@ def points_binsize_adata_counts_reference():
         ], dtype=np.int8),
         obs=pd.DataFrame(index=points['hash'].unique().astype(str)),
         var=pd.DataFrame(index=points['gene'].unique().astype(str)),
-        dtype=np.int8,
     )
     adata.obs.index.name='hash'
     adata.var.index.name='gene'
@@ -51,7 +49,7 @@ def adata_distance():
         [1,0,0,2],
         [0,1,0,2],
         [0,0,1,0],
-    ], dtype=float),dtype=float)
+    ], dtype=float))
     adata.obs['x'] = [0,3,0]
     adata.obs['y'] = [0,0,4]
     adata.obs['c'] = pd.Series([0,0,1], index=adata.obs.index).astype('category')
@@ -183,13 +181,13 @@ def test_distance_matrix(adata_distance, low_mem):
 
     result = tc.tl.distance_matrix(adata, None, low_mem=low_mem)
     
-    tc.testing.assert_dense_equal(result, distance.A)
+    tc.testing.assert_dense_equal(result, distance.toarray())
 
     distance = adata.obsp['distance_c']
     
     result = tc.tl.distance_matrix(adata, None, annotation_key='c', low_mem=low_mem)
     
-    tc.testing.assert_dense_equal(result, distance.A)
+    tc.testing.assert_dense_equal(result, distance.toarray())
 
 def test_affinity(adata_distance):
     adata = adata_distance
@@ -225,7 +223,7 @@ def test_distribute_molecules():
         [1,0,0,2],
         [0,1,0,2],
         [0,0,1,0],
-    ], dtype=float),dtype=float)
+    ], dtype=float))
     adata.obs['x'] = [0,3,0]
     adata.obs['y'] = [0,0,4]
     

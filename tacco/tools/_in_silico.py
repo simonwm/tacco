@@ -234,7 +234,7 @@ def mix_in_silico(
                 np.around(sample_X, decimals=0, out=sample_X)
         if issparse(sample_X):
             sample_X.eliminate_zeros()
-        sample_data = ad.AnnData(X=sample_X, obs=sampling, var=adata.var.copy(), dtype=sample_X.dtype)
+        sample_data = ad.AnnData(X=sample_X, obs=sampling, var=adata.var.copy())
         if platform_log10_mean is not None:
             sample_data.var['platform_effect'] = rescaling_factors
         

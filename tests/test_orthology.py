@@ -7,13 +7,11 @@ import scipy.sparse
 
 @pytest.fixture(scope="session")
 def adata_to_convert():
-    human_adata = ad.AnnData(scipy.sparse.csr_matrix(np.eye(4)),
+    human_adata = ad.AnnData(scipy.sparse.csr_matrix(np.eye(4),dtype=np.float32),
         var=pd.DataFrame(index=['ISG15','TP53','GSTM3','GSTM2']),
-        dtype=np.float32,
     )
-    mouse_adata = ad.AnnData(scipy.sparse.csr_matrix(np.eye(4)),
+    mouse_adata = ad.AnnData(scipy.sparse.csr_matrix(np.eye(4),dtype=np.float32),
         var=pd.DataFrame(index=['Isg15','Trp53','Gstm5','Gstm7']),
-        dtype=np.float32,
     )
     return {'human':human_adata,'mouse':mouse_adata}
 

@@ -36,9 +36,9 @@ def get_minimal_transitions(
 ):
     assert(aa.shape==bb.shape)
     if issparse(aa):
-        aa = aa.A
+        aa = aa.toarray()
     if issparse(bb):
-        bb = bb.A
+        bb = bb.toarray()
     
     res = _get_minimal_transitions(aa,bb)
     
@@ -98,7 +98,7 @@ def _annotate_OT(
         xam = get_minimal_transitions(ax.T, xm)
         ax.eliminate_zeros()
         ax.data = 1 / ax.data
-        ma = np.einsum('xam,xa,ax->ma', xam, xa.A, ax.A)
+        ma = np.einsum('xam,xa,ax->ma', xam, xa.toarray(), ax.toarray())
         
         cell_type = utils.parallel_nnls(ma, om)
         

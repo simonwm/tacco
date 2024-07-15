@@ -40,8 +40,8 @@ def dataframe_adata_and_enrichments():
             'cat':pd.Series([5,5,5,5,6,6,6,6],dtype='category'),
             'group':pd.Series([0,0,1,1,0,0,1,1],dtype='category'),
             'enrichment':pd.Series(['enriched','purified','enriched','purified','enriched','purified','enriched','purified'],dtype='category'),
-            'p_welch':pd.Series([0.0,1.0,1.0,0.0,1.0,0.0,0.0,1.0],dtype=float),
-            'p_welch_fdr_bh':pd.Series([0.0,1.0,1.0,0.0,1.0,0.0,0.0,1.0],dtype=float),
+            'p_welch':pd.Series([1.60342833833497915111e-33,1.0,1.0,1.60342833833497915111e-33,1.0,0.0,0.0,1.0],dtype=float),
+            'p_welch_fdr_bh':pd.Series([3.20685667666995830223e-33,1.0,1.0,3.20685667666995830223e-33,1.0,0.0,0.0,1.0],dtype=float),
             }),
         'mwuc_cat': pd.DataFrame({
             'cat':pd.Series([5,5,5,5,6,6,6,6],dtype='category'),
@@ -168,7 +168,7 @@ def dataframe_adata_and_enrichments():
     df = df.copy()
     df.index = df.index.astype(str)
     
-    adata = ad.AnnData(df[['cont1','cont2']].to_numpy(), dtype=float, obs=df, var=df.loc[[],['cont1','cont2']].T)
+    adata = ad.AnnData(df[['cont1','cont2']].to_numpy().astype(float), obs=df, var=df.loc[[],['cont1','cont2']].T)
     adata.obsm['cont']=df[['cont1','cont2']]
     
     return df, adata, enrichments
@@ -255,24 +255,24 @@ def categorical_dataframe_and_contributions():
     })
     contributions = {
         'aggregate_sum': pd.DataFrame([
-                [2,0,0],
-                [0,3,0],
-                [1,1,1],
+                [2.0,0.0,0.0],
+                [0.0,3.0,0.0],
+                [1.0,1.0,1.0],
             ],
             index=pd.Series([0,1,2],dtype='category',name='group'),
             columns=pd.Series([5,6,7],dtype='category',name='value'),
             ),
         'aggregate_sum_restrict_groups': pd.DataFrame([
-                [2,0,0],
-                [0,3,0],
+                [2.0,0.0,0.0],
+                [0.0,3.0,0.0],
             ],
             index=pd.Series([0,1],dtype='category',name='group'),
             columns=pd.Series([5,6,7],dtype='category',name='value'),
             ),
         'aggregate_sum_restrict_values': pd.DataFrame([
-                [2,0],
-                [0,3],
-                [1,1],
+                [2.0,0.0],
+                [0.0,3.0],
+                [1.0,1.0],
             ],
             index=pd.Series([0,1,2],dtype='category',name='group'),
             columns=pd.Series([5,6],dtype='category',name='value'),

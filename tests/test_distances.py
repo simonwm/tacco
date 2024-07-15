@@ -75,8 +75,8 @@ def counts_distances():
     return {
     'countsA': countsA,
     'countsB': countsB,
-    'euclidean': scipy.spatial.distance.cdist(countsA.A,countsB.A,metric='euclidean'),
-    'cosine': scipy.spatial.distance.cdist(countsA.A,countsB.A,metric='cosine'),
+    'euclidean': scipy.spatial.distance.cdist(countsA.toarray(),countsB.toarray(),metric='euclidean'),
+    'cosine': scipy.spatial.distance.cdist(countsA.toarray(),countsB.toarray(),metric='cosine'),
     # these distances are just the frozen results of a reference run - no guarante...
     'projection': np.array([[0.9033069734004313, 0.9339160839160839, 0.9043336944745395, 0.9343117408906882, 0.9029585798816568, 0.8867565424266455],
                             [0.9027345102111457, 0.9118967452300786, 0.9061032863849765, 0.9166666666666666, 0.9112739112739112, 0.9102710958381062],
@@ -216,9 +216,9 @@ def test_cdist_counts(counts_distances, metric, sparse, singleAobs, singleBobs):
     countsA = counts_distances['countsA']
     countsB = counts_distances['countsB']
     if sparse == 'only A' or sparse == 'none':
-        countsB = countsB.A
+        countsB = countsB.toarray()
     if sparse == 'only B' or sparse == 'none':
-        countsA = countsA.A
+        countsA = countsA.toarray()
     distance = counts_distances[metric]
     if singleAobs:
         countsA = countsA[:1]

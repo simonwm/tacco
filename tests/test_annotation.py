@@ -17,7 +17,7 @@ def adata_reference_and_typing0():
         [0,0,1],
         [0,0,2],
         [0,0,3],
-    ]))
+    ], dtype=np.float32))
     reference.obs=pd.DataFrame({
         'type': pd.Series([0,0,0,1,1,1,2,2,2,],dtype='category',index=pd.Index(range(reference.shape[0])).astype(str)),
     })
@@ -34,7 +34,7 @@ def adata_reference_and_typing0():
         [1,1,0],
         [1,1,0],
         [1,1,0],
-    ]))
+    ], dtype=np.float32))
     adata.obsm['type']=pd.DataFrame(np.array([
         [1,0,0],
         [1,0,0],
@@ -58,12 +58,11 @@ def adata_reference_and_typing1():
             [10,0,0],
             [0,20,10],
         ], dtype=np.int8),
-        dtype=np.int8,
         obs=pd.DataFrame({'type': pd.Series([0,1]).astype('category')}),
     )
     adata = ad.AnnData(X=scipy.sparse.csr_matrix([
         [3,2,1],
-    ]))
+    ], dtype=np.float32))
     adata.obsm['type']=pd.DataFrame(np.array([
         [0.5,0.5],
     ]),index=adata.obs.index,columns=pd.Index(reference.obs['type'].cat.categories,dtype=reference.obs['type'].dtype,name='type'))
@@ -107,7 +106,7 @@ def adata_reference_and_typing2():
         [0,0,0,0,0,0,0,0,0,2,0,0,],
         [0,0,0,0,0,0,0,0,0,0,2,0,],
         [0,0,0,0,0,0,0,0,0,0,0,2,],
-    ]))
+    ], dtype=np.float32))
     reference.obs=pd.DataFrame({
         'type': pd.Series([0,0,0,0,1,1,1,1,2,2,2,2,],dtype='category',index=pd.Index(range(reference.shape[0])).astype(str)),
     })
@@ -124,7 +123,7 @@ def adata_reference_and_typing2():
         [1,1,1,1,1,1,1,1,0,0,0,0,],
         [1,1,1,1,1,1,1,1,0,0,0,0,],
         [1,1,1,1,1,1,1,1,0,0,0,0,],
-    ]))
+    ], dtype=np.float32))
     adata.obsm['type']=pd.DataFrame(np.array([
         [1,0,0],
         [1,0,0],

@@ -12,7 +12,7 @@ def adata_with_data():
         [0,1,0],
         [0,0,1],
         [1,1,0],
-    ]),dtype=np.float32, obs=pd.DataFrame(index=['A','T','C','G']))
+    ],dtype=np.float32), obs=pd.DataFrame(index=['A','T','C','G']))
     adata.layers['sparse'] = scipy.sparse.csr_matrix(adata.X)
     adata.layers['dense'] = adata.X
     adata.var['type']=pd.Series(['a','b','c'],index=adata.var.index,name='type')

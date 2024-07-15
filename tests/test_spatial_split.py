@@ -21,7 +21,6 @@ def spatial_adata_to_split():
     })
     adata = ad.AnnData(np.zeros((len(points),0), dtype=np.int8),
         obs=points,
-        dtype=np.int8,
     )
     return adata
 

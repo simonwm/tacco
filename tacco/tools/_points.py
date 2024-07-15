@@ -382,7 +382,7 @@ def distance_matrix(
             
             distance = None
             
-            for anno, obs in adata.obs.groupby(annotation_column):
+            for anno, obs in adata.obs.groupby(annotation_column,observed=False):
 
                 _whole_row = whole_row[obs.index].to_numpy()
                 _distance = utils.dense_distance_matrix(positions.iloc[_whole_row].to_numpy(), **kw_args)
@@ -405,7 +405,7 @@ def distance_matrix(
 
             try:
 
-                for anno, obs in adata.obs.groupby(annotation_column):
+                for anno, obs in adata.obs.groupby(annotation_column,observed=False):
 
                     _whole_row = whole_row[obs.index].to_numpy()
 

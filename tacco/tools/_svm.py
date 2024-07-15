@@ -22,6 +22,10 @@ def _annotate_svm(
     Implements the functionality of :func:`~annotate_svm` without data
     integrity checks.
     """
+
+    if 'dual' not in kwargs: # conserve sklearn pre-1.5 behaviour
+        kwargs['dual'] = True
+
     ref_X = reference.X
     tes_X = adata.X
     if trafo is not None:

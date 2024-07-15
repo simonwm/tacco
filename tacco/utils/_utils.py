@@ -94,7 +94,7 @@ def parallel_nnls(
     """
     def _nnls(A,B):
         if scipy.sparse.issparse(B):
-            return np.array([ nnls(A, B[g].A.flatten())[0] for g in range(B.shape[0]) ])
+            return np.array([ nnls(A, B[g].toarray().flatten())[0] for g in range(B.shape[0]) ])
         else:
             return np.array([ nnls(A, B[g])[0] for g in range(B.shape[0]) ])
     
@@ -165,10 +165,10 @@ def solve_OT(
     """
 
     # high precision is necessary 
-    a = np.array(a, dtype=np.float64, copy=False)
-    b = np.array(b, dtype=np.float64, copy=False)
+    a = np.asarray(a, dtype=np.float64)
+    b = np.asarray(b, dtype=np.float64)
     _M = M
-    M = np.array(M, dtype=np.float64, copy=False)
+    M = np.asarray(M, dtype=np.float64)
     
     if inplace and _M is not M:
         raise Exception('`inplace` is `True` but impossible, as `M` is not a `np.float64` `np.ndarray`!')
@@ -443,7 +443,7 @@ def get_average_profiles(
                 _math.row_scale(rX, 1/np.array(reference.X.sum(axis=1)).flatten())
             
             mean_profiles = {}
-            for l, df in reference.obs.groupby(type_key):
+            for l, df in reference.obs.groupby(type_key,observed=False):
                 rX_l = rX[reference.obs.index.isin(df.index)]
                 mean_profiles[l] = np.array(rX_l.mean(axis=0)).flatten()
             mean_profiles = pd.DataFrame(mean_profiles)
@@ -1351,7 +1351,7 @@ def spatial_split(
     sample_column = sample_column.astype(str)
     for idim,ps in enumerate(position_split):
         new_sample_column = sample_column.copy()
-        for sample, sub in positions.iloc[:,idim].groupby(sample_column):
+        for sample, sub in positions.iloc[:,idim].groupby(sample_column,observed=False):
             max_ps = ps if min_obs < 1 else min(int((len(sub)/min_obs)**(1/(ndim-idim))), ps) # split only if enough observations are available
             position_cuts = pd.qcut(sub, max_ps, duplicates='drop')
             new_sample_column.loc[sub.index] = new_sample_column.loc[sub.index] + '|' + position_cuts.astype(str)
@@ -1564,7 +1564,7 @@ def split_spatial_samples(
     sample_column = sample_column.astype(str)
     for direction,n_patches in zip(split_direction,split_scheme):
         new_sample_column = sample_column.copy()
-        for sample, sub in positions.groupby(sample_column):
+        for sample, sub in positions.groupby(sample_column,observed=False):
             
             # get direction vector
             if direction is None:

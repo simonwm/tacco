@@ -16,10 +16,16 @@ Features
 - Add :func:`tacco.tools.other_new_func` to implement feature request.
 
 Fixes
---------
+-----
 .. include resolution of bugs and very unintuitive behaviour here
 
 - Fix some issue `#9 <https://github.com/simonwm/tacco/issues/9>`__
+
+Breaking changes
+----------------
+.. include changes which alter previous behaviour here
+
+- Support for new AnnData version
 
 Documentation
 -------------

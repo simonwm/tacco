@@ -154,7 +154,7 @@ def filter(
                 else:
                     not_constant = adatas[i].X.max(axis=0)!=adatas[i].X.min(axis=0)
                     if issparse(not_constant):
-                        not_constant = not_constant.A
+                        not_constant = not_constant.toarray()
                     not_constant = not_constant.flatten()
                     good_genes = good_genes.intersection(adatas[i].var.index[not_constant])
         

@@ -317,6 +317,9 @@ def row_scale(
     `None`. This is an inplace operation.
         
     """
+    
+    if pd.api.types.is_float_dtype(rescaling_factors) and not pd.api.types.is_float_dtype(X):
+        raise ValueError(f'When row_scale gets floating point rescaling factors, it also needs floating point data in `X`, as it is an inplace operation; but it got {X.dtype}!')
 
     if hasattr(rescaling_factors, 'to_numpy'):
         rescaling_factors = rescaling_factors.to_numpy()
@@ -356,6 +359,9 @@ def col_scale(
         
     """
     
+    if pd.api.types.is_float_dtype(rescaling_factors) and not pd.api.types.is_float_dtype(X):
+        raise ValueError(f'When col_scale gets floating point rescaling factors, it also needs floating point data in `X`, as it is an inplace operation; but it got {X.dtype}!')
+
     if not isinstance(X, np.ndarray) and not issparse(X):
         raise ValueError(f'`X` must be a numpy array or a scipy sparse matrix!')
 

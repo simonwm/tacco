@@ -230,6 +230,6 @@ def fill_regions(
         new_anno = pd.Series(anno.iloc[np.argmin(dists, axis=1)].to_numpy(), index=new_pos.index)
         return pd.concat([anno, new_anno]).reindex_like(all_anno)
     
-    adata.obs[region_key] = batches.groupby(batches).transform(get_closest_annotation)
+    adata.obs[region_key] = batches.groupby(batches, observed=False).transform(get_closest_annotation)
     
     return adata

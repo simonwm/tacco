@@ -619,12 +619,12 @@ def adatas_coocc_permute():
     adata0 = ad.AnnData(np.ones(shape=(N,1)),obs=pd.DataFrame({'x':pattern[0],'y':pattern[1]+0.12,'a':'A','sample':samples}))
     adata1 = ad.AnnData(np.ones(shape=(N,1)),obs=pd.DataFrame({'x':pattern[0],'y':pattern[1]+0.01,'a':'B','sample':samples}))
     adata2 = ad.AnnData(np.ones(shape=(N,1)),obs=pd.DataFrame({'x':pattern[0],'y':pattern[1]-0.10,'a':'C','sample':samples}))
-    adataA = adata0.concatenate([adata1,adata2]).copy()
+    adataA = ad.concat([adata0,adata1,adata2], index_unique='-', label='batch').copy()
     adataA.obs['sample'] = adataA.obs['sample'].astype('category')
     adata0 = ad.AnnData(np.ones(shape=(N,1)),obs=pd.DataFrame({'x':pattern[0],'y':pattern[1]+0.12,'a':'A','sample':samples}))
     adata1 = ad.AnnData(np.ones(shape=(N,1)),obs=pd.DataFrame({'x':pattern[0],'y':pattern[1]+0.01,'a':'B','sample':samples}))
     adata2 = ad.AnnData(np.ones(shape=(N,1)),obs=pd.DataFrame({'x':pattern[0],'y':pattern[1]+0.10,'a':'C','sample':samples}))
-    adataB = adata0.concatenate([adata1,adata2]).copy()
+    adataB = ad.concat([adata0,adata1,adata2], index_unique='-', label='batch').copy()
     adataB.obs['sample'] = adataB.obs['sample'].astype('category')
     
     adataA.uns['correct'] = {

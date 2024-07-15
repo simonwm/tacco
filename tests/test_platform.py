@@ -13,7 +13,7 @@ def adata_and_subsampling():
         [0,4,0],
         [0,0,5],
         [0,0,6],
-    ]))
+    ], dtype=np.float32))
     adata.obs['type'] = pd.Series(['a','a','ab','ab','bb','bb'],dtype='category',index=adata.obs.index)
     subsampling = {'a':2.0,'ab':1.0,'b':0.5}
     sub_adata = ad.AnnData(X=np.array([
@@ -24,7 +24,7 @@ def adata_and_subsampling():
         [0,4,0],
         [0,3,0],
         [0,0,6],
-    ]))
+    ], dtype=np.float32))
     sub_adata.obs=pd.DataFrame({
         'type': pd.Series(['a','a','a','a','ab','ab','bb'],dtype='category',index=sub_adata.obs.index)
     })
@@ -50,7 +50,7 @@ def adata_and_platform_effect():
         [1,1,1],
         [1,1,1],
         [1,1,1],
-    ]))
+    ], dtype=np.float32))
     adata.obs['type'] = pd.Series(['a','a','b','b','c','c','d','d','d'],dtype='category',index=adata.obs.index)
     adata.obsm['type_obsm'] = pd.get_dummies(adata.obs['type'])
     platform_adata = ad.AnnData(X=np.array([ # fix the expression: random, but deterministic for given seed
@@ -63,7 +63,7 @@ def adata_and_platform_effect():
         [ 2.1717718, 0.8804041,  3.4343598],
         [ 2.1717718, 0.8804041,  3.4343598],
         [ 2.1717718, 0.8804041,  3.4343598],
-    ]))
+    ], dtype=np.float32))
     platform_adata.obs['type'] = pd.Series(['a','a','b','b','c','c','d','d','d'],dtype='category',index=platform_adata.obs.index)
     platform_adata.obsm['type_obsm'] = pd.get_dummies(platform_adata.obs['type'])
     return ( adata, platform_adata )

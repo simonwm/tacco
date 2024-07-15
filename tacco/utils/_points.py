@@ -75,19 +75,19 @@ def dataframe2anndata(
 
     dtype = min_dtype(len(row))
     if var_key is None:
-        counts = scipy.sparse.csr_matrix((len(row.cat.categories),0))
+        counts = scipy.sparse.csr_matrix((len(row.cat.categories),0),dtype=dtype)
     else:
         if count_key is None:
             count = np.ones_like(row, dtype=dtype)
         else:
             count = data[count_key]
         counts = scipy.sparse.coo_matrix((count, (row.cat.codes,col.cat.codes)))
-        counts = counts.tocsr()
+        counts = counts.tocsr().astype(dtype)
 
     obs = pd.DataFrame(index=row.cat.categories.astype(str))
     var = None if var_key is None else pd.DataFrame(index=col.cat.categories.astype(str))
 
-    adata = ad.AnnData(counts, obs=obs, var=var, dtype=dtype)
+    adata = ad.AnnData(counts, obs=obs, var=var)
 
     adata.obs.index.name = obs_key
     adata.var.index.name = var_key

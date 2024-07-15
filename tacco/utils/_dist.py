@@ -90,7 +90,7 @@ def bin(
     bin_coords = np.array([((_coords[:,d] - mins[d]) // bin_size).astype(dtype) for d in range(n_dim) ]).T
 
 #    bind = [np.arange(mins[d],maxs[d],bin_size) for d in range(n_dim) ]
-#    counts = np.array([ np.histogramdd(sub[position_keys].to_numpy(), bins=bind)[0] for g, sub in data.groupby(count_key) ])
+#    counts = np.array([ np.histogramdd(sub[position_keys].to_numpy(), bins=bind)[0] for g, sub in data.groupby(count_key, observed=False) ])
 #    bin_coords = np.array([x.T for x in np.meshgrid(*[list(range(len(b[:-1]))) for b in bind])])
 
     if bin_keys is None:

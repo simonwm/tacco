@@ -50,11 +50,17 @@ def get_contributions(
     position_key
         The `.obsm` key or array-like of `.obs` keys with the position space
         coordinates. If `None`, no position splits are performed.
+        NOTE: Splitting samples spatially on the fly is deprecated. Instead,
+        use :func:`~tacco.utils.split_spatial_samples` explicitly and supply it
+        as the `sample_key`.
     position_split
         The number of splits per spatial dimension before enrichment. Can be a
         tuple with the spatial dimension as length to assign a different split
         per dimension. If `None`, no position splits are performed. See also
         `min_obs`.
+        NOTE: Splitting samples spatially on the fly is deprecated. Instead,
+        use :func:`~tacco.utils.split_spatial_samples` explicitly and supply it
+        as the `sample_key`.
     min_obs
         The minimum number of observations per sample: if less observations are
         available, the sample is not used. This also limits the number of
@@ -166,7 +172,7 @@ def get_contributions(
         if value_key in adata_obs.columns and (value_location is None or value_location == 'obs'):
             found.append('obs')
             if hasattr(adata_obs[value_key], 'cat'):
-                obs = pd.get_dummies(adata_obs[value_key])
+                obs = pd.get_dummies(adata_obs[value_key], dtype=np.uint8)
                 obs.columns.name = value_key
             else:
                 obs = pd.DataFrame({value_key:adata_obs[value_key]})
@@ -243,7 +249,7 @@ def get_contributions(
         
         obs.columns.name = value_key.name if hasattr(value_key,'name') and value_key.name is not None else 'value'
         obs.columns = obs.columns.astype('category')
-    
+ 
     if sample_key is None:
         sample_column = None
     else:
@@ -252,7 +258,7 @@ def get_contributions(
     if reads:
         counts = get.counts(adata, counts_location=counts_location, annotation=False, copy=False)
         totals = utils.get_sum(counts.X, axis=1)
-        obs *= totals[:,None]
+        obs = obs * totals[:,None].astype(np.float64, copy=False)
     
     # prepare positions aleady here to follow obs filtering in the following steps
     positions = None
@@ -280,7 +286,8 @@ def get_contributions(
     
     # divide spatial samples spatially into subsamples: keeps all the correlation structure
     if position_key is not None and position_split is not None:
-        
+        import warnings
+        warnings.warn(f'Splitting samples spatially on the fly is deprecated. Instead, use tacco.utils.split_spatial_samples explicitly and supply it as the sample_key.', DeprecationWarning)
         sample_column = utils.spatial_split(positions, position_key=positions.columns, sample_key=sample_column, position_split=position_split, min_obs=min_obs)
             
     else: # filter out too small samples
@@ -308,11 +315,11 @@ def get_contributions(
             sums = x
         elif isinstance(reduction, str):
             if reduction == 'sum':
-                sums = x.sum(axis=0, skipna=True)
+                sums = pd.Series(np.nansum(x.to_numpy(), axis=0, dtype=np.float64), index=x.columns)
             elif reduction == 'mean':
-                sums = x.mean(axis=0, skipna=True)
+                sums = pd.Series(np.nanmean(x.to_numpy(), axis=0, dtype=np.float64), index=x.columns)
             elif reduction == 'median':
-                sums = x.median(axis=0, skipna=True)
+                sums = pd.Series(np.nanmedian(x.to_numpy(), axis=0), index=x.columns)
             else:
                 raise ValueError('`reduction` "%s" is not implemented.' % reduction)
         else:
@@ -327,10 +334,10 @@ def get_contributions(
             if normalization == 'sum':
                 # normalize total to 1 for each groupXsample
                 #factor = sums.to_numpy().sum(axis=-1, skipna=True)
-                factor = np.nansum(sums.to_numpy(), axis=-1)
+                factor = np.nansum(sums.to_numpy(), axis=-1, dtype=np.float64)
             elif normalization == 'percent':
                 # normalize total to 1 for each groupXsample
-                factor = np.nansum(sums.to_numpy(), axis=-1) / 100
+                factor = np.nansum(sums.to_numpy(), axis=-1, dtype=np.float64) / 100
             elif normalization in ['gmean','clr']:
                 # normalize by geometric mean for each groupXsample
                 sums_le_0 = ~(sums>0) # also includes nans
@@ -344,7 +351,7 @@ def get_contributions(
                         min_sums = sums[~sums_le_0].to_numpy().min()
                         sums = sums.copy()
                         sums[sums_le_0] = min_sums * 1e-3
-                    factor = stats.gmean(sums,axis=-1)
+                    factor = stats.gmean(sums,axis=-1, dtype=np.float64)
             elif normalization in sums.index:
                 factor = sums[normalization]
             else:
@@ -361,7 +368,7 @@ def get_contributions(
             except Exception as e:
                 raise ValueError('The supplied `normalization` is neither string nor a working callable!')
     
-    compositions = obs.groupby(grouping, group_keys=False).apply(_normalize)
+    compositions = obs.groupby(grouping, group_keys=False, observed=False).apply(_normalize)
     
     if len(compositions.index) == len(groups.index) and (compositions.index == groups.index).all():
         compositions.index = pd.MultiIndex.from_arrays([groups,pd.Series(groups.index,index=groups.index)])
@@ -480,11 +487,17 @@ def enrichments(
     position_key
         The `.obsm` key or array-like of `.obs` keys with the position space
         coordinates. If `None`, no position splits are performed.
+        NOTE: Splitting samples spatially on the fly is deprecated. Instead,
+        use :func:`~tacco.utils.split_spatial_samples` explicitly and supply it
+        as the `sample_key`.
     position_split
         The number of splits per spatial dimension before enrichment. Can be a
         tuple with the spatial dimension as length to assign a different split
         per dimension. If `None`, no position splits are performed. See also
         `min_obs`.
+        NOTE: Splitting samples spatially on the fly is deprecated. Instead,
+        use :func:`~tacco.utils.split_spatial_samples` explicitly and supply it
+        as the `sample_key`.
     reference_group
         The particular group value to which all other groups should be
         compared. This group will be compared to the rest. If `None`, all

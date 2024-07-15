@@ -83,7 +83,7 @@ def subsample_annotation(
     
     selection = np.concatenate([
         utils.complete_choice(df.index, counts.loc[l,'new'], seed=seed)
-        for l,df in adata.obs.groupby(annotation_key)
+        for l,df in adata.obs.groupby(annotation_key,observed=False)
     ])
     
     return adata[selection]

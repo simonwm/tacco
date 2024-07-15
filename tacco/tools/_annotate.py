@@ -180,6 +180,9 @@ def boost_annotation_method(
         
         if bisection_divisor < 2:
             raise ValueError('`bisection_divisor` is smaller than 2!')
+        
+        if not pd.api.types.is_float_dtype(adata.X):
+            raise ValueError(f'Bisectioning is only possible for floating point data in `.X`, but it got {adata.X.dtype}!')
 
         def get_bisections(bisections, bisection_divisor):
             remaining = [1.0]
@@ -229,8 +232,8 @@ def boost_annotation_method(
                 utils.row_scale(reconstruction, cell_prior)
 
                 if len(adata.obs.index) == 1 and scipy.sparse.issparse(reconstruction): # edgecase bug in scanpy
-                    adata.X = adata.X.A
-                    reconstruction = reconstruction.A
+                    adata.X = adata.X.toarray()
+                    reconstruction = reconstruction.toarray()
                 adata.X -= current * reconstruction
 
                 del reconstruction
@@ -408,7 +411,7 @@ def multi_center_annotation_method(
         sc.pp.pca(preped, random_state=42, n_comps=min(10,min(preped.shape[0],preped.shape[1])-1))
         
         new_cats = []
-        for cat, df in reference.obs.groupby(annotation_key):
+        for cat, df in reference.obs.groupby(annotation_key, observed=False):
             _multi_center = min(multi_center, df.shape[0])
             
             X = preped[df.index].obsm['X_pca']

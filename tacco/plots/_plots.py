@@ -1111,7 +1111,7 @@ def scatter(
             raise ValueError(f'The `group_key` {group_key!r} is not `None`, but `adata` is not a single `AnnData` instance!')
         if group_key not in adata.obs:
             raise ValueError(f'The `group_key` {group_key!r} is not available in `adata.obs`!')
-        adata = { c: adata[df.index] for c, df in adata.obs.groupby(group_key) if len(df) > 0 }
+        adata = { c: adata[df.index] for c, df in adata.obs.groupby(group_key, observed=False) if len(df) > 0 }
     
     typing_data, adatas, methods, types, colors, coords = _validate_scatter_args(adata, position_key, keys, colors, show_only, method_labels=method_labels, counts_location=counts_location, compositional=compositional)
     n_solutions, n_samples, n_types = len(typing_data), len(adatas), len(types)
@@ -3608,7 +3608,7 @@ def annotated_heatmap(
                     raise ValueError(f'`var_key` {var_key!r} is not a column of `adata.var`!')
                 if not hasattr(adata.var[var_key], 'cat'):
                     print(f'WARNING: `var_key` {var_key!r} is not a categorical column of `adata.var`! Treating it as a categorical column...')
-                marker = {c: df.index for c,df in adata.var.groupby(var_key)}
+                marker = {c: df.index for c,df in adata.var.groupby(var_key, observed=False)}
 
         all_marker = [c for l,m in marker.items() for c in m]
         # reorder genes to represent the annotation
@@ -3631,7 +3631,7 @@ def annotated_heatmap(
         if not hasattr(adata.obs[obs_key], 'cat'):
             print(f'WARNING: `obs_key` {obs_key!r} is not a categorical column of `adata.obs`! Treating it as a categorical column...')
 
-        cells = {c: df.index for c,df in adata.obs.groupby(obs_key)}
+        cells = {c: df.index for c,df in adata.obs.groupby(obs_key, observed=False)}
         all_cells = [c for l,m in cells.items() for c in m]
         # reorder cells to represent the annotation
         adata = adata[all_cells]
@@ -3846,7 +3846,7 @@ def annotation_coordinate(
     if group_key is None:
         group_adatas = {'':adata}
     else:
-        group_adatas = {group:adata[df.index] for group,df in adata.obs.groupby(group_key) if len(df)>0 }
+        group_adatas = {group:adata[df.index] for group,df in adata.obs.groupby(group_key, observed=False) if len(df)>0 }
     
     if annotation_key in adata.obs:
         annotation = adata.obs[annotation_key]
@@ -4012,8 +4012,8 @@ def dotplot(
     marker_counts = adata[:,markers].to_df()
     if log1p:
         marker_counts = np.log1p(marker_counts)
-    mean_exp = pd.DataFrame({c: marker_counts.loc[df.index].mean(axis=0) for c,df in adata.obs.groupby(group_key) })
-    mean_pos = pd.DataFrame({c: (marker_counts.loc[df.index] != 0).mean(axis=0) for c,df in adata.obs.groupby(group_key) })
+    mean_exp = pd.DataFrame({c: marker_counts.loc[df.index].mean(axis=0) for c,df in adata.obs.groupby(group_key, observed=False) })
+    mean_pos = pd.DataFrame({c: (marker_counts.loc[df.index] != 0).mean(axis=0) for c,df in adata.obs.groupby(group_key, observed=False) })
 
     if marks is not None:
         marks = marks.reindex_like(mean_pos)

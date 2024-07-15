@@ -346,7 +346,7 @@ def co_occurrence(
     # split the data into samples to treat separately
         
     if sample_key is not None:
-        sample_adatas = { sample: adata[df.index] for sample, df in adata.obs.groupby(sample_key) }
+        sample_adatas = { sample: adata[df.index] for sample, df in adata.obs.groupby(sample_key, observed=False) }
         samples = list(sample_adatas.keys())
         sample_adatas = list(sample_adatas.values())
         sample_labels = [ labels.loc[_adata.obs.index] for _adata in sample_adatas ]
@@ -791,7 +791,7 @@ def annotation_coordinate(
     if sample_key is None:
         sample_adatas = [adata]
     else:
-        sample_adatas = [adata[df.index] for sample,df in adata.obs.groupby(sample_key)]
+        sample_adatas = [adata[df.index] for sample,df in adata.obs.groupby(sample_key,observed=False)]
     
     if distance_key is None:
         if verbose > 0:

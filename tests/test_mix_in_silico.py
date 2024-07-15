@@ -8,8 +8,8 @@ import tacco as tc
 @pytest.fixture(scope="session")
 def adata_and_mixture():
     rng = np.random.Generator(np.random.PCG64(42))
-    adataA = ad.AnnData(rng.poisson([0.5,8],[4,2]),dtype=np.uint8)
-    adataB = ad.AnnData(rng.poisson([8,0.5],[4,2]),dtype=np.uint8)
+    adataA = ad.AnnData(rng.poisson([0.5,8],[4,2]).astype(np.uint8))
+    adataB = ad.AnnData(rng.poisson([8,0.5],[4,2]).astype(np.uint8))
     adata = ad.concat([adataA,adataB],label='celltype',index_unique='-')
     
     # Fixed result from reference run
@@ -25,7 +25,7 @@ def adata_and_mixture():
        [ 9.,  8.],
        [ 6.,  8.],
        [ 0.,  0.],
-    ])),dtype=np.float64,obs=pd.DataFrame(np.array([
+    ]),dtype=np.float64),obs=pd.DataFrame(np.array([
        [0.55458479, 0.466721  ],
        [0.06381726, 0.04380377],
        [0.82763117, 0.15428949],
@@ -75,7 +75,7 @@ def test_mix_in_silico(adata_and_mixture, dtype, sparsity,):
     elif sparsity == 'csc':
         adata.X = scipy.sparse.csc_matrix(adata.X)
     elif sparsity == 'dense':
-        mixture.X = mixture.X.A
+        mixture.X = mixture.X.toarray()
     
     adata.X = adata.X.astype(dtype)
     

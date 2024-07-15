@@ -103,19 +103,20 @@ def _scale(cx,bead_type_map,type_profiles, delta=1e-6, batch_size=1000, n_jobs=N
     # workaround: add epsilon expression probability for every gene in every celltype
     type_profiles = type_profiles + 1 / type_profiles.shape[0] * 1e-3
     type_profiles = type_profiles / type_profiles.sum(axis=0)
-    
-    cx = cx.astype(float)
-    counts_per_bead_and_gene = cx
-    counts_per_bead = np.array(counts_per_bead_and_gene.sum(axis=1)).flatten().astype(cx.dtype)
+
+    result_dtype = np.result_type(cx,bead_type_map,type_profiles)
+
+    counts_per_bead_and_gene = cx.astype(result_dtype,copy=False)#.astype(float)
+    counts_per_bead = np.array(counts_per_bead_and_gene.sum(axis=1)).flatten()
     counts_per_bead_and_type = bead_type_map * counts_per_bead[:,None]
 
-    x = type_profiles.astype(cx.dtype)  # b_rescaled x will be diag(a_b).x.diag(b_b)
+    x = type_profiles.astype(result_dtype, copy=False) # b_rescaled x will be diag(a_b).x.diag(b_b)
     
-    u = counts_per_bead_and_gene.T.copy()          # per_gene_and_bead
-    v = counts_per_bead_and_type.astype(cx.dtype) # per_bead_and_type
+    u = counts_per_bead_and_gene.T.astype(result_dtype, copy=True) # per_gene_and_bead
+    v = counts_per_bead_and_type.astype(result_dtype, copy=False)   # per_bead_and_type
 
     a,b = parallel_matrix_scaling(x,u,v, batch_size=batch_size, n_jobs=n_jobs)
-        
+    
     # rescaled splitted count matrix is a_gb x_gt b_bt
     return a,b,x
 
@@ -273,7 +274,7 @@ def split_beads(tdata, bead_type_map, type_profiles, min_counts=None, seed=42, d
         print(f'removed {(nonzero_beads).sum() - len(beads)} of {(nonzero_beads).sum()} observations from count matrix due to missing intersection with mapping')
     
     types = type_profiles.columns.intersection(bead_type_map.columns)
-    tdata = tdata[beads,genes]
+    tdata = tdata[beads,genes].copy()
     type_profiles = type_profiles.loc[genes,types]
     bead_type_map = bead_type_map.loc[beads,types]
     
@@ -340,10 +341,12 @@ def combine_layers(adata, layer_mapping, remove_old_layers=False):
         else:
             print(f'Warning: requested layer {old!r} did not exist in adata!')
     
+    result_dtype = np.result_type(*[ adata.layers[old].dtype for olds in contributions.values() for old in olds ])
+
     for new, olds in contributions.items():
         if len(olds) == 0:
             print(f'Warning: new layer {new!r} effectively did not get any mapping in adata and is set to 0!')
-            adata.layers[new] = csr_matrix(adata.X.shape)
+            adata.layers[new] = csr_matrix(adata.X.shape, dtype=result_dtype)
         else:
             X = adata.layers[olds[0]]
             if remove_old_layers:
@@ -408,7 +411,7 @@ def merge_beads(mdata, merge_annotation_name='layers', bead_annotation_name='bc'
     if mean_keys is not None:
         if isinstance(mean_keys, str):
             mean_keys = [mean_keys]
-        means = obs.groupby('__cat_codes__')[mean_keys].mean()
+        means = obs.groupby('__cat_codes__',observed=False)[mean_keys].mean()
         
     obs.drop_duplicates(subset=['__cat_codes__'], inplace=True)
     obs.sort_values(by=['__cat_codes__'], inplace=True)

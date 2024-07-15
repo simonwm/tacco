@@ -96,7 +96,7 @@ def _construct_gene2DB_matrix(tax_id):
     merge_adata = ad.AnnData(merge_matrix, obs=pd.DataFrame(index=hom_df['Symbol'].cat.categories), var=pd.DataFrame(index=hom_df[homology_key].cat.categories))
     
     hom_df[homology_key] = hom_df[homology_key].astype(str)
-    merge_adata.var[f'{tax_id} orthologs'] = hom_df.groupby(homology_key)['Symbol'].apply(lambda x: list(x))
+    merge_adata.var[f'{tax_id} orthologs'] = hom_df.groupby(homology_key, observed=False)['Symbol'].apply(lambda x: list(x))
     for dbck in merge_adata.var[merge_adata.var[f'{tax_id} orthologs'].isna()].index:
         merge_adata.var.loc[dbck,f'{tax_id} orthologs'] = []
     
