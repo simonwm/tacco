@@ -13,7 +13,7 @@ from .. import get
 from .. import preprocessing
 
 def _round_X(adata):
-    if scipy.sparse.issparse(adata.X.data):
+    if scipy.sparse.issparse(adata.X):
         adata.X.data = np.round(adata.X.data)
     else:
         adata.X = np.round(adata.X)
