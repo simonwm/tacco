@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath('..'))  # Source code dir relative to this fi
 import tacco
 
 project = 'TACCO'
-copyright = '2022, Broad Institute'
+copyright = '2022-2025, Broad Institute, 2025-2026 The TACCO Project Maintainers'
 #author = tacco.__author__
 
 # The full version, including alpha/beta/rc tags
@@ -24,6 +24,7 @@ extensions = [
     'sphinx.ext.viewcode',  # Add a link to the Python source code for classes, functions etc.
     #'sphinx_autodoc_typehints', # Automatically document param types (less noise in class signature)
     'nbsphinx',  # Integrate Jupyter Notebooks and Sphinx
+    'sphinx_gallery',
     'sphinx_gallery.load_style',
     'IPython.sphinxext.ipython_console_highlighting',
     'sphinx.ext.napoleon',

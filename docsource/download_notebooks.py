@@ -13,13 +13,13 @@ os.makedirs('notebooks', exist_ok=True)
 
 repo = 'simonwm/tacco_examples'
 branch = 'main'
-repo_url = f'https://github.com/{repo}/tree/{branch}/notebooks'
+api_url = f'https://api.github.com/repos/{repo}/contents/notebooks?ref={branch}'
 raw_url = f'https://raw.githubusercontent.com/{repo}/{branch}/notebooks'
-with urllib.request.urlopen(repo_url) as f:
-    response = f.read().decode('utf-8')
 
-pieces = response.split('.ipynb">')[1:]
-basenames = [p.split('.ipynb</a>')[0] for p in pieces]
+with urllib.request.urlopen(api_url) as f:
+    import json
+    data = json.loads(f.read().decode('utf-8'))
+    basenames = [item['name'].replace('.ipynb', '') for item in data if item['name'].endswith('.ipynb')]
 
 # download all notebooks
 
