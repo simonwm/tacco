@@ -12,11 +12,14 @@ from . import _helper as helper
 from .. import get
 from .. import preprocessing
 
-def _round_X(adata):
+def _round_X(adata, inplace=False):
+    if not inplace:
+        adata = adata.copy()
     if scipy.sparse.issparse(adata.X):
         adata.X.data = np.round(adata.X.data)
     else:
         adata.X = np.round(adata.X)
+    return adata
 
 def annotate_RCTD(
     adata,
@@ -29,6 +32,9 @@ def annotate_RCTD(
     doublet=False,
     min_ct=0,
     UMI_min_sigma=None,
+    Reference_n_max_cells=np.inf,
+    Reference_min_UMI=0,
+    RCTD_counts_MIN=0,
     n_cores=None,
     working_directory=None,
     verbose=True,
@@ -57,8 +63,9 @@ def annotate_RCTD(
         `('layer','my_counts_key')`, ... For details see
         :func:`~tacco.get.counts`.
     conda_env
-        The path of a conda environment where `RCTD` is installed and
-        importable as 'library(RCTD)'.
+        The name or path of a conda environment where `RCTD` is installed and
+        importable as 'library(RCTD)' or 'library(spacexr)'. If `None`, uses
+        the current environment.
     x_coord_name
         Name of an `.obs` column to forward to RCTD as x coordinates. If not
         available, forwards a new 0-only column.
@@ -74,6 +81,25 @@ def annotate_RCTD(
         datasets, and breaks RCTD. Therefore the default heuristic for `None`
         here is at `min(300,median(total_counts_per_observation)-1)`. See RCTD
         docs for details about this parameter. 
+    Reference_n_max_cells
+        In RCTD this number limits the number of cells used in the reference
+        per celltype (by default to 10000) and subsamples them if more cells
+        are available. For better transparency, this should be done already
+        in python outside of RCTD. Therefore this parameter is set to infinity
+        in the TACCO wrapper function by default, but can be set using this
+        parameter.
+    Reference_min_UMI
+        In RCTD this number sets the minimum number of UMIs a cells must have
+        to be used in the reference (by default 100). For transparency, this
+        should be done already in python outside of RCTD. Therefore this
+        parameter is set to 0 the TACCO wrapper function by default, but can be
+        set using this parameter.
+    RCTD_counts_MIN
+        In RCTD this number sets the minimum number of counts (by default 10)
+        in internally selected genes which a pixel needs to have in order to be
+        kept. For transparency, this should be done already in python outside
+        of RCTD. Therefore this parameter is set to 0 the TACCO wrapper
+        function by default, but can be set using this parameter.
     n_cores
         Number of cores to use for RCTD. If `None`, use all available cores.
     working_directory
@@ -89,16 +115,17 @@ def annotate_RCTD(
     
     """
     
-    if conda_env is None:
-        conda_env = '/ahg/regevdata/users/jklugham/src/anaconda3/envs/R_RCTD'
-    if not os.path.exists(conda_env):
-        raise Exception('The conda environment "%s" does not exist! A conda environment with a working `RCTD` setup is needed and can be supplied by the `conda_env` argument.' % (conda_env))
+    if conda_env is not None:
+        if conda_env not in utils.get_conda_envs():
+            print('The conda environment "%s" is not known to the "conda" executable. Trying to supply it as path to the environment.' % (conda_env))
+            if not os.path.exists(conda_env):
+                raise Exception('The conda environment "%s" does not exist! A conda environment with a working `RCTD` setup is needed and can be supplied by the `conda_env` argument.' % (conda_env))
         
     adata, reference, annotation_key = helper.validate_annotation_args(adata, reference, annotation_key, counts_location, full_reference=True)
     
     # since 1.2: RCTD requires integer input - to make it work also otherwise, round data here.
-    _round_X(adata)
-    _round_X(reference)
+    adata = _round_X(adata) # could be implemented more efficiently if the copy is only made if the anndata was not already copied in the current annotate call by marking copied anndatas with a flag in .uns at the possible copy sites
+    reference = _round_X(reference)
     
     if UMI_min_sigma is None:
         UMI_min_sigma = min(300,np.median(utils.get_sum(adata.X,axis=1))-1)
@@ -159,7 +186,7 @@ read_reference=function(adata_file,ct_col) {
     cell_types = meta_data[,ct_col]
     names(cell_types) = row.names(meta_data)
     
-    return(Reference(as(t(adata$X),'dgCMatrix'), as.factor(cell_types)))
+    return(Reference(as(t(adata$X),'dgCMatrix'), as.factor(cell_types), n_max_cells = """ + f'{"Inf" if np.isinf(Reference_n_max_cells) else Reference_n_max_cells}, min_UMI = {Reference_min_UMI}' + """))
 }
 
 read_spatial=function (adata_file,x_col,y_col) {
@@ -179,7 +206,7 @@ print('reading reference')
 reference=read_reference(sc_adata,ct_col)
 
 print('running RCTD')
-myRCTD <- create.RCTD(puck, reference, max_cores = cores, CELL_MIN_INSTANCE = min_ct,  UMI_min = 0, UMI_min_sigma=UMI_min_sigma) # UMI_min filter is already applied when data arrives here
+myRCTD <- create.RCTD(puck, reference, max_cores = cores, CELL_MIN_INSTANCE = min_ct,  UMI_min = 0, UMI_min_sigma=UMI_min_sigma, counts_MIN=""" + f'{RCTD_counts_MIN}' + """) # UMI_min filter is already applied when data arrives here
 
 myRCTD <- run.RCTD(myRCTD, doublet_mode = mode)
 
@@ -252,10 +279,13 @@ write.table(weights,paste0(out,".tsv"),sep="\t",quote=FALSE)
     utils.write_adata_x_var_obs(reference, filename=working_directory + ref_file_name, compression='gzip')
     #print('running RCTD')
     process = subprocess.Popen('bash', shell=False, universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-    command = f'\
-cd {working_directory}\n\
+    activate_conda_env = '' if conda_env is None else f'\
 source $(dirname $(dirname $(which conda)))/bin/activate\n\
 conda activate {conda_env}\n\
+'
+    command = f'\
+cd {working_directory}\n\
+{activate_conda_env}\
 Rscript "{R_script_file_name}" "{ref_file_name}" "{data_file_name}" "{result_file_namebase}" {min_ct} {n_cores} "{mode}" "{annotation_key}" "{x_coord_name}" "{y_coord_name}" {UMI_min_sigma}\n\
 '
     #print(command)
@@ -270,7 +300,10 @@ Rscript "{R_script_file_name}" "{ref_file_name}" "{data_file_name}" "{result_fil
         if successful:
             type_fractions = pd.read_csv(working_directory + result_file_name, sep='\t')
         else:
-            raise Exception('RCTD did not work properly!')
+            if conda_env is None:
+                raise Exception(f'Calling RCTD via Rscript was not successful in the current environment! Either fix the RCTD/spacexr installation in the current environment or supply the path to a conda environment with a working RCTD/spacexr in the `conda_env` argument!')
+            else:
+                raise Exception(f'Calling RCTD via Rscript was not successful in the {conda_env} environment supplied by the `conda_env` argument! RCTD/spacexr might not be installed correctly in this environment.')
     finally:
         if tempdir is not None:
             tempdir.cleanup()

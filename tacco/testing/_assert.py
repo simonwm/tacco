@@ -56,9 +56,9 @@ def assert_sparse_equal(left, right, rtol=1e-05, atol=1e-08):
     assert(left.dtype == right.dtype)
     assert_tuple_equal(left.shape, right.shape)
     # transform to csr to have well defined order
-    left = scipy.sparse.csr_matrix(left.tocoo())
+    left = scipy.sparse.csr_matrix(left.tocoo(copy=True))
     left.sort_indices()
-    right = scipy.sparse.csr_matrix(right.tocoo())
+    right = scipy.sparse.csr_matrix(right.tocoo(copy=True))
     right.sort_indices()
     assert_tuple_equal(left.data.shape, right.data.shape)
     assert(np.allclose(left.data, right.data, rtol=rtol, atol=atol, equal_nan=True))
@@ -98,7 +98,10 @@ def assert_adata_equal(left, right, rtol=1e-05, atol=1e-08):
     for k in right.obsm:
         if k not in left.obsm:
             raise AssertionError(f'The obsm key "{k}" is in adata right, but not in adata left!')
-        assert_frame_equal(left.obsm[k],right.obsm[k])
+        if isinstance(left.obsm[k], pd.DataFrame):
+            assert_frame_equal(left.obsm[k],right.obsm[k])
+        else:
+            assert_dense_equal(left.obsm[k],right.obsm[k])
     for k in left.obsp:
         if k not in right.obsp:
             raise AssertionError(f'The obsp key "{k}" is in adata left, but not in adata right!')
@@ -116,7 +119,10 @@ def assert_adata_equal(left, right, rtol=1e-05, atol=1e-08):
     for k in right.varm:
         if k not in left.varm:
             raise AssertionError(f'The varm key "{k}" is in adata right, but not in adata left!')
-        assert_frame_equal(left.varm[k],right.varm[k])
+        if isinstance(left.varm[k], pd.DataFrame):
+            assert_frame_equal(left.varm[k],right.varm[k])
+        else:
+            assert_dense_equal(left.varm[k],right.varm[k])
     for k in left.varp:
         if k not in right.varp:
             raise AssertionError(f'The varp key "{k}" is in adata left, but not in adata right!')

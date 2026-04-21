@@ -5,7 +5,7 @@ import anndata as ad
 import tacco as tc
 import scipy.sparse
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def adata_reference_and_typing0():
     reference = ad.AnnData(X=np.array([
         [1,0,0],
@@ -34,7 +34,7 @@ def adata_reference_and_typing0():
         [1,1,0],
         [1,1,0],
         [1,1,0],
-    ], dtype=np.float32))
+    ], dtype=np.int32))
     adata.obsm['type']=pd.DataFrame(np.array([
         [1,0,0],
         [1,0,0],
@@ -52,7 +52,7 @@ def adata_reference_and_typing0():
     adata.uns['annotation_prior']=pd.Series(adata.obsm['type'].sum(axis=0).to_numpy(),index=adata.obsm['type'].columns)
     return ( adata, reference, )
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def adata_reference_and_typing1():
     reference = ad.AnnData(scipy.sparse.csr_matrix([
             [10,0,0],
@@ -62,7 +62,7 @@ def adata_reference_and_typing1():
     )
     adata = ad.AnnData(X=scipy.sparse.csr_matrix([
         [3,2,1],
-    ], dtype=np.float32))
+    ], dtype=np.float64))
     adata.obsm['type']=pd.DataFrame(np.array([
         [0.5,0.5],
     ]),index=adata.obs.index,columns=pd.Index(reference.obs['type'].cat.categories,dtype=reference.obs['type'].dtype,name='type'))
@@ -91,21 +91,21 @@ def adata_reference_and_typing1():
     adata.uns['annotation_prior']=pd.Series(adata.obsm['type'].sum(axis=0).to_numpy(),index=adata.obsm['type'].columns)
     return ( adata, reference, )
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def adata_reference_and_typing2():
     reference = ad.AnnData(X=np.array([
-        [2,0,0,0,0,0,0,0,0,0,0,0,],
-        [0,2,0,0,0,0,0,0,0,0,0,0,],
-        [0,0,2,0,0,0,0,0,0,0,0,0,],
-        [0,0,0,2,0,0,0,0,0,0,0,0,],
-        [0,0,0,0,2,0,0,0,0,0,0,0,],
-        [0,0,0,0,0,2,0,0,0,0,0,0,],
-        [0,0,0,0,0,0,2,0,0,0,0,0,],
-        [0,0,0,0,0,0,0,2,0,0,0,0,],
-        [0,0,0,0,0,0,0,0,2,0,0,0,],
-        [0,0,0,0,0,0,0,0,0,2,0,0,],
-        [0,0,0,0,0,0,0,0,0,0,2,0,],
-        [0,0,0,0,0,0,0,0,0,0,0,2,],
+        [2.5,0,0,0,0,0,0,0,0,0,0,0,],
+        [0,2.5,0,0,0,0,0,0,0,0,0,0,],
+        [0,0,2.5,0,0,0,0,0,0,0,0,0,],
+        [0,0,0,2.5,0,0,0,0,0,0,0,0,],
+        [0,0,0,0,2.5,0,0,0,0,0,0,0,],
+        [0,0,0,0,0,2.5,0,0,0,0,0,0,],
+        [0,0,0,0,0,0,2.5,0,0,0,0,0,],
+        [0,0,0,0,0,0,0,2.5,0,0,0,0,],
+        [0,0,0,0,0,0,0,0,2.5,0,0,0,],
+        [0,0,0,0,0,0,0,0,0,2.5,0,0,],
+        [0,0,0,0,0,0,0,0,0,0,2.5,0,],
+        [0,0,0,0,0,0,0,0,0,0,0,2.5,],
     ], dtype=np.float32))
     reference.obs=pd.DataFrame({
         'type': pd.Series([0,0,0,0,1,1,1,1,2,2,2,2,],dtype='category',index=pd.Index(range(reference.shape[0])).astype(str)),
@@ -229,7 +229,7 @@ def adata_reference_and_typing2():
     adata.uns['annotation_prior']=pd.Series(adata.obsm['type'].sum(axis=0).to_numpy(),index=adata.obsm['type'].columns)
     return ( adata, reference, )
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def adata_reference_and_typing(adata_reference_and_typing0, adata_reference_and_typing1, adata_reference_and_typing2):
     return [
         adata_reference_and_typing0,
@@ -243,7 +243,12 @@ def test_annotate_NMFreg(adata_reference_and_typing, dataset):
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
 
+    reference_copy = reference.copy()
+
     result = tc.tl.annotate(adata, reference, annotation_key='type', method='NMFreg', K=3)
+
+    del reference.varm['type'] # restore reference up to intended side-effects
+    tc.testing.assert_adata_equal(reference, reference_copy, rtol=1e-14, atol=1e-14)
 
     tc.testing.assert_frame_equal(result, typing, rtol=1e-14, atol=1e-14)
 
@@ -252,7 +257,12 @@ def test_annotate_nnls(adata_reference_and_typing, dataset):
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
 
+    reference_copy = reference.copy()
+
     result = tc.tl.annotate(adata, reference, annotation_key='type', method='nnls')
+
+    del reference.varm['type'] # restore reference up to intended side-effects
+    tc.testing.assert_adata_equal(reference, reference_copy, rtol=1e-14, atol=1e-14)
 
     tc.testing.assert_frame_equal(result, typing, rtol=1e-14, atol=1e-14)
 
@@ -263,8 +273,13 @@ def test_annotate_OT(adata_reference_and_typing, dataset, decomposition, metric)
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
     annotation_prior=adata.uns['annotation_prior']
+
+    reference_copy = reference.copy()
     
     result = tc.tl.annotate(adata, reference, annotation_key='type', method='OT', bisections=0, annotation_prior=annotation_prior, metric=metric, decomposition=decomposition)
+
+    del reference.varm['type'] # restore reference up to intended side-effects
+    tc.testing.assert_adata_equal(reference, reference_copy, rtol=1e-14, atol=1e-14)
 
     tc.testing.assert_frame_equal(result, typing, rtol=1e-14, atol=1e-14)
 
@@ -275,8 +290,13 @@ def test_annotate_OT_deconvolution(adata_reference_and_typing, dataset, deconvol
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
     annotation_prior=adata.uns['annotation_prior']
+
+    reference_copy = reference.copy()
     
     result = tc.tl.annotate(adata, reference, annotation_key='type', method='OT', bisections=0, annotation_prior=annotation_prior, metric=metric, deconvolution=deconvolution)
+
+    del reference.varm['type'] # restore reference up to intended side-effects
+    tc.testing.assert_adata_equal(reference, reference_copy, rtol=1e-14, atol=1e-14)
 
     tc.testing.assert_frame_equal(result, typing, rtol=1e-6, atol=1e-14)
 
@@ -286,9 +306,30 @@ def test_annotate_OT_max(adata_reference_and_typing, dataset):
     typing = adata.obsm['type']
     annotation_prior=adata.uns['annotation_prior']
 
+    reference_copy = reference.copy()
+
     result = tc.tl.annotate(adata, reference, annotation_key='type', method='OT', bisections=0, annotation_prior=annotation_prior, max_annotation=1)
+
+    del reference.varm['type'] # restore reference up to intended side-effects
+    tc.testing.assert_adata_equal(reference, reference_copy, rtol=1e-14, atol=1e-14)
     
     tc.testing.assert_frame_equal(result, typing, rtol=1e-14, atol=1e-14)
+
+@pytest.mark.parametrize('dataset', [0,1,2,])
+@pytest.mark.parametrize('bisections', [0,1,2,10])
+def test_annotate_OT_bisections(adata_reference_and_typing, dataset, bisections):
+    adata, reference = adata_reference_and_typing[dataset]
+    typing = adata.obsm['type']
+    annotation_prior=adata.uns['annotation_prior']
+
+    reference_copy = reference.copy()
+
+    result = tc.tl.annotate(adata, reference, annotation_key='type', method='OT', bisections=bisections, annotation_prior=annotation_prior)
+
+    del reference.varm['type'] # restore reference up to intended side-effects
+    tc.testing.assert_adata_equal(reference, reference_copy, rtol=1e-14, atol=1e-14)
+    
+    tc.testing.assert_frame_equal(result, typing, rtol=1e-9, atol=1e-14) # rounding error for dataset 1 necessitates smaller relative error
 
 @pytest.mark.parametrize('dataset', [1,2,]) # does not make sense for degenerate types
 @pytest.mark.parametrize('multi_center', [0,1,2,10])
@@ -298,11 +339,14 @@ def test_annotate_OT_multi_center(adata_reference_and_typing, dataset, multi_cen
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
     annotation_prior=adata.uns['annotation_prior']
-    
-    adata = adata.copy() # dont change the input
+
+    reference_copy = reference.copy()
     
     tc.tl.annotate(adata, reference, annotation_key='type', method='OT', bisections=0, annotation_prior=annotation_prior, multi_center=multi_center, multi_center_amplitudes=multi_center_amplitudes, result_key='annotation', reconstruction_key=reconstruction_key)
     result = adata.obsm['annotation']
+
+    del reference.varm['type'] # restore reference up to intended side-effects
+    tc.testing.assert_adata_equal(reference, reference_copy, rtol=1e-14, atol=1e-14)
 
     tc.testing.assert_frame_equal(result, typing, rtol=1e-14, atol=1e-14)
     
@@ -336,7 +380,12 @@ def test_annotate_projection(adata_reference_and_typing, dataset, projection, bi
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
 
+    reference_copy = reference.copy()
+
     result = tc.tl.annotate(adata, reference, annotation_key='type', method='projection', bisections=bisections, projection=projection, deconvolution=deconvolution)
+
+    del reference.varm['type'] # restore reference up to intended side-effects
+    tc.testing.assert_adata_equal(reference, reference_copy, rtol=1e-14, atol=1e-14)
 
     if dataset == 1 and deconvolution == 0 and projection == 'naive': # this method has huge error on the this dataset
         tc.testing.assert_frame_equal(result, typing, rtol=1e-14, atol=2e-1)
@@ -349,7 +398,12 @@ def test_annotate_SVM(adata_reference_and_typing, dataset, mode):
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
 
+    reference_copy = reference.copy()
+
     result = tc.tl.annotate(adata, reference, annotation_key='type', method='svm', mode=mode, platform_iterations=None)
+
+    del reference.varm['type'] # restore reference up to intended side-effects
+    tc.testing.assert_adata_equal(reference, reference_copy, rtol=1e-14, atol=1e-14)
 
     if mode == 'classification':
         # classification can only find a single type per cell
@@ -360,13 +414,18 @@ def test_annotate_SVM(adata_reference_and_typing, dataset, mode):
     tc.testing.assert_frame_equal(result, typing, rtol=1e-4, atol=1e-4)
 
 @pytest.mark.skip(reason="RCTD environment is optional")
-@pytest.mark.parametrize('dataset', [0,2,]) # does not work for single observation data
+@pytest.mark.parametrize('dataset', [2,]) # skip 0: since RCTD is Spacexr it raises an exception if less than 10 differential genes are found in the dataset; skip 1: RCTD requires at least 3 observations per cell type
 @pytest.mark.parametrize('doublet', ['doublet','full'])
 def test_annotate_RCTD(adata_reference_and_typing, dataset, doublet):
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
 
+    reference_copy = reference.copy()
+
     result = tc.tl.annotate(adata, reference, annotation_key='type', method='RCTD', min_ct=1, verbose=False, platform_iterations=None, doublet=doublet, conda_env='RCTD')
+
+    del reference.varm['type'] # restore reference up to intended side-effects
+    tc.testing.assert_adata_equal(reference, reference_copy, rtol=1e-14, atol=1e-14)
 
     tc.testing.assert_frame_equal(result, typing, rtol=1e-14, atol=2e-3)
 
@@ -376,17 +435,27 @@ def test_annotate_tangram(adata_reference_and_typing, dataset):
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
 
+    reference_copy = reference.copy()
+
     result = tc.tl.annotate(adata, reference, annotation_key='type', method='tangram', verbose=True, platform_iterations=None, conda_env='tangram')
+
+    del reference.varm['type'] # restore reference up to intended side-effects
+    tc.testing.assert_adata_equal(reference, reference_copy, rtol=1e-14, atol=1e-14)
 
     tc.testing.assert_frame_equal(result, typing, rtol=4e-2, atol=4e-2) # tangram gets not reproducible results with quite some distance from the ground truth
 
 @pytest.mark.skip(reason="SingleR environment is optional")
-@pytest.mark.parametrize('dataset', [0,1,2,])
+@pytest.mark.parametrize('dataset', [0,1,]) # skip 2: SingleR v2.8.0 does not work on this test case due to upstream changes
 def test_annotate_SingleR(adata_reference_and_typing, dataset):
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
 
+    reference_copy = reference.copy()
+
     result = tc.tl.annotate(adata, reference, annotation_key='type', method='SingleR', verbose=True, platform_iterations=None, conda_env='SingleR')
+
+    del reference.varm['type'] # restore reference up to intended side-effects
+    tc.testing.assert_adata_equal(reference, reference_copy, rtol=1e-14, atol=1e-14)
 
     # SingleR can only find a single type per cell
     single_types = (typing.to_numpy() != 0).sum(axis=1) == 1
@@ -401,7 +470,12 @@ def test_annotate_WOT(adata_reference_and_typing, dataset):
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
 
+    reference_copy = reference.copy()
+
     result = tc.tl.annotate(adata, reference, annotation_key='type', method='WOT', verbose=True, platform_iterations=None)
+
+    del reference.varm['type'] # restore reference up to intended side-effects
+    tc.testing.assert_adata_equal(reference, reference_copy, rtol=1e-14, atol=1e-14)
 
     tc.testing.assert_frame_equal(result, typing, rtol=1e-7, atol=2e-2)
 
@@ -411,7 +485,12 @@ def test_annotate_NovoSpaRc(adata_reference_and_typing, dataset):
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
 
+    reference_copy = reference.copy()
+
     result = tc.tl.annotate(adata, reference, annotation_key='type', method='novosparc', verbose=True, platform_iterations=None)
+
+    del reference.varm['type'] # restore reference up to intended side-effects
+    tc.testing.assert_adata_equal(reference, reference_copy, rtol=1e-14, atol=1e-14)
 
     tc.testing.assert_frame_equal(result, typing, rtol=1e-7, atol=3.4e-1) # exact marginal enforcement by optimal transport makes a better result impossible...
 
@@ -421,7 +500,12 @@ def test_benchmark_annotate(adata_reference_and_typing, dataset):
     adata, reference = adata_reference_and_typing[dataset]
     typing = adata.obsm['type']
     annotation_prior=adata.uns['annotation_prior']
+
+    reference_copy = reference.copy()
     
     result = tc.benchmarking.benchmark_annotate(adata, reference, annotation_key='type', method='OT', bisections=0, annotation_prior=annotation_prior)
+
+    del reference.varm['type'] # restore reference up to intended side-effects
+    tc.testing.assert_adata_equal(reference, reference_copy, rtol=1e-14, atol=1e-14)
 
     tc.testing.assert_frame_equal(result['annotation'], typing, rtol=1e-14, atol=1e-14)

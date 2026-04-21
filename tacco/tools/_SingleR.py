@@ -49,8 +49,9 @@ def annotate_SingleR(
         `('layer','my_counts_key')`, ... For details see
         :func:`~tacco.get.counts`.
     conda_env
-        The path of a conda environment where `SingleR` is installed and
-        importable as 'library(SingleR)'.
+        The name or the path of a conda environment where `SingleR`, `data.table`,
+        `hdf5r`, and `sparsem` are installed. If `None`, uses the current
+        environment.
     fine_tune
         Forwards the 'fine.tune' parameter to SingleR.
     aggr_ref
@@ -58,7 +59,7 @@ def annotate_SingleR(
     genes
         Forwards the 'genes' parameter to SingleR.
     de_method
-        Forwards the 'de_method' parameter to SingleR.
+        Forwards the 'de.method' parameter to SingleR.
     working_directory
         The directory where to store all the intermediates. If `None`, a
         temporary directory is used and cleaned in the end. This option is
@@ -71,9 +72,12 @@ def annotate_SingleR(
     Returns the annotation in a :class:`~pandas.DataFrame`.
     
     """
-    
-    if conda_env is None or not os.path.exists(conda_env):
-        raise Exception(f'The conda environment {conda_env!r} does not exist! A conda environment with a working `SingleR` setup is needed and can be supplied by the `conda_env` argument.')
+
+    if conda_env is not None:
+        if conda_env not in utils.get_conda_envs():
+            print('The conda environment "%s" is not known to the "conda" executable. Trying to supply it as path to the environment.' % (conda_env))
+            if not os.path.exists(conda_env):
+                raise Exception(f'The conda environment {conda_env!r} does not exist! A conda environment with a working `SingleR` setup is needed and can be supplied by the `conda_env` argument.')
         
     adata, reference, annotation_key = helper.validate_annotation_args(adata, reference, annotation_key, counts_location, full_reference=True)
     
@@ -88,8 +92,11 @@ def annotate_SingleR(
     result_file_namebase = 'result'
     result_file_name = result_file_namebase + '.tsv'
 
+    fine_tune = 'TRUE' if fine_tune else 'FALSE'
+    aggr_ref = 'TRUE' if aggr_ref else 'FALSE'
+
     R_script_file_name = 'run.R'
-    R_script = _anndata2R_header() + """
+    R_script = _anndata2R_header() + f"""
 args=commandArgs(trailingOnly = TRUE)
 
 library(data.table)
@@ -99,10 +106,6 @@ sc_adata=args[1]
 sp_adata=args[2]
 out = args[3]
 annotation_key = args[4]
-fine.tune = args[5]
-aggr.ref = args[6]
-genes = args[7]
-de.method = args[8]
 
 print(args)
 
@@ -118,7 +121,7 @@ cell_types=reference$obs[,annotation_key]
 names(cell_types)=row.names(reference$obs)
 
 print('running SingleR')
-SingleR_result <- SingleR(test=adata.Xt, ref=reference.Xt, labels=cell_types, fine.tune=fine.tune, genes=genes, de.method=de.method, aggr.ref=aggr.ref)
+SingleR_result <- SingleR(test=adata.Xt, ref=reference.Xt, labels=cell_types, fine.tune={fine_tune}, genes="{genes}", de.method="{de_method}", aggr.ref={aggr_ref})
 
 write.table(cbind(row.names(SingleR_result),SingleR_result$labels),paste0(out,".tsv"),sep="\t",quote=FALSE,row.names=FALSE)
 """
@@ -136,11 +139,14 @@ write.table(cbind(row.names(SingleR_result),SingleR_result$labels),paste0(out,".
     utils.write_adata_x_var_obs(reference, filename=working_directory + ref_file_name, compression='gzip')
     #print('running SingleR')
     process = subprocess.Popen('bash', shell=False, universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-    command = f'\
-cd {working_directory}\n\
+    activate_conda_env = '' if conda_env is None else f'\
 source $(dirname $(dirname $(which conda)))/bin/activate\n\
 conda activate {conda_env}\n\
-Rscript "{R_script_file_name}" "{ref_file_name}" "{data_file_name}" "{result_file_namebase}" "{annotation_key}" "{fine_tune}" "{aggr_ref}" "{genes}" "{de_method}"\n\
+'
+    command = f'\
+cd {working_directory}\n\
+{activate_conda_env}\
+Rscript "{R_script_file_name}" "{ref_file_name}" "{data_file_name}" "{result_file_namebase}" "{annotation_key}" \n\
 '
     #print(command)
     out, err = process.communicate(command)
@@ -154,7 +160,10 @@ Rscript "{R_script_file_name}" "{ref_file_name}" "{data_file_name}" "{result_fil
         if successful:
             type_annotations = pd.read_csv(working_directory + result_file_name, sep='\t')
         else:
-            raise Exception('SingleR did not work properly!')
+            if conda_env is None:
+                raise Exception(f'Calling SingleR via Rscript was not successful in the current environment! Either fix the SingleR installation in the current environment or supply the path to a conda environment with a working SingleR in the `conda_env` argument!')
+            else:
+                raise Exception(f'Calling SingleR via Rscript was not successful in the {conda_env} environment supplied by the `conda_env` argument! SingleR might not be installed correctly in this environment.')
     finally:
         if tempdir is not None:
             tempdir.cleanup()

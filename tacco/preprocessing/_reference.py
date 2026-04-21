@@ -202,7 +202,7 @@ def refine_reference(
 
     #n(cg) = p(cg) / sum_a p(g|a) p(a|c)
     if issparse(counts.X):
-        p_cg = counts.X.tocoo()
+        p_cg = utils.tocoo_copy_if_necessary(counts.X)
         if p_cg is counts.X:
             p_cg = p_cg.copy()
         p_cg.data *= 1/p_cg.data.sum() # normalize as joint probability

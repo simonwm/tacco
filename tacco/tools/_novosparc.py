@@ -37,9 +37,9 @@ def _annotate_novosparc(
     dataset = reference
     # NovoSpaRc seems to be allergic to sparse data
     if scipy.sparse.issparse(dataset.X):
-        dataset = sc.AnnData(dataset.X.A, obs=dataset.obs, var=dataset.var)
+        dataset = sc.AnnData(dataset.X.toarray(), obs=dataset.obs, var=dataset.var)
     if scipy.sparse.issparse(atlas_matrix):
-        atlas_matrix = atlas_matrix.A
+        atlas_matrix = atlas_matrix.toarray()
     locations = get.positions(adata, position_key) if alpha != 1 else np.arange(0,len(adata.obs.index))[:,None]
     
     markers_to_use = np.arange(dataset.shape[1])

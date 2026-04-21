@@ -1,10 +1,31 @@
 import numpy as np
 import pandas as pd
-from scipy.sparse import issparse, csr_matrix, csc_matrix
+from scipy.sparse import issparse, csr_matrix, csc_matrix, coo_matrix
 from sklearn.utils.sparsefuncs import inplace_column_scale, inplace_row_scale
 import numba
-import mkl
 from numba import njit, prange
+
+def tocoo_copy_if_necessary(sparse_matrix):
+    """\
+    Convert a sparse matrix to COO format with proper copying to avoid scipy
+    >=1.7.0 compatibility issues where .tocoo() can corrupt the original matrix.
+    
+    Parameters
+    ----------
+    sparse_matrix
+        A scipy sparse matrix (CSR, CSC, or COO format)
+        
+    Returns
+    -------
+    A COO matrix which is a reference to the original matrix if the input is a coo_matrix and a safe copy otherwise.
+        
+    """
+    if isinstance(sparse_matrix, coo_matrix):
+        # Already COO format, no conversion needed
+        return sparse_matrix
+    else:
+        # Convert from CSR/CSC to COO with explicit copy=True to prevent corruption
+        return sparse_matrix.tocoo(copy=True)
 
 @njit(fastmath=True, cache=True)
 def _divide_serial(a,b,out):
@@ -123,7 +144,8 @@ def sparse_result_gemmT(
     if result_shape != sparse_out.shape:
         raise ValueError("The result shape implied by `A` and `B` %s dont fit to the one supplied in `sparse_out`! The corresponding shapes are %s and %s!" % (result_shape, sparse_out.shape))
     
-    _sparse_out = sparse_out.tocoo()
+    #_sparse_out = sparse_out.tocoo()
+    _sparse_out = tocoo_copy_if_necessary(sparse_out)
     if inplace and _sparse_out is not sparse_out:
         raise ValueError("`inplace` is `True` but the supplied sparse result matrix is not a coo matrix!")
     elif not inplace and _sparse_out is sparse_out:
@@ -256,12 +278,6 @@ def gemmT(
     
     A,B = cast_down_common(A,B)
     
-    numba_threads = numba.get_num_threads()
-    mkl_threads = mkl.get_max_threads()
-    if not parallel:
-        numba.set_num_threads(1)
-        mkl.set_num_threads(1)
-    
     result_shape = (A.shape[0],B.shape[0])
     inner_size = A.shape[1]
     if B.shape[1] != A.shape[1]:
@@ -269,30 +285,44 @@ def gemmT(
     
     try: # if mkl is available, use it.
         import sparse_dot_mkl
-        return sparse_dot_mkl.dot_product_mkl(A, B.T, dense=(not sparse_result));
+        import mkl
+
+        mkl_threads = mkl.get_max_threads()
+        if not parallel:
+            mkl.set_num_threads(1)
+
+        result = sparse_dot_mkl.dot_product_mkl(A, B.T, dense=(not sparse_result));
+        
+        if not parallel:
+            mkl.set_num_threads(mkl_threads)
     
     except ImportError: # use custom numba implementation
-        print('sparse_dot_mkl is not found, so a (slower) fallback is used.')
+        print('sparse_dot_mkl and/or mkl not found, so a (slower) fallback is used.')
         
+        numba_threads = numba.get_num_threads()
+        if not parallel:
+            numba.set_num_threads(1)
+    
         if issparse(A) and issparse(B):
             if not sparse_result:
                 A = A.tocsr()
                 BT = B.tocsc() # avoids intermediate during transposition: .tocsc() == .T.tocsr()
-                return _csrcsr_gemm_dense(result_shape[0], result_shape[1], A.indptr, A.indices, A.data, BT.indptr, BT.indices, BT.data)
+                result = _csrcsr_gemm_dense(result_shape[0], result_shape[1], A.indptr, A.indices, A.data, BT.indptr, BT.indices, BT.data)
             else:
-                return A@(B.T)
+                result = A@(B.T)
         elif issparse(A) and not issparse(B):
             A = A.tocsc()
-            return _cscdense_gemm_dense(result_shape[0], result_shape[1], A.indptr, A.indices, A.data, B.T)
+            result = _cscdense_gemm_dense(result_shape[0], result_shape[1], A.indptr, A.indices, A.data, B.T)
         elif not issparse(A) and issparse(B):
             BT = B.tocsc() # avoids intermediate during transposition: .tocsc() == .T.tocsr()
-            return _densecsr_gemm_dense(result_shape[0], result_shape[1], A, BT.indptr, BT.indices, BT.data)
+            result = _densecsr_gemm_dense(result_shape[0], result_shape[1], A, BT.indptr, BT.indices, BT.data)
         else:
-            return A@(B.T)
-    
-    if not parallel:
-        numba.set_num_threads(numba_threads)
-        mkl.set_num_threads(mkl_threads)
+            result = A@(B.T)
+        
+        if not parallel:
+            numba.set_num_threads(numba_threads)
+
+    return result
 
 def row_scale(
     X,
@@ -509,7 +539,7 @@ def get_sum(
     """
 
     if issparse(X):
-        result = X.sum(axis=axis, dtype=dtype).A.flatten()
+        result = X.sum(axis=axis, dtype=dtype).A.flatten() # since scipy.sparse.csr_matrix.sum returns matrix stick with .A here 
     else:
         result = X.sum(axis=axis, dtype=dtype)
     

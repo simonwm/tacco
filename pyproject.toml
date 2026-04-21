@@ -11,8 +11,8 @@ authors = [
     {name = "Jan Watter"},
 ]
 maintainers = [
-    {name = "Jan Watter", email = "jan.watter@gmail.com"},
-    {name = "Simon Mages", email = "smages@broadinstitute.org"},
+    {name = "Jan Watter"},
+    {name = "Simon Mages"},
 ]
 readme = "README.md"
 license = {file = "LICENCE.txt"}
@@ -31,23 +31,23 @@ classifiers = [
 dynamic = ["version"]
 
 dependencies = [
-  "requests",
-  "joblib",
-  "numba>=0.51.2",
-  "numpy",
-  "matplotlib!=3.7",
-  "seaborn",
-  "sparse_dot_mkl>=0.7.3",
-  "scanpy>=1.7.0",
-  "statsmodels",
-  "anndata>=0.9.0",
-  "pandas>=1.1.0",
-  "scipy>=1.6.0",
-  "mkl",
-  "mkl_service",
-  "scikit_learn",
-  "threadpoolctl",
-  "pyamg",
+ 'requests',
+ 'joblib',
+ 'numba>=0.51.2',
+ 'numpy',
+ 'matplotlib!=3.7',
+ 'seaborn',
+ 'scanpy>=1.7.0',
+ 'statsmodels',
+ 'anndata>=0.9.0',
+ 'pandas>=1.1.0',
+ 'scipy>=1.6.0',
+ 'scikit_learn',
+ 'threadpoolctl',
+ 'pyamg',
+ 'sparse_dot_mkl>=0.7.3; platform_machine == "x86_64"',
+ 'mkl; platform_machine == "x86_64"',
+ 'mkl_service; platform_machine == "x86_64"',
 ]
 
 [project.urls]
@@ -59,6 +59,7 @@ local_scheme = "no-local-version"
 
 [project.optional-dependencies]
 doc = [
+  "tacco",
   "sphinx",
   "sphinx-rtd-theme",
   "pydata-sphinx-theme",

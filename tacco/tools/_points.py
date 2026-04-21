@@ -342,7 +342,7 @@ def distance_matrix(
 
             if scipy.sparse.issparse(distance):
                 
-                distance = distance.tocoo()
+                distance = _math.tocoo_copy_if_necessary(distance)
                 
                 # add distances in squares
                 distance.data *= distance.data
@@ -724,7 +724,7 @@ def spectral_clustering(
         last_message = ''
         for c, c_size in components_sizes.items():
 
-            _selection = components==c
+            _selection = (components==c).to_numpy()
             aff = affinity[_selection][:,_selection]
 
             # Sometimes there are disconnected components in a single "component"... Probably due to an instability in the clustering.
@@ -739,7 +739,7 @@ def spectral_clustering(
                     last_message = 'disco'
 
                 labels += new_component_i
-                new_components.loc[_selection.to_numpy()] = labels
+                new_components.loc[_selection] = labels
                 new_component_i += n_components
                 continue
 
@@ -756,7 +756,7 @@ def spectral_clustering(
                 _positions = positions[_selection]
                 _X = _positions - np.mean(_positions, axis=0)
                 if scipy.sparse.issparse(_X) and _X.shape[0] == _X.shape[1]:
-                    _X = _X.A
+                    _X = _X.toarray()
                 _sizes = scipy.linalg.svd(_X, full_matrices=False, compute_uv=False, check_finite=False)
                 _sizes *= 2 / np.sqrt(c_size) # these are now twice the standard deviation, i.e. some kind of diameter
                 _sizes.sort() # sorts ascending
@@ -779,13 +779,13 @@ def spectral_clustering(
             if subclustering == False:
                 # This is already a good cluster
 
-                cluster.loc[_selection.to_numpy()] = cluster_i
+                cluster.loc[_selection] = cluster_i
                 cluster_i += 1
                 
             elif subclustering is None and dim is None:
                 # We need an estimate of the dimension before we go on with this size cluster, save that for later
 
-                new_components.loc[_selection.to_numpy()] = new_component_i
+                new_components.loc[_selection] = new_component_i
                 new_component_i += 1
 
             else:
@@ -892,11 +892,11 @@ def spectral_clustering(
                 if subclustering:
                     # accept the new clusters
                     labels += new_component_i
-                    new_components.loc[_selection.to_numpy()] = labels
+                    new_components.loc[_selection] = labels
                     new_component_i += sol_n_clusters
                 else:
                     # reject the new clusters and add the current cluster to the finished clusters
-                    cluster.loc[_selection.to_numpy()] = cluster_i
+                    cluster.loc[_selection] = cluster_i
                     cluster_i += 1
         
         if verbose > 1:

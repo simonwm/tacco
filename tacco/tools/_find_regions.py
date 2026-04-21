@@ -159,7 +159,7 @@ def find_regions(
             for i in range(len(data)):
                 if batch[row[i]] != batch[col[i]]:
                     data[i] *= cross_batch_rescaling_factor
-        _connectivity = annotation_connectivity.tocoo()
+        _connectivity = utils.tocoo_copy_if_necessary(annotation_connectivity)
         if _connectivity is annotation_connectivity:
             _connectivity = annotation_connectivity.copy()
         annotation_connectivity = _connectivity
@@ -183,16 +183,21 @@ def fill_regions(
     region_key='region',
     batch_key=None,
     position_key=('x','y'),
+    result_key=...,
+    k=1,
     ):
 
     """\
     Fills the region annotation of not annotated observation (i.e. na values)
-    with the annotation of the spatially closest annotated observation.
+    with the majority vote of the annotations of the k annotated spatially
+    closest observations.
     
     Parameters
     ----------
     adata
         An :class:`~anndata.AnnData` including region and position annotation.
+        Can also be a :class:`~pandas.DataFrame` which is then used in place of
+        `.obs`.
     region_key
         The `.obs` key where the region annotation is stored.
     batch_key
@@ -201,35 +206,62 @@ def fill_regions(
     position_key
         The `.obsm` key or array-like of `.obs` keys with the position space
         coordinates.
+    result_key
+        The `.obs` key of `adata` where to store the resulting annotation. If
+        `None`, do not write to `adata` and return the annotation as
+        :class:`~pandas.Series` instead. If Ellipsis (i.e. `...`) the result
+        will overwritte the information contained in `region_key`. NOTE: The
+        Ellipsis behaviour is kept for backwards compatibility and will be
+        removed in a future release.
+    k
+        The `k` of the kNN classifier used for the task.
         
     Returns
     -------
-    The updated input `adata` containing the filled `obs[region_key]`.
+    Depending on `result_key`, either returns the original `adata` with\
+    annotation written in the corresponding `.obs` key, or just the annotation\
+    as a new :class:`~pandas.Series`.
     
     """
-    
-    if region_key not in adata.obs.columns:
-        raise ValueError(f'The `region_key` "{region_key}" is not a column name in `adata.obs`')
 
+    if result_key is ...:
+        import warnings
+        warnings.warn(f'Overwriting the input data in the "region_key" automatically by default is deprecated and will be changed in a future release to returning the created annotation. You can get the new default bahaviour by explicitly passing `result_key=None`.', DeprecationWarning)
+        result_key = region_key
+
+    regions = get.data_from_key(adata, region_key)
     positions = get.positions(adata, position_key)
     
     if batch_key is None:
-        batches = pd.Series(1,index=adata.obs.index)
+        batches = pd.Series(1,index=regions.index)
     else:
-        if batch_key not in adata.obs.columns:
-            raise ValueError(f'The `batch_key` "{batch_key}" is not a column name in `adata.obs`')
-        batches = adata.obs[batch_key]
+        batches = get.data_from_key(adata, batch_key)
     
     def get_closest_annotation(batch):
+        from sklearn.neighbors import KNeighborsClassifier
         all_pos = positions.loc[batch.index]
-        all_anno = adata.obs.loc[batch.index,region_key].copy()
+        all_anno = regions.loc[batch.index].copy()
         anno = all_anno.dropna()
         pos = all_pos.loc[anno.index]
         new_pos = all_pos.loc[all_anno.index.difference(anno.index)]
-        dists = utils.cdist(new_pos, pos, metric='euclidean')
-        new_anno = pd.Series(anno.iloc[np.argmin(dists, axis=1)].to_numpy(), index=new_pos.index)
+        neigh = KNeighborsClassifier(n_neighbors=k)
+        neigh.fit(pos, anno)
+        new_anno = pd.Series(neigh.predict(new_pos), index=new_pos.index)
         return pd.concat([anno, new_anno]).reindex_like(all_anno)
     
-    adata.obs[region_key] = batches.groupby(batches, observed=False).transform(get_closest_annotation)
+    filled_regions = batches.groupby(batches, observed=False).transform(get_closest_annotation)
     
-    return adata
+    if regions.dtype != filled_regions.dtype:
+        filled_regions = filled_regions.astype(regions.dtype)
+    
+    if result_key is not None:
+        if isinstance(adata, sc.AnnData):
+            adata.obs[result_key] = filled_regions
+        else:
+            adata[result_key] = filled_regions
+        result = adata
+    else:
+        filled_regions.name = regions.name
+        result = filled_regions
+    
+    return result

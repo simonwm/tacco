@@ -4,18 +4,15 @@ TACCO is a python framework for working with categorical and compositional annot
 
 ## How to install TACCO
 
-### Clean
-
-The simplest way to install TACCO is to create a clean environment with `conda` using the `environment.yml` file from the TACCO repository:
-
-```
-conda env create -f "https://raw.githubusercontent.com/simonwm/tacco/master/environment.yml"
-```
-(For older versions of `conda` one needs to download the `environment.yml` and use the local file for installation.)
-
 ### Conda
 
-To install TACCO in an already existing environment, use `conda` to install from the `conda-forge` channel:
+The simplest way to install TACCO is to create a clean environment with `conda create` using the `environment.yml` file from the TACCO repository:
+
+```
+conda create -n TACCO_env -c conda-forge tacco
+```
+
+To install TACCO in an already existing environment, use `conda install`:
 
 ```
 conda install -c conda-forge tacco
@@ -29,7 +26,7 @@ It is also possible to install from pypi via `pip`:
 pip install tacco
 ```
 
-This is however not recommended. Unlike `conda`, `pip` cannot treat python itself as a package, so if you start with the wrong python version, you will run into errors with dependencies (e.g. at the time of writing, `mkl-service` is not available for python 3.10 and `numba` not for 3.11).
+This is however not recommended. Unlike `conda`, `pip` cannot treat python itself as a package, so if you start with the wrong python version, you will run into errors with dependencies.
 
 ### Github
 

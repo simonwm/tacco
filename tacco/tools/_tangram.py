@@ -69,8 +69,9 @@ def annotate_tangram(
         `('layer','my_counts_key')`, ... For details see
         :func:`~tacco.get.counts`.
     conda_env
-        The path of a conda environment where `tangram` is installed and
-        importable as 'import tangram'.
+        The name or path of a conda environment where `tangram` is installed
+        and importable as 'import tangram'. If `None`, uses the current
+        environment.
     result_file
         The name of a file to contain additional results of `tangram` as
         `.h5ad`. If `None`, nothing except for the returned annotation is
@@ -93,10 +94,11 @@ def annotate_tangram(
     
     """
     
-    if conda_env is None:
-        conda_env = '/ahg/regevdata/users/smages/conda_envs/tangram'
-    if not os.path.exists(conda_env):
-        raise Exception('The conda environment "%s" does not exist! A conda environment with a working `tangram` setup is needed and can be supplied by the `conda_env` argument.' % (conda_env))
+    if conda_env is not None:
+        if conda_env not in utils.get_conda_envs():
+            print('The conda environment "%s" is not known to the "conda" executable. Trying to supply it as path to the environment.' % (conda_env))
+            if not os.path.exists(conda_env):
+                raise Exception('The conda environment "%s" does not exist! A conda environment with a working `tangram` setup is needed and can be supplied by the `conda_env` argument.' % (conda_env))
         
     adata, reference, annotation_key = helper.validate_annotation_args(adata, reference, annotation_key, counts_location, full_reference=True)
 
@@ -160,49 +162,55 @@ ad_map.write({result_file_name!r}, compression='gzip')
         
         #print('writing reference')
         utils.write_adata_x_var_obs(reference, filename=tmpdirname + ref_file_name, compression='gzip')
-        #print('running RCTD')
+        #print('running tangram')
         process = subprocess.Popen('bash', shell=False, universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-        command = f"""
-cd {tmpdirname}
+        activate_conda_env = '' if conda_env is None else f'\
 source $(dirname $(dirname $(which conda)))/bin/activate\n\
 conda activate {conda_env}\n\
-which python
-python {script_file_name}
-"""
+'
+        command = f"\
+cd {tmpdirname}\n\
+{activate_conda_env}\
+which python\n\
+python {script_file_name}\n\
+"
         #print(command)
         out, err = process.communicate(command)
         #print('done')
+
         if verbose:
             print(out)
             print(err)
-        
-        #print('now its done. copy your tangram to where you want it')
-        #import time
-        #time.sleep(60)
-        #input('now its done. copy your tangram to where you want it')
-        
-        if result_file is not None:
-            ad_map = ad.read_h5ad(result_file)
-        else:
-            ad_map = ad.read_h5ad(tmpdirname + result_file_name)
-        
-        if annotation_key in reference.obsm:
-            annotation = reference.obsm[annotation_key]
-        else:
-            annotation = pd.get_dummies(reference.obs[annotation_key]).astype(np.float32)
-        annotation_columns = annotation.columns
-        
-        if cluster_mode:
-            type_fractions = ad_map.X.T
-        else:
-            # get count-type fractions from the cell-bead matrix
-            annotation = annotation.to_numpy()
 
-            utils.row_scale(annotation, np.array(reference.X.sum(axis=1)).flatten() / annotation.sum(axis=1))
+        try:
+            if result_file is not None:
+                ad_map = ad.read_h5ad(result_file)
+            else:
+                ad_map = ad.read_h5ad(tmpdirname + result_file_name)
+            
+            if annotation_key in reference.obsm:
+                annotation = reference.obsm[annotation_key]
+            else:
+                annotation = pd.get_dummies(reference.obs[annotation_key]).astype(np.float32)
+            annotation_columns = annotation.columns
+            
+            if cluster_mode:
+                type_fractions = ad_map.X.T
+            else:
+                # get count-type fractions from the cell-bead matrix
+                annotation = annotation.to_numpy()
 
-            type_fractions = utils.gemmT(ad_map.X.T, annotation.T)
-        
-        type_fractions = pd.DataFrame(type_fractions, index=ad_map.var.index, columns=annotation_columns)
+                utils.row_scale(annotation, np.array(reference.X.sum(axis=1)).flatten() / annotation.sum(axis=1))
+
+                type_fractions = utils.gemmT(ad_map.X.T, annotation.T)
+            
+            type_fractions = pd.DataFrame(type_fractions, index=ad_map.var.index, columns=annotation_columns)
+        except Exception as e:
+            print(repr(e))
+            if conda_env is None:
+                raise Exception(f'Calling tangram was not successful in the current environment! Either fix the tangram installation in the current environment or supply the path to a conda environment with a working tangram in the `conda_env` argument!')
+            else:
+                raise Exception(f'Calling tangram was not successful in the {conda_env} environment supplied by the `conda_env` argument! tangram might not be installed correctly in this environment.')
     
     helper.normalize_result_format(type_fractions, types=reference.obs[annotation_key].unique())
     

@@ -729,7 +729,7 @@ def _validate_args(adata, keys, colors, show_only, reads=False, method_labels=No
                     elif element in adata.var.index:
                         _data = adata[:,element].X
                         if scipy.sparse.issparse(_data):
-                            _data = _data.A
+                            _data = _data.toarray()
                         data[element] = _data.flatten()
                     else:
                         raise Exception(f'The key {element} is neither in obs.columns nor in var.index%s!' % ('' if sample == '' else (' for sample "%s"' % sample)))
@@ -3659,7 +3659,7 @@ def annotated_heatmap(
     
     data = adata.X
     if scipy.sparse.issparse(data):
-        data = data.A
+        data = data.toarray()
     
     if cmap_vmin_vmax is None:
         cmap_vmin_vmax = [data.min(),data.max()]

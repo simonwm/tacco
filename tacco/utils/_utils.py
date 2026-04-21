@@ -8,13 +8,13 @@ from scipy.optimize import nnls
 from numpy.random import Generator, PCG64
 import scipy.spatial.distance
 import multiprocessing
+import subprocess
 import os
 import joblib
 from difflib import SequenceMatcher
 import scanpy as sc
 import time
 import gc
-import mkl
 import tempfile
 from numba import njit, prange
 from ..get._counts import _get_counts_location
@@ -59,9 +59,13 @@ def cpu_count():
     
     if 'NSLOTS' in os.environ: # if Sun Grid Engine is used, we can get the number of allocated cores here 
         return int(os.environ.get('NSLOTS'))
-    mkl_threads = mkl.get_max_threads()
-    if mkl_threads is not None:
-        return mkl_threads
+    try:
+        import mkl
+        mkl_threads = mkl.get_max_threads()
+        if mkl_threads is not None:
+            return mkl_threads
+    except ImportError:
+        pass
     return multiprocessing.cpu_count()
 
 def parallel_nnls(
@@ -1711,6 +1715,10 @@ read_matrix = function(file, name) {
         groupX_encoding_type = h5attr(groupX,'encoding-type')
         if (groupX_encoding_type == 'csr_matrix' || groupX_encoding_type == 'csc_matrix' ) {
             ra = groupX$open('data')$read()
+            if (is.integer(ra)) {
+                print('dgCMatrix does not support sparse integer matrices so the matrix is converted to double precision floating point numbers...')
+                ra = as.double(ra)
+            }
             ja = as.integer(groupX$open('indices')$read()+1)
             ia = as.integer(groupX$open('indptr')$read()+1)
             dim = h5attr(groupX,'shape')
@@ -1747,7 +1755,14 @@ read_df = function(file, name) {
     #print('---------- group open read')
     #print(group$open(h5attr(group, '_index'))$read())
     #print('---------- df')
-    df = data.frame(row.names=group$open(h5attr(group, '_index'))$read())
+    index_item = group$open(h5attr(group, '_index'))
+    if (index_item$get_obj_type() == 'H5I_GROUP') { # catch categorical index
+        index = index_item$open('codes')$read()
+        index = index_item$open('categories')$read()[index+1]
+    } else {
+        index = index_item$read()
+    }
+    df = data.frame(row.names=index)
     if (length(list.datasets(group)) > 1) { # catch case with only the index and no additional column
         for (col in h5attr(group, 'column-order')) {
             col_item = group$open(col)
@@ -1764,7 +1779,11 @@ read_df = function(file, name) {
                     temp = categories$open(col)$read()[temp+1]
                 }
             }
-            df[col] = temp
+            if (nrow(df) > length(temp)) {
+                cat(sprintf('Column "%s" of a dataframe seems to contain invalid elements like NaNs and is therefore ignored.\n', col), sep='', file=stderr())
+            } else {
+                df[col] = temp
+            }
         }
     }
     return(df)
@@ -1791,3 +1810,19 @@ read_adata = function(filename, transpose=FALSE) {
     }
 }
 """
+
+def get_conda_envs():
+    process = subprocess.Popen('bash', shell=False, universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+    command = 'conda env list'
+    out, err = process.communicate(command)
+
+    if err != '':
+        raise Exception(f'{err}\nThere was an error while calling conda! Make sure that there is a working conda installation available in the path.')
+
+    lines = out.splitlines()
+
+    envs = [ token for line in lines for token in line.split() if not line.startswith('#') ]
+
+    return envs
+
+

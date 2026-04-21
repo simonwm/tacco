@@ -17,24 +17,27 @@ jobs:
           fetch-depth: 0
 
       - name: Install dependencies with micromamba
-        uses: mamba-org/provision-with-micromamba@main
+        uses: mamba-org/setup-micromamba@v3
         with:
-          cache-downloads: true
-          extra-specs: |
-            sphinx
-            sphinx_rtd_theme
-            pydata-sphinx-theme
-            sphinx-autodoc-typehints
-            nbsphinx
-            sphinx-gallery=0.10.1
-            ipython
-            jupytext
-            jupyter 
+         environment-name: docs
+         cache-downloads: true
+         create-args: >-
+           sphinx
+           sphinx_rtd_theme
+           pydata-sphinx-theme
+           sphinx-autodoc-typehints
+           nbsphinx
+           sphinx-gallery=0.10.1
+           ipython
+           jupytext
+           jupyter 
 
       - name: Build Sphinx html doc
-        shell: bash -l {0} # necessary to access the (cached) mamba environment
+        shell: bash -el {0} # necessary to access the (cached) mamba environment
         run: |
           set -x
+
+          pip install .
 
           pushd docsource
 

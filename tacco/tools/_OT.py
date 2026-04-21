@@ -7,6 +7,7 @@ from .. import get
 from .. import preprocessing
 from .. import utils
 from ..utils import _math
+from ..utils._math import get_sum
 from ..utils._utils import _run_OT
 from . import _helper as helper
 from ._annotate import annotate
@@ -85,7 +86,7 @@ def _annotate_OT(
         # miXture Annotation joint probability distribution
         xa = mixtures.copy()
         # get probability of miXture given Annotation
-        utils.col_scale(xa,1/xa.sum(axis=0).A.flatten())
+        utils.col_scale(xa,1/get_sum(xa, axis=0))
         # get measurement given annotation
 
         # assume independent m and a
@@ -93,7 +94,7 @@ def _annotate_OT(
 
         # get probability of Annotation given mixture
         ax = mixtures.T
-        utils.col_scale(ax,1/ax.sum(axis=0).A.flatten())
+        utils.col_scale(ax,1/get_sum(ax, axis=0))
         # assume minimal error between m and a
         xam = get_minimal_transitions(ax.T, xm)
         ax.eliminate_zeros()

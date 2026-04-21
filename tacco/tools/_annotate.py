@@ -174,16 +174,20 @@ def boost_annotation_method(
         
         nonlocal annotation_method, bisections, bisection_divisor
         
-        adata = ad.AnnData(adata.X.copy(), obs=adata.obs[[]], var=adata.var[[]])
+        if pd.api.types.is_float_dtype(adata.X):
+            adata_X = adata.X.copy()
+        else:
+            if verbose > 0:
+                print(f'Warning: Bisectioning is only possible for floating point data in `.X`, but it got {adata.X.dtype}! Performing implicit cast to float32.')
+            adata_X = adata.X.astype(np.float32)
+        
+        adata = ad.AnnData(adata_X, obs=adata.obs[[]], var=adata.var[[]])
         average_profiles = utils.get_average_profiles(annotation_key, reference)
         average_profiles /= average_profiles.sum(axis=0).to_numpy()
         
         if bisection_divisor < 2:
             raise ValueError('`bisection_divisor` is smaller than 2!')
         
-        if not pd.api.types.is_float_dtype(adata.X):
-            raise ValueError(f'Bisectioning is only possible for floating point data in `.X`, but it got {adata.X.dtype}!')
-
         def get_bisections(bisections, bisection_divisor):
             remaining = [1.0]
             current = []
@@ -958,7 +962,7 @@ def annotate_single_molecules(
     # do the binning, typing, splitting, mapping for multiple shifted bins
     for shift in shifts:
 
-        bins = utils.bin(molecules, bin_size=bin_size, position_keys=position_keys, shift=-shift*bin_size/n_shifts); # shift bin to negaive directions to not exclude points
+        bins = utils.bin(molecules, bin_size=bin_size, position_keys=position_keys, shift=-shift*bin_size/n_shifts); # shift bin to negative directions to not exclude points
 
         hashes = utils.hash(bins);
 

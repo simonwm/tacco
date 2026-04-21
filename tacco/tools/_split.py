@@ -264,7 +264,7 @@ def split_observations(
         
         - 'exact': All counts in the input are distributed to the splitted
           observations conserving the total number of counts per gene and bead
-          and the annotation fractions; see `map_zero_profile_genes`.
+          and the annotation fractions; see `map_all_genes`.
         - 'denoise': The counts per gene and bead are ignored and the split
           results from a matrix product of mean expression profiles and the
           annotation. Depending on the input this can be done on a sub-category

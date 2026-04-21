@@ -125,6 +125,26 @@ def test_sparse_result_gemmT(gemmT):
 
     tc.testing.assert_sparse_equal(result, spC)
 
+@pytest.mark.parametrize('input_format', ['csr', 'csc', 'coo'])
+def test_sparse_result_gemmT_no_corruption(input_format):
+    """Test that sparse_result_gemmT doesn't corrupt input matrices."""
+    # Create test data similar to the real bug scenario
+    np.random.seed(42)
+    cell_type = np.random.rand(10, 5).astype(np.float64)
+    average_profiles = np.random.rand(100, 5).astype(np.float32)
+    
+    # Create input matrix in specified format
+    sparse_out = scipy.sparse.random(10, 100, density=0.1, format=input_format, dtype=np.float32)
+    
+    # Store original matrix for comparison
+    original_sparse_out = sparse_out.copy()
+    
+    # Call the function with inplace=False (should NOT modify input)
+    output = tc.utils.sparse_result_gemmT(cell_type, average_profiles, sparse_out, inplace=False)
+    
+    # Verify input was not modified using tacco's testing function
+    tc.testing.assert_sparse_equal(sparse_out, original_sparse_out)
+
 def test_row_scale(row_scale):
     A,B,s = row_scale
 

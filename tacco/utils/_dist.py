@@ -3,6 +3,7 @@ import numpy as np
 import scipy.spatial
 from scipy.sparse import issparse
 from . import _math
+from ._math import get_sum
 from . import _utils
 from numba import njit, prange
 import numba
@@ -353,7 +354,7 @@ def get_norm(A):
         # reuse indices of sparse matrix, while preseving the original data
         A, A_data = data_copy(A)
         A.data *= A.data
-        Anorm = np.sqrt(A.sum(axis=1)).A.flatten()
+        Anorm = np.sqrt(get_sum(A ,axis=1))
         restore_data(A, A_data)
     else:
         Anorm = np.sqrt((A**2).sum(axis=1))
@@ -433,7 +434,7 @@ def get_sqnorm(A):
         # reuse indices of sparse matrix, while preserving the original data
         A, A_data = data_copy(A)
         A.data *= A.data
-        Anorm = A.sum(axis=1).A.flatten()
+        Anorm = get_sum(A, axis=1)
         restore_data(A, A_data)
     else:
         Anorm = (A**2).sum(axis=1)
@@ -1400,7 +1401,7 @@ def sparse_distance_matrix(
         kd_tree = scipy.spatial.cKDTree(A)
         distance = kd_tree.sparse_distance_matrix(kd_tree, max_distance)
 
-        distance = distance.tocoo()
+        distance = _math.tocoo_copy_if_necessary(distance)
 
         distance.eliminate_zeros()
         

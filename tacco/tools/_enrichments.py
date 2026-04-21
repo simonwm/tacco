@@ -190,7 +190,7 @@ def get_contributions(
             found.append('X')
             X = adata[:,value_key].X
             if issparse(X):
-                X = X.A
+                X = X.toarray()
             obs = pd.DataFrame({value_key:X.flatten()},index=adata_obs.index)
             obs.columns.name = value_key
             obs.columns = obs.columns.astype('category')
@@ -234,7 +234,7 @@ def get_contributions(
         if var_keys.any():
             obs_from_X = adata[:,value_key[var_keys]].X
             if issparse(obs_from_X):
-                obs_from_X = obs_from_X.A
+                obs_from_X = obs_from_X.toarray()
             obs_from_X = pd.DataFrame(obs_from_X, index=adata_obs.index, columns=value_key[var_keys])
             obs.append(obs_from_X)
         

@@ -21,7 +21,7 @@ def matrix_scaling(x,u,v, min_iter=3, max_iter=100, delta=1e-3, check_iter=1):
         raise ValueError('"x" has zero-only rows!')
     
     if issparse(u):
-        a = u.tocoo()
+        a = _math.tocoo_copy_if_necessary(u)
         u_data = a.data.copy()
         a.data *= 0
     else:
@@ -115,7 +115,7 @@ def _scale(cx,bead_type_map,type_profiles, delta=1e-6, batch_size=1000, n_jobs=N
     u = counts_per_bead_and_gene.T.astype(result_dtype, copy=True) # per_gene_and_bead
     v = counts_per_bead_and_type.astype(result_dtype, copy=False)   # per_bead_and_type
 
-    a,b = parallel_matrix_scaling(x,u,v, batch_size=batch_size, n_jobs=n_jobs)
+    a,b = parallel_matrix_scaling(x,u,v, delta=delta, batch_size=batch_size, n_jobs=n_jobs)
     
     # rescaled splitted count matrix is a_gb x_gt b_bt
     return a,b,x
@@ -211,7 +211,7 @@ def _fuseall(a_rows,a_cols,a_data,b,x, seed=42, batch_size=50000):
             probabilities = remaining_reads
             
             # Every batch gets its own random seed, so even though it might be parallel, the results will be identical irrespective of the degree of parallelism.
-            # But that means that changing the batch_size has an impact on the results, via changing the random seed for parts of the batchhes.
+            # But that means that changing the batch_size has an impact on the results, via changing the random seed for parts of the batches.
             layers_data = integer_part + multinomial_rest(counts, probabilities, seed=seed+batch//batch_size)
         
         for t in range(nt):
@@ -265,7 +265,7 @@ def split_beads(tdata, bead_type_map, type_profiles, min_counts=None, seed=42, d
     
     nonzero_beads = np.array(tdata.X.sum(axis=1)).flatten() != 0
     if verbose > 0 and not nonzero_beads.all():
-        print(f'removed {len(nonzero_beads)-nonzero_beads.sum()} of {len(nonzero_beads)} observation from count matrix due to zero counts in observation')
+        print(f'removed {len(nonzero_beads)-nonzero_beads.sum()} of {len(nonzero_beads)} observations from count matrix due to zero counts in observation')
     nonzero_map_beads = bead_type_map.sum(axis=1).to_numpy() != 0
     if verbose > 0 and not nonzero_map_beads.all():
         print(f'removed {len(nonzero_map_beads)-nonzero_map_beads.sum()} of {len(nonzero_map_beads)} observations from mapping due to zero mapping')
@@ -314,7 +314,7 @@ def split_beads(tdata, bead_type_map, type_profiles, min_counts=None, seed=42, d
         print('fuseall', end='...')
     start = time.time()
     if issparse(a):
-        a = a.tocoo()
+        a = _math.tocoo_copy_if_necessary(a)
     else:
         a = coo_matrix(a)
     _layers_data = _fuseall(a.row,a.col,a.data,b,x, seed=seed, batch_size=rounding_batch_size)
@@ -393,7 +393,7 @@ def merge_beads(mdata, merge_annotation_name='layers', bead_annotation_name='bc'
     joined_cat = joined.astype('category')
     
     if issparse(mdata.X):
-        X = mdata.X.tocoo()
+        X = _math.tocoo_copy_if_necessary(mdata.X)
         X.row = joined_cat.cat.codes[X.row].to_numpy()
         X.resize((len(joined_cat.dtype.categories),X.shape[1]))
         X.eliminate_zeros()
